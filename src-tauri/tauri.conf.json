@@ -12,9 +12,15 @@
   "app": {
     "windows": [
       {
+        "label": "main",
         "title": "hrairto",
-        "width": 800,
-        "height": 600
+        "width": 500,
+        "height": 72,
+        "visible": false,
+        "skipTaskbar": true,
+        "decorations": false,
+        "resizable": false,
+        "alwaysOnTop": true
       }
     ],
     "security": {
