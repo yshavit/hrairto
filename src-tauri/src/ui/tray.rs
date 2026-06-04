@@ -2,8 +2,8 @@ use super::window_types::Window;
 use std::sync::Mutex;
 use std::time::{Duration, Instant};
 use tauri::{
-    AppHandle, Manager, PhysicalPosition,
     tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
+    AppHandle, Manager, PhysicalPosition,
 };
 
 enum WindowAction {
@@ -30,12 +30,7 @@ struct MonitorBounds {
 /// Places the window above the tray when it's in the bottom half of the monitor
 /// (Windows taskbar), or below when it's in the top half (macOS menu bar).
 /// Horizontally centered on the icon, clamped to stay on-screen.
-fn window_position_for_tray(
-    tray: &ScreenRect,
-    win_width: u32,
-    win_height: u32,
-    monitor: &MonitorBounds,
-) -> (i32, i32) {
+fn window_position_for_tray(tray: &ScreenRect, win_width: u32, win_height: u32, monitor: &MonitorBounds) -> (i32, i32) {
     let tray_center_y = tray.y + tray.height / 2.0;
     let monitor_mid_y = monitor.y as f64 + monitor.height as f64 / 2.0;
 
@@ -72,9 +67,9 @@ struct TrayState {
 /// directly comparable to monitor bounds and usable with `Position::Physical`.
 fn screen_rect_from_event(event: &TrayIconEvent, scale: f64) -> Option<ScreenRect> {
     let r = match event {
-        TrayIconEvent::Click { rect, .. }
-        | TrayIconEvent::Enter { rect, .. }
-        | TrayIconEvent::Move { rect, .. } => rect,
+        TrayIconEvent::Click { rect, .. } | TrayIconEvent::Enter { rect, .. } | TrayIconEvent::Move { rect, .. } => {
+            rect
+        }
         _ => return None,
     };
     let (x, y) = match &r.position {
@@ -114,10 +109,7 @@ fn position_window_near_tray(app: &AppHandle) {
         .find(|m| {
             let p = m.position();
             let s = m.size();
-            tray_cx >= p.x
-                && tray_cx < p.x + s.width as i32
-                && tray_cy >= p.y
-                && tray_cy < p.y + s.height as i32
+            tray_cx >= p.x && tray_cx < p.x + s.width as i32 && tray_cy >= p.y && tray_cy < p.y + s.height as i32
         })
         .cloned()
         .or_else(|| window.primary_monitor().ok().flatten());
@@ -135,10 +127,7 @@ fn position_window_near_tray(app: &AppHandle) {
             },
         ),
         // No monitor info at all: best-effort centering above the tray icon.
-        None => (
-            tray_cx - win_size.width as i32 / 2,
-            tray_cy - win_size.height as i32,
-        ),
+        None => (tray_cx - win_size.width as i32 / 2, tray_cy - win_size.height as i32),
     };
 
     let _ = window.set_position(tauri::Position::Physical(PhysicalPosition::new(x, y)));
@@ -167,7 +156,11 @@ fn apply_toggle(app: &AppHandle) {
         }
     }
 
-    let window_action = if visible { WindowAction::Hide } else { WindowAction::Show };
+    let window_action = if visible {
+        WindowAction::Hide
+    } else {
+        WindowAction::Show
+    };
     match window_action {
         WindowAction::Show => {
             position_window_near_tray(app);
@@ -237,34 +230,64 @@ mod tests {
     use super::*;
 
     fn monitor_1080p() -> MonitorBounds {
-        MonitorBounds { x: 0, y: 0, width: 1920, height: 1080 }
+        MonitorBounds {
+            x: 0,
+            y: 0,
+            width: 1920,
+            height: 1080,
+        }
     }
 
     #[test]
     fn tray_at_bottom_puts_window_above() {
-        let tray = ScreenRect { x: 1850.0, y: 1055.0, width: 20.0, height: 20.0 };
+        let tray = ScreenRect {
+            x: 1850.0,
+            y: 1055.0,
+            width: 20.0,
+            height: 20.0,
+        };
         let (_, y) = window_position_for_tray(&tray, 400, 500, &monitor_1080p());
         assert_eq!(y, 1055 - 500);
     }
 
     #[test]
     fn tray_at_top_puts_window_below() {
-        let tray = ScreenRect { x: 1800.0, y: 5.0, width: 20.0, height: 20.0 };
+        let tray = ScreenRect {
+            x: 1800.0,
+            y: 5.0,
+            width: 20.0,
+            height: 20.0,
+        };
         let (_, y) = window_position_for_tray(&tray, 400, 500, &monitor_1080p());
         assert_eq!(y, 25);
     }
 
     #[test]
     fn window_clamped_to_right_monitor_edge() {
-        let tray = ScreenRect { x: 1910.0, y: 1055.0, width: 20.0, height: 20.0 };
+        let tray = ScreenRect {
+            x: 1910.0,
+            y: 1055.0,
+            width: 20.0,
+            height: 20.0,
+        };
         let (x, _) = window_position_for_tray(&tray, 400, 500, &monitor_1080p());
         assert!(x + 400 <= 1920, "window right edge ({}) exceeds monitor", x + 400);
     }
 
     #[test]
     fn second_monitor_offset() {
-        let monitor = MonitorBounds { x: 1920, y: 0, width: 1920, height: 1080 };
-        let tray = ScreenRect { x: 3800.0, y: 1055.0, width: 20.0, height: 20.0 };
+        let monitor = MonitorBounds {
+            x: 1920,
+            y: 0,
+            width: 1920,
+            height: 1080,
+        };
+        let tray = ScreenRect {
+            x: 3800.0,
+            y: 1055.0,
+            width: 20.0,
+            height: 20.0,
+        };
         let (x, y) = window_position_for_tray(&tray, 400, 500, &monitor);
         assert!(x >= 1920, "window left edge ({x}) should be on second monitor");
         assert!(x + 400 <= 3840, "window right edge ({}) exceeds monitor", x + 400);
