@@ -7,6 +7,7 @@ use tauri::{AppHandle, Manager, WebviewUrl, WebviewWindowBuilder};
 /// the standard window shows in Alt-Tab on its own. The promotion is reverted
 /// once the window closes so we go back to being a tray-only app.
 #[tauri::command]
+#[specta::specta]
 pub fn open_yearly_goals(app: AppHandle) {
     if let Some(main) = app.get_webview_window(Window::Main.label()) {
         let _ = main.hide();

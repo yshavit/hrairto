@@ -75,3 +75,11 @@ jobs:
           workspaces: src-tauri
       - run: cargo test
         working-directory: src-tauri
+      # cargo test regenerates src/bindings.ts via the exports_typescript_bindings
+      # test; fail if the committed copy has drifted from the current Rust types.
+      - name: Check generated bindings are up to date
+        run: |
+          if ! git diff --exit-code src/bindings.ts; then
+            echo "::error file=src/bindings.ts::Committed src/bindings.ts is out of date with the Rust types. Run 'cargo test' in src-tauri (or 'pnpm tauri dev') to regenerate it, then commit the updated src/bindings.ts."
+            exit 1
+          fi

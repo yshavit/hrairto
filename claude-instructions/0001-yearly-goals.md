@@ -45,6 +45,34 @@ When using these as array indices in TypeScript, subtract 1 at the point of use.
 
 ### Rust structs
 
+> **Step 1 is implemented.** `src-tauri/src/models.rs` is now the canonical
+> source of truth for the data model. The structs below were the original
+> prescriptive spec; they diverge from the real code in a few ways (typed ID
+> newtypes, `Epoch` for timestamps, `AnnualGoalRef` enum — see below). Read
+> `models.rs` directly rather than relying on this section.
+
+Key changes made during implementation:
+
+- **Typed IDs**: `String` IDs replaced with newtypes (`CalendarId`, `SwimlaneId`,
+  etc.) wrapping `Uuid`. All serialize transparently as strings on the wire.
+- **`Epoch`**: `i64` timestamps replaced with `Epoch(i64)` (milliseconds UTC,
+  `#[serde(transparent)]`). Milliseconds so the wire format is native to JS
+  without any ×1000 conversion.
+- **`AnnualGoalRef`**: `QuarterlyGoal::annual_goal_id: AnnualGoalId` replaced
+  with `annual_goal: AnnualGoalRef` to support side quests:
+
+```rust
+#[serde(tag = "type", content = "id")]
+pub enum AnnualGoalRef {
+    MainQuest(AnnualGoalId), // serves a specific annual goal
+    SideQuest,               // intentional but not tied to any annual goal
+}
+```
+
+TypeScript (from specta): `{ type: "MainQuest"; id: AnnualGoalId } | { type: "SideQuest" }`
+
+Original prescriptive structs (now superseded) follow for historical reference:
+
 Define these in `src-tauri/src/models.rs`:
 
 ```rust

@@ -55,6 +55,13 @@ Five types of planning/reflection sessions, each with its own UX:
    Tomorrow's plan IS the next day's starting point — no separate morning session.
 4. **Mid-day check-in** — lightweight "how's the morning going" with no planning.
 
+### Side quests
+
+A quarterly goal that doesn't serve any annual goal but is still intentional and
+worthwhile. Not a distraction (which is unplanned); a side quest is planned and
+deliberate — it just lives outside the annual goal hierarchy. Represented in the
+data model as `AnnualGoalRef::SideQuest` on `QuarterlyGoal`.
+
 ### Distractions
 
 Work that wasn't in the quarterly plan is a "distraction" — not pejorative, just

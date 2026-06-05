@@ -1,1 +1,5 @@
 * text=auto eol=lf
+
+# Generated from Rust types by tauri-specta (see src-tauri/src/lib.rs).
+# Committed because the TypeScript build imports it and never runs cargo.
+src/bindings.ts linguist-generated=true
