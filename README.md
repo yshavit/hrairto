@@ -1,12 +1,31 @@
-# Tauri + React + Typescript
+# Hrairto
 
-This template should help get you started developing with Tauri, React and Typescript in Vite.
+Local-first desktop app for cascading goal planning and daily work tracking. Tauri + React + TypeScript.
 
-## Building
+## Run (dev mode)
 
 ```shell
 pnpm install
 pnpm tauri dev
+```
+
+## Build
+
+```shell
+pnpm tauri build   # full desktop bundle
+pnpm build         # frontend only (tsc && vite build)
+```
+
+Run the built target:
+
+- Bare binary: `src-tauri/target/release/hrairto[.exe]`
+- Installers: `src-tauri/target/release/bundle/*` (system-dependent)
+
+## Test
+
+```shell
+pnpm test          # frontend (vitest)
+cargo test         # rust (run from src-tauri/)
 ```
 
 ## Recommended IDE Setup

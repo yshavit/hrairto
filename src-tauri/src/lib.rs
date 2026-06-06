@@ -8,8 +8,18 @@ use tauri_specta::{collect_commands, Builder};
 /// `i64`/`u64` timestamps are emitted as `number` rather than `bigint`: every
 /// timestamp here is a Unix value (seconds or milliseconds) far below
 /// `Number.MAX_SAFE_INTEGER`, and the frontend works with them as plain numbers.
+#[allow(dead_code)]
 fn ts_exporter() -> Typescript {
-    Typescript::default().bigint(BigIntExportBehavior::Number)
+    Typescript::default().bigint(BigIntExportBehavior::Number).header(
+        [
+            // We don't want to format generated files; if we do, CI checks for drift will fail
+            "// @formatter:off",
+            // No use linting them, either
+            "// @ts-nocheck",
+            "// noinspection JSUnusedGlobalSymbols,JSUnusedLocalSymbols",
+        ]
+        .join("\n"),
+    )
 }
 
 /// Quits the application, exiting the process.

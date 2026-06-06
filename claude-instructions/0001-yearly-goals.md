@@ -224,6 +224,12 @@ fn main() {
 Run the app once in dev mode to generate `src/bindings.ts`. Import all types from
 there — never hand-write types that duplicate Rust structs.
 
+The snippet above is illustrative; the real export setup lives in `src-tauri/src/lib.rs`
+(a shared `ts_exporter()` used by both `run` and the bindings-export test), which is the
+canonical source. The exporter sets a `// @ts-nocheck` header so the generated file is
+skipped by `tsc --noEmit` — a tsconfig `exclude` wouldn't work because hand-written code
+imports from `bindings.ts`, which pulls it back into the type-check.
+
 ---
 
 ## Step 2: Calendar utility
