@@ -120,7 +120,7 @@ export type Swimlane = { id: SwimlaneId; name: string;
  */
 color: string }
 export type SwimlaneId = string
-export type SwimlaneWeightEntry = { swimlane_id: SwimlaneId; 
+export type SwimlaneWeightEntry = { target: WeightTarget; 
 /**
  * 0.0–1.0. All entries within a [`SwimlaneWeightPeriod`] must sum to 1.0.
  */
@@ -150,6 +150,22 @@ target_year: number; text: string;
  */
 completed_at: Epoch | null }
 export type WaypointId = string
+/**
+ * What a [`SwimlaneWeightEntry`] allocates weight toward.
+ * 
+ * Including `Distractions` as a first-class target lets the user budget
+ * intentionally for unplanned work rather than having it silently erode
+ * the swimlane allocations.
+ */
+export type WeightTarget = 
+/**
+ * A specific swimlane.
+ */
+{ type: "Swimlane"; id: SwimlaneId } | 
+/**
+ * The distraction budget — unplanned work as a whole.
+ */
+{ type: "Distractions" }
 
 /** tauri-specta globals **/
 

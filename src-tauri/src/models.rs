@@ -109,7 +109,7 @@ pub struct SwimlaneWeightPeriod {
 
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 pub struct SwimlaneWeightEntry {
-    pub swimlane_id: SwimlaneId,
+    pub target: WeightTarget,
     /// 0.0–1.0. All entries within a [`SwimlaneWeightPeriod`] must sum to 1.0.
     pub weight: f64,
 }
@@ -127,6 +127,20 @@ pub struct AnnualGoal {
     pub due_year: u32,
     pub text: String,
     pub created_at: Epoch,
+}
+
+/// What a [`SwimlaneWeightEntry`] allocates weight toward.
+///
+/// Including `Distractions` as a first-class target lets the user budget
+/// intentionally for unplanned work rather than having it silently erode
+/// the swimlane allocations.
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+#[serde(tag = "type", content = "id")]
+pub enum WeightTarget {
+    /// A specific swimlane.
+    Swimlane(SwimlaneId),
+    /// The distraction budget — unplanned work as a whole.
+    Distractions,
 }
 
 /// Whether a quarterly goal serves an annual goal or is a standalone side quest.

@@ -69,7 +69,20 @@ pub enum AnnualGoalRef {
 }
 ```
 
-TypeScript (from specta): `{ type: "MainQuest"; id: AnnualGoalId } | { type: "SideQuest" }`
+TypeScript: `{ type: "MainQuest"; id: AnnualGoalId } | { type: "SideQuest" }`
+
+- **`WeightTarget`**: `SwimlaneWeightEntry::swimlane_id: SwimlaneId` replaced
+  with `target: WeightTarget` so weight periods can budget for distractions:
+
+```rust
+#[serde(tag = "type", content = "id")]
+pub enum WeightTarget {
+    Swimlane(SwimlaneId),  // a specific swimlane
+    Distractions,          // unplanned work as a whole
+}
+```
+
+TypeScript: `{ type: "Swimlane"; id: SwimlaneId } | { type: "Distractions" }`
 
 Original prescriptive structs (now superseded) follow for historical reference:
 

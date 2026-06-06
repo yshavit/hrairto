@@ -55,19 +55,29 @@ Five types of planning/reflection sessions, each with its own UX:
    Tomorrow's plan IS the next day's starting point — no separate morning session.
 4. **Mid-day check-in** — lightweight "how's the morning going" with no planning.
 
-### Side quests
+### Three kinds of work
 
-A quarterly goal that doesn't serve any annual goal but is still intentional and
-worthwhile. Not a distraction (which is unplanned); a side quest is planned and
-deliberate — it just lives outside the annual goal hierarchy. Represented in the
-data model as `AnnualGoalRef::SideQuest` on `QuarterlyGoal`.
+Hrairto organizes all work into exactly three categories:
 
-### Distractions
+1. **Long-term goals** — set in quarterly planning sessions; cascade from annual
+   goals down to weekly goals. This is the main hierarchy.
 
-Work that wasn't in the quarterly plan is a "distraction" — not pejorative, just
-honest. Distractions are a first-class concept: they have labels ("bug",
-"customer request", "external team"), they're tracked separately from planned work,
-and they show up in reflections as context for why actuals diverged from plans.
+2. **Side quests** — intentional work planned for a quarter or month that doesn't
+   serve any annual goal. Deliberate and worthwhile, just outside the long-term
+   hierarchy. Represented as `AnnualGoalRef::SideQuest` on `QuarterlyGoal`.
+
+3. **Distractions** — everything else. Definitionally: any work that wasn't in the
+   quarterly plan. This includes both reactive work (oncall incidents, urgent bugs)
+   *and* unplanned work the user chose to take on mid-week. Conflating these is
+   intentional — both are pulling the user away from their stated objectives,
+   regardless of merit. Distractions are a first-class concept: they have labels
+   ("bug", "customer request", "external team"), are tracked separately from planned
+   work, and surface in reflections as context for why actuals diverged from plans.
+
+Swimlane weights account for all three: a `SwimlaneWeightPeriod` can allocate
+budget to specific swimlanes (`WeightTarget::Swimlane`) and to distractions as a
+whole (`WeightTarget::Distractions`), so the user sets intentional expectations
+for how much unplanned work they absorb.
 
 ### No carryover
 
