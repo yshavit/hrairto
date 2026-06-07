@@ -17,11 +17,22 @@ planning has begun re-collapses the planning section (but does not discard plan 
 
 ---
 
-## Mockups
+## Mockups and this spec
 
-Reference screenshots are in `claude-instructions/0002-mockups/`. These show the
-intended UX from the design session. The spec takes precedence over the mockups
-where they conflict — the mockups are visual reference, not the source of truth.
+Reference screenshots are in `claude-instructions/0002-mockups/`:
+
+- `weekly-reflection.png` — reflect section, empty state (no goals marked)
+- `weekly-reflection-filled.png` — reflect section, mid-fill with validation errors visible
+- `weekly-planning.png` — plan section after reflection is complete
+
+**Read these before starting any implementation step.** They show the intended
+layout and interaction states faster than the prose spec can. The spec takes
+precedence over the mockups where they conflict — the mockups are visual reference,
+not the source of truth.
+
+**Keep this doc in sync as you implement.** After each step, note any intentional
+divergences from the mockups in a "Divergences from mockups" subsection here, so
+the doc stays an accurate picture of what's actually built.
 
 ## Key files (to be created)
 
@@ -40,7 +51,7 @@ Reuses from existing code:
 
 - All ID newtypes and model types from `src/bindings.ts`
 - `src/utils/calendar.ts` display helpers
-- Swimlane color constants (define in a shared `src/theme.ts` if not already present)
+- Swimlane colors: use `swimlane.color` (hex string from backend) applied via inline `style` + CSS variables, matching the pattern in `SwimlaneRow.tsx`.
 
 ---
 
@@ -85,6 +96,9 @@ pub enum GoalOutcome {
     Miss,
 }
 
+// Struct variants with multiple named fields require internally-tagged serde
+// (not the adjacently-tagged form used by WeightTarget/AnnualGoalRef).
+#[serde(tag = "type")]
 pub enum WeeklyGoalRef {
     /// Planned work: belongs to a swimlane, optionally tied to a waypoint.
     Planned {
@@ -124,7 +138,7 @@ pub struct SwimlaneQuarterContext {
     pub swimlane_id: SwimlaneId,
     pub quarter: QuarterDisplay,         // from existing models
     pub quarterly_goal: Option<QuarterlyGoal>,
-    pub waypoints: Vec<Waypoint>,
+    // waypoints are accessed via quarterly_goal.waypoints — no separate field needed
 }
 
 pub struct ActualSplitEntry {
@@ -405,7 +419,7 @@ The past week should have:
 
 ## Implementation checklist
 
-- [ ] **Step 0: Reconcile spec with current codebase**
+- [x] **Step 0: Reconcile spec with current codebase**
   - This spec was written in a separate Claude session with knowledge of the data
     model and UX decisions, but without full visibility into current code conventions.
     Before implementing anything:
