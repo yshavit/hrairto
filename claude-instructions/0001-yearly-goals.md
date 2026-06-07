@@ -232,88 +232,41 @@ imports from `bindings.ts`, which pulls it back into the type-check.
 
 ---
 
-## Step 2: Calendar utility
+## Step 2: Fiscal-calendar math
 
-Write and test this utility **before building any components**. Quarter derivation
-around fiscal year boundaries is subtle enough to get wrong, and getting it wrong
-causes hard-to-trace bugs everywhere.
+> **Step 2 is implemented in Rust, not TypeScript.** Fiscal-calendar math belongs
+> in Rust so it can be shared with a future CLI and so there is a single place
+> for business logic (see `CLAUDE.md` "Logic goes in Rust"). The TypeScript layer
+> receives precomputed `QuarterInfo` values and never does fiscal math itself.
 
-Create `src/utils/calendar.ts`:
+The implementation lives in `src-tauri/src/calendar.rs`. Key public functions:
 
-```typescript
-import {Calendar} from '../bindings'
+- `quarter_for_timestamp(Epoch, &Calendar) -> Result<QuarterInfo, String>`
+- `quarter_info(quarter, fiscal_year, &Calendar) -> Result<QuarterInfo, String>`
+- `quarters_to_display(&Calendar, now: Epoch, past_count, future_count) -> Result<Vec<QuarterInfo>, String>`
 
-export interface QuarterInfo {
-    quarter: number  // 1-based: 1–4
-    year: number     // fiscal year (calendar year in which fiscal year starts)
-    label: string    // e.g. "Q2 · Apr–Jun"
-    startAt: number  // unix timestamp (ms) of quarter start in calendar timezone
-    endAt: number    // unix timestamp (ms) of quarter end in calendar timezone
-}
-
-export interface MonthInfo {
-    month: number    // 1-based: 1–12
-    year: number     // calendar year
-    label: string    // e.g. "May"
-}
-
-/**
- * Given a unix timestamp (ms) and a calendar config, return the fiscal
- * QuarterInfo that contains that timestamp.
- */
-export function getQuarterForTimestamp(
-    timestampMs: number,
-    calendar: Calendar
-): QuarterInfo { ...
-}
-
-/**
- * Return the QuarterInfo for a specific fiscal quarter and year.
- */
-export function getQuarterInfo(
-    quarter: number,
-    year: number,
-    calendar: Calendar
-): QuarterInfo { ...
-}
-
-/**
- * Return the MonthInfo for a specific month and year.
- */
-export function getMonthInfo(month: number, year: number): MonthInfo { ...
-}
-
-/**
- * Return the current QuarterInfo based on now.
- */
-export function getCurrentQuarter(calendar: Calendar): QuarterInfo {
-    return getQuarterForTimestamp(Date.now(), calendar)
-}
-
-/**
- * Return an array of QuarterInfo for a range of quarters to display.
- * Typically: one past quarter, the active quarter, two future quarters.
- */
-export function getQuartersToDisplay(
-    calendar: Calendar,
-    pastCount: number,
-    futureCount: number
-): QuarterInfo[] { ...
+`QuarterInfo` is a specta-exported struct in `models.rs`:
+```rust
+pub struct QuarterInfo {
+    pub quarter: u8,    // 1-based: 1–4
+    pub year: u32,      // fiscal year (calendar year in which fiscal year starts)
+    pub label: String,  // e.g. "Q2 · Apr–Jun"
+    pub start_at: Epoch,
+    pub end_at: Epoch,  // exclusive end — [start_at, end_at)
 }
 ```
 
-Use `Intl.DateTimeFormat` with the calendar's timezone for all local date
-operations — don't use `new Date()` arithmetic directly, as it ignores timezones.
+`GoalTreeData` now includes `quarters_to_display: Vec<QuarterInfo>`, computed at
+command-invocation time by the backend. The mock data hardcodes this field.
 
-Write unit tests in `src/utils/calendar.test.ts` using Vitest. Test cases must
-include:
+The TypeScript utility `src/utils/calendar.ts` is reduced to display-only helpers:
+- `isCurrentQuarter(q: QuarterInfo): boolean` — compares `Date.now()` to the interval
+- `getMonthInfo(month, year): MonthInfo` — formats a month name via `Intl.DateTimeFormat`
 
-- Standard calendar year (quarter_start_month = 1)
-- Fiscal year starting in February (quarter_start_month = 2)
-- A timestamp in January when fiscal Q1 starts in February
-  (this is Q4 of the *previous* fiscal year)
-- Quarter boundary edge cases (last second of a quarter, first second of next)
-- Year rollover (Q4 → Q1 of next year)
+The original TypeScript spec below is superseded; `src-tauri/src/calendar.rs` is
+the canonical implementation. Rust tests in that file cover the same edge cases
+the spec prescribed (standard year, February fiscal year, January-in-Q4, boundaries,
+year rollover).
 
 ---
 

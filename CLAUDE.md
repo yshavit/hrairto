@@ -22,6 +22,35 @@ behaviour), add it to `0000-hrairto-overview.md`. If it supersedes something in 
 step-specific spec, update that file and note that the code is now the canonical
 source where applicable.
 
+## Locale
+
+`Calendar.locale` (a BCP 47 tag, e.g. `"en-US"`) is the single source of truth
+for locale-sensitive formatting. Rules:
+
+- **TypeScript**: pass `calendar.locale` to every `Intl.DateTimeFormat` call. Never
+  hard-code a locale string literal in display code.
+- **Rust**: generated labels (e.g. `QuarterDisplay.label`) are currently English-only.
+  When i18n is added, `calendar.locale` becomes the Rust source of truth as well;
+  until then, a comment in `calendar.rs` marks where to update.
+
+Today the mock hardcodes `locale: "en-US"`. Adding real i18n means changing that
+field in the backend config — display code doesn't need to change.
+
+## Logic goes in Rust
+
+Unless there is a compelling latency reason (e.g. keystroke handlers), put
+non-trivial logic in Rust rather than TypeScript. "Non-trivial" includes anything
+that uses non-trivial libraries (datetime math, UUID generation) or that implements
+domain rules.
+
+Two reasons:
+1. Single source of truth — Rust is the only place the app's business logic lives.
+2. CLI compatibility — a future Rust CLI can share the same library functions
+   without re-implementing them in a second language.
+
+The TypeScript layer should be limited to: rendering, layout, user interaction, and
+display formatting (e.g. `Intl.DateTimeFormat` for human-readable labels).
+
 ## Rust documentation
 
 Document fields on the field, not in the struct's doc comment. A struct's `///`

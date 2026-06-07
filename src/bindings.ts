@@ -82,7 +82,14 @@ quarter_start_month: number;
  * are a living list that can't be enumerated statically in a way that
  * stays correct over time.
  */
-timezone: string }
+timezone: string; 
+/**
+ * BCP 47 language tag, e.g. `"en-US"`. The frontend passes this to
+ * `Intl.DateTimeFormat` for all locale-sensitive display formatting.
+ * Rust-side labels (e.g. `QuarterDisplay.label`) are currently generated
+ * in English; this field becomes the Rust source of truth once i18n is added.
+ */
+locale: string }
 export type CalendarId = string
 /**
  * Unix timestamp in **milliseconds** UTC.
@@ -101,7 +108,41 @@ export type Epoch = number
  * Full data payload for the goal tree view.
  * This is the shape of what the eventual Tauri command will return.
  */
-export type GoalTreeData = { calendar: Calendar; swimlanes: Swimlane[]; current_weights: SwimlaneWeightPeriod; annual_goals: AnnualGoal[]; quarterly_goals: QuarterlyGoal[] }
+export type GoalTreeData = { calendar: Calendar; swimlanes: Swimlane[]; current_weights: SwimlaneWeightPeriod; annual_goals: AnnualGoal[]; quarterly_goals: QuarterlyGoal[]; 
+/**
+ * Quarters to show in the scrolling strip, in chronological order.
+ * Computed by the backend at invocation time (see `calendar::quarters_to_display`).
+ * Typically one past quarter, the current quarter, and two or more future quarters.
+ */
+quarters_to_display: QuarterDisplay[] }
+/**
+ * Precomputed display info for one fiscal quarter.
+ * 
+ * The backend computes these at command-invocation time so the frontend never needs
+ * to do fiscal-calendar math. `start_at` and `end_at` form a half-open interval
+ * `[start_at, end_at)` in epoch milliseconds UTC.
+ */
+export type QuarterDisplay = { 
+/**
+ * 1-based: 1–4.
+ */
+quarter: number; 
+/**
+ * Fiscal year — calendar year in which the fiscal year starts.
+ */
+year: number; 
+/**
+ * Display label, e.g. "Q2 · Apr–Jun".
+ */
+label: string; 
+/**
+ * First millisecond of this quarter (inclusive).
+ */
+start_at: Epoch; 
+/**
+ * First millisecond of the following quarter (exclusive end).
+ */
+end_at: Epoch }
 /**
  * Quarterly goal — due at the end of a specific fiscal quarter.
  */

@@ -67,6 +67,11 @@ pub struct Calendar {
     /// are a living list that can't be enumerated statically in a way that
     /// stays correct over time.
     pub timezone: String,
+    /// BCP 47 language tag, e.g. `"en-US"`. The frontend passes this to
+    /// `Intl.DateTimeFormat` for all locale-sensitive display formatting.
+    /// Rust-side labels (e.g. `QuarterDisplay.label`) are currently generated
+    /// in English; this field becomes the Rust source of truth once i18n is added.
+    pub locale: String,
 }
 
 /// Parse a timezone string into a `chrono_tz::Tz`.
@@ -189,6 +194,25 @@ pub struct Waypoint {
     pub completed_at: Option<Epoch>,
 }
 
+/// Precomputed display info for one fiscal quarter.
+///
+/// The backend computes these at command-invocation time so the frontend never needs
+/// to do fiscal-calendar math. `start_at` and `end_at` form a half-open interval
+/// `[start_at, end_at)` in epoch milliseconds UTC.
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct QuarterDisplay {
+    /// 1-based: 1–4.
+    pub quarter: u8,
+    /// Fiscal year — calendar year in which the fiscal year starts.
+    pub year: u32,
+    /// Display label, e.g. "Q2 · Apr–Jun".
+    pub label: String,
+    /// First millisecond of this quarter (inclusive).
+    pub start_at: Epoch,
+    /// First millisecond of the following quarter (exclusive end).
+    pub end_at: Epoch,
+}
+
 /// Full data payload for the goal tree view.
 /// This is the shape of what the eventual Tauri command will return.
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
@@ -198,4 +222,8 @@ pub struct GoalTreeData {
     pub current_weights: SwimlaneWeightPeriod,
     pub annual_goals: Vec<AnnualGoal>,
     pub quarterly_goals: Vec<QuarterlyGoal>,
+    /// Quarters to show in the scrolling strip, in chronological order.
+    /// Computed by the backend at invocation time (see `calendar::quarters_to_display`).
+    /// Typically one past quarter, the current quarter, and two or more future quarters.
+    pub quarters_to_display: Vec<QuarterDisplay>,
 }
