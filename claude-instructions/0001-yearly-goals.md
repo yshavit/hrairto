@@ -237,17 +237,17 @@ imports from `bindings.ts`, which pulls it back into the type-check.
 > **Step 2 is implemented in Rust, not TypeScript.** Fiscal-calendar math belongs
 > in Rust so it can be shared with a future CLI and so there is a single place
 > for business logic (see `CLAUDE.md` "Logic goes in Rust"). The TypeScript layer
-> receives precomputed `QuarterInfo` values and never does fiscal math itself.
+> receives precomputed `QuarterDisplay` values and never does fiscal math itself.
 
 The implementation lives in `src-tauri/src/calendar.rs`. Key public functions:
 
-- `quarter_for_timestamp(Epoch, &Calendar) -> Result<QuarterInfo, String>`
-- `quarter_info(quarter, fiscal_year, &Calendar) -> Result<QuarterInfo, String>`
-- `quarters_to_display(&Calendar, now: Epoch, past_count, future_count) -> Result<Vec<QuarterInfo>, String>`
+- `quarter_for_timestamp(Epoch, &Calendar) -> Result<QuarterDisplay, String>`
+- `quarter_info(quarter, fiscal_year, &Calendar) -> Result<QuarterDisplay, String>`
+- `quarters_to_display(&Calendar, now: Epoch, past_count, future_count) -> Result<Vec<QuarterDisplay>, String>`
 
-`QuarterInfo` is a specta-exported struct in `models.rs`:
+`QuarterDisplay` is a specta-exported struct in `models.rs`:
 ```rust
-pub struct QuarterInfo {
+pub struct QuarterDisplay {
     pub quarter: u8,    // 1-based: 1–4
     pub year: u32,      // fiscal year (calendar year in which fiscal year starts)
     pub label: String,  // e.g. "Q2 · Apr–Jun"
@@ -256,11 +256,11 @@ pub struct QuarterInfo {
 }
 ```
 
-`GoalTreeData` now includes `quarters_to_display: Vec<QuarterInfo>`, computed at
+`GoalTreeData` now includes `quarters_to_display: Vec<QuarterDisplay>`, computed at
 command-invocation time by the backend. The mock data hardcodes this field.
 
 The TypeScript utility `src/utils/calendar.ts` is reduced to display-only helpers:
-- `isCurrentQuarter(q: QuarterInfo): boolean` — compares `Date.now()` to the interval
+- `isCurrentQuarter(q: QuarterDisplay): boolean` — compares `Date.now()` to the interval
 - `getMonthInfo(month, year): MonthInfo` — formats a month name via `Intl.DateTimeFormat`
 
 The original TypeScript spec below is superseded; `src-tauri/src/calendar.rs` is
@@ -292,37 +292,52 @@ Guidelines:
 
 ## Step 4: React component hierarchy
 
+> **Step 4 is implemented.** The component sources under `src/components/` are the
+> canonical reference. The descriptions below reflect the delivered design.
+
 ```
-<GoalTreeView data={GoalTreeData}>
-  <GoalTreeHeader />          // title, period label, today/prev/next nav
-  <WeightDisplay />           // donut chart + legend
-  <SwimlanesContainer>        // manages synchronized scrolling
-    <SwimlaneRow>             // one per swimlane, tinted background
-      <SwimlaneHeader />      // lane name, annual goal text
-      <QuarterScroller>       // the horizontally scrolling strip
-        <QuarterCard />       // one per quarter (past/active/future)
-          <WaypointList />    // waypoints within the quarter
-        </QuarterCard>
-      </QuarterScroller>
-    </SwimlaneRow>
-  </SwimlanesContainer>
-</GoalTreeView>
+<YearlyGoals>                      // fetches data via api.ts, wraps in ErrorBoundary
+  <GoalTreeView data={GoalTreeData}>  // owns scroll ref, bridges header ↔ swimlanes
+    <GoalTreeHeader>               // title, nav buttons, current quarter, donut chart
+      <WeightDisplay />            // donut chart + legend (rendered inside header)
+    </GoalTreeHeader>
+    <SwimlanesContainer>           // owns all scroll state and rubber-band logic
+      <SwimlaneRow>                // one per swimlane, tinted background
+        <SwimlaneHeader />         // lane name, annual goal text
+        <QuarterScroller>          // the horizontally scrolling strip
+          <QuarterCard />          // one per quarter (past/active/future)
+            <WaypointList />       // waypoints within the quarter
+          </QuarterCard>
+        </QuarterScroller>
+      </SwimlaneRow>
+    </SwimlanesContainer>
+  </GoalTreeView>
+</YearlyGoals>
 ```
 
 ### Component responsibilities
 
-**GoalTreeView** — top-level container; owns no state, just passes data down.
+**YearlyGoals** — entry point; calls `getGoalTreeData()`, shows loading state,
+wraps in `ErrorBoundary`. This is the file rendered by `goals-main.tsx` and the
+Tauri window.
 
-**GoalTreeHeader** — shows title ("Goals"), current quarter label (e.g. "Q2 2025"),
-and prev/next/today navigation buttons. Accepts a `onNavigate(direction)` callback.
+**GoalTreeView** — owns the `ScrollAPI` ref that connects the header nav buttons
+to `SwimlanesContainer`. Passes `onPrev`/`onNext`/`onToday` callbacks to
+`GoalTreeHeader`. No state of its own.
+
+**GoalTreeHeader** — single-row flex header. Props: `currentQuarterLabel`,
+`entries`, `swimlanes`, `onPrev`, `onNext`, `onToday`. Renders `WeightDisplay`
+inline on the right side, next to the current-quarter label. No `onNavigate(direction)`
+— the three callbacks are separate.
 
 **WeightDisplay** — renders a small donut chart (SVG arc, no library needed for
 two segments) showing current swimlane weight split. Accepts
 `entries: SwimlaneWeightEntry[]` and `swimlanes: Swimlane[]`.
 
-**SwimlanesContainer** — owns all scroll state and behavior. Uses two refs (one
-per swimlane scroller) and syncs `scrollLeft` between them. Also owns rubber-band
-logic and "scroll to today" behavior. Passes scroll refs and handlers down.
+**SwimlanesContainer** — owns all scroll state and behavior. Uses a ref array (one
+entry per swimlane scroller) and syncs `scrollLeft` between them. Also owns
+rubber-band logic and exposes a `ScrollAPI` handle via `forwardRef`. Passes scroll
+refs and handlers down to each `SwimlaneRow`.
 
 **SwimlaneRow** — renders one swimlane. Tinted background using the swimlane's
 color at low opacity (`${color}22` for ~13% opacity hex alpha). Header shows lane
@@ -332,10 +347,9 @@ name and annual goal text prominently.
 10px gap. Accepts a ref for scroll sync. Does not handle scroll events itself —
 delegates to SwimlanesContainer.
 
-**QuarterCard** — renders one quarter. Receives a `QuarterInfo` and a
-`QuarterlyGoal | null` (null = not yet planned). Derives past/active/future status
-by comparing quarter to current quarter. Past cards: `opacity: 0.5`. Future
-unplanned: italic placeholder text.
+**QuarterCard** — renders one quarter. Receives a `QuarterDisplay` and a
+`QuarterlyGoal | null` (null = not yet planned). Past cards: `opacity: 0.5`. Future
+unplanned: shows a "Plan during {activeQuarterLabel} review →" placeholder.
 
 **WaypointList** — renders waypoints within a quarter card. Each waypoint shows
 its month label (from `getMonthInfo`), text, and completion state. "Current" = first
@@ -345,90 +359,33 @@ incomplete waypoint in the active quarter.
 
 ## Step 5: Scroll behavior
 
+> **Step 5 is implemented.** `src/components/SwimlanesContainer.tsx` is the
+> canonical source. The descriptions below reflect the delivered design.
+
 ### Scroll sync
 
-```typescript
-const teamRef = useRef<HTMLDivElement>(null)
-const personalRef = useRef<HTMLDivElement>(null)
-const isSyncing = useRef(false)  // use ref, not state, to avoid re-renders
-
-const handleScroll = (
-    source: React.RefObject<HTMLDivElement>,
-    target: React.RefObject<HTMLDivElement>
-) => {
-    if (isSyncing.current || !source.current || !target.current) return
-    isSyncing.current = true
-    target.current.scrollLeft = source.current.scrollLeft
-    isSyncing.current = false
-}
-```
-
-Attach scroll listeners in a `useEffect` with proper cleanup.
+Use a ref array (one element per swimlane scroller), not individual named refs.
+Use a boolean `isSyncing` ref to prevent feedback loops. Sync is handled in
+`onScroll` callbacks — not via `useEffect` scroll listeners — so cleanup is
+automatic. During animations, `isAnimating` is set to suppress scroll-event
+propagation (the animation drives all scrollers directly).
 
 ### Default scroll position
 
-On mount, scroll to show the active quarter with ~10% of the previous quarter
-peeking from the left:
+On mount, scroll to show the active quarter with ~10% of the card peeking from
+the left:
 
 ```typescript
 const CARD_WIDTH = 220
 const GAP = 10
 const STEP = CARD_WIDTH + GAP
 
-// activeIndex = index of active quarter in quarters array (0-based for array)
-const scrollTarget = (activeIndex * STEP) - (CARD_WIDTH * 0.1)
+// activeIndex = index of active quarter in quarters array (0-based)
+const scrollTarget = activeIndex > 0 ? activeIndex * STEP - CARD_WIDTH * 0.1 : 0
 ```
 
-Set without animation on mount. Set on both scrollers simultaneously.
-
-### Rubber-band scroll wall
-
-The maximum useful scroll position is where the last card is ~20% visible.
-Implement using pointer events (not scroll events) so you can intercept and damp:
-
-```typescript
-const CARD_WIDTH = 220
-const GAP = 10
-const PADDING = 16
-
-// max = last card is 20% visible
-const maxScroll = (quarters.length - 1) * (CARD_WIDTH + GAP)
-    - (CARD_WIDTH * 0.8) + PADDING
-
-// when dragging past max, apply damping factor
-const overshoot = rawScroll - maxScroll
-const dampedScroll = maxScroll + (overshoot * 0.3)
-// clamp damped overshoot to a maximum of 60px
-const clampedScroll = maxScroll + Math.min(overshoot * 0.3, 60)
-
-// on pointer release, if past max, spring back:
-// use requestAnimationFrame with ease-out cubic over ~320ms
-```
-
-### Easing function (used for all animated scrolls)
-
-```typescript
-const easeOutCubic = (t: number): number => 1 - Math.pow(1 - t, 3)
-
-function animateScroll(
-    refs: React.RefObject<HTMLDivElement>[],
-    targetScroll: number,
-    durationMs: number
-) {
-    const startScroll = refs[0].current?.scrollLeft ?? 0
-    const startTime = performance.now()
-    const frame = (now: number) => {
-        const t = Math.min((now - startTime) / durationMs, 1)
-        const eased = easeOutCubic(t)
-        const current = startScroll + (targetScroll - startScroll) * eased
-        refs.forEach(ref => {
-            if (ref.current) ref.current.scrollLeft = current
-        })
-        if (t < 1) requestAnimationFrame(frame)
-    }
-    requestAnimationFrame(frame)
-}
-```
+Set without animation on mount (direct `scrollLeft` assignment). Reset whenever
+the active quarter changes.
 
 ### Peek quarter
 
@@ -445,14 +402,42 @@ Rules that follow from this:
 - When the backend generates `quarters_to_display`, it should append one peek
   quarter after the last planned quarter.
 
+### Rubber-band scroll wall
+
+The snap boundary is the scroll position that leaves the last *planned* quarter
+fully in view (the peek quarter is just past it). The browser clamps `scrollLeft`
+to `scrollWidth - clientWidth`, so rubber-band overshoot is applied via CSS
+`translateX` on the inner wrapper (`.quarter-scroller__inner`), not via
+`scrollLeft`.
+
+```typescript
+// Snap boundary: same formula used by both drag handler and › nav button.
+const maxScroll = Math.max(0, el.scrollWidth - el.clientWidth - STEP)
+
+// When dragging past maxScroll: pin scrollLeft at maxScroll, stretch visually.
+const rubberOffset = Math.min(overshoot * 0.3, 90)  // cap at 90px
+inner.style.transform = `translateX(${-rubberOffset}px)`
+
+// On pointer release: animate transform back to '' over ~350ms ease-out cubic.
+```
+
+### Easing function (used for all animated scrolls)
+
+```typescript
+const easeOutCubic = (t: number): number => 1 - Math.pow(1 - t, 3)
+```
+
+Both `animateAll` (scrollLeft-based, for nav and today) and `animateTransform`
+(transform-based, for rubber-band spring-back) use this curve. Refs are captured
+via closure rather than passed as arguments.
+
 ### Navigation buttons
 
-- **Prev/Next**: snap to nearest quarter boundary, capped at `hardMax` for next
+- **Prev/Next**: snap to nearest quarter boundary, capped at `hardMax` for next:
   ```typescript
-  const currentQ = Math.round(scrollLeft / STEP)
+  const currentQ = Math.round(el.scrollLeft / STEP)
   const hardMax = Math.max(0, el.scrollWidth - el.clientWidth - STEP)
-  const targetQ = Math.max(0, currentQ + direction)
-  animateScroll(refs, Math.min(hardMax, targetQ * STEP), 300)
+  animateAll(Math.min(hardMax, (currentQ + 1) * STEP), 300)
   ```
 - **Today**: animate to default scroll position (active quarter with peek)
 
@@ -480,7 +465,7 @@ Everything else in the header is secondary.
 
 - Width: 220px fixed
 - White background, `0.5px` border, 8px border radius
-- Header: quarter label + status badge (done / active / not planned yet)
+- Header: quarter label + status badge (`done` / `active` / `future`)
 - Active badge: `background: #EAF3DE, color: #3B6D11`
 - Done badge: muted, light border
 - Goal text: 12px below header
@@ -490,6 +475,41 @@ Everything else in the header is secondary.
 
 Two `<path>` elements using SVG arc math. 48×48px canvas, 18px radius, 7px stroke,
 `round` linecaps, 0.04 radian gap between segments. Start at top (−π/2).
+
+---
+
+## Testing
+
+### Test stack
+
+- **Vitest + React Testing Library** (`pnpm test`) — unit tests for individual
+  components. Config in `vitest.config.ts`; setup in `src/test-setup.ts`.
+- **Playwright** (`pnpm test:e2e`) — interaction tests that exercise scroll behavior,
+  sync, and rubber-band in a real browser. Config in `playwright.config.ts`.
+
+### Isolation: `ui-test-entrypoints/`
+
+`main.tsx` is the only file with a hard Tauri dependency (`getCurrentWindow().label`).
+To test components in a browser without Tauri, `ui-test-entrypoints/goals.html`
+renders `YearlyGoals` directly via `src/goals-main.tsx`. Playwright navigates to
+`/ui-test-entrypoints/goals.html`. Add a similar `<window>.html` + `<window>-main.tsx`
+pair for each new Tauri window that needs browser-testable isolation.
+
+The `ui-test-entrypoints/` directory is registered as a Rollup input in
+`vite.config.ts` so it's served by `pnpm dev` and included in production builds.
+
+### Playwright viewport
+
+Set to `900×680` to match the Tauri window dimensions. At wider viewports all
+cards fit without scrolling, which makes scroll-dependent tests incorrect.
+
+### What to test
+
+- **RTL**: static rendering — badge labels, waypoint `data-state` attributes,
+  `Intl`-formatted month names. Keep tests at behavior level, not DOM text strings
+  (e.g. assert `data-state="completed"`, not `textContent === "✓"`).
+- **Playwright**: dynamic behavior — nav button caps, scroll sync across swimlanes,
+  rubber-band spring-back. Use `scrollLeft` and `style.transform` assertions.
 
 ---
 
