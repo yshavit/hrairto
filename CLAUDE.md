@@ -14,6 +14,11 @@ Body (if needed): explain the *what and why* at a level that's useful in `git lo
 Don't list every file or struct changed — name concepts, not inventories. If the
 body needs to enumerate things, use bullet points rather than prose enumeration.
 
+GitHub issue references (add at the end of the commit message body):
+- Commit relates to an issue but doesn't resolve it: `In service of #<id>`
+- Commit resolves an issue: `Resolves #<id>` — but always ask for explicit
+  confirmation before including this, even in auto mode.
+
 ## Keeping claude-instructions up to date
 
 When a requirement changes or a design decision is made during implementation,

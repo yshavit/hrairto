@@ -135,27 +135,80 @@
     padding: 14px 20px 16px;
     background: var(--swimlane-tint);
     border-top: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-.swimlane-row__header {
-    flex-shrink: 0;
-    margin-bottom: 12px;
+    overflow-y: auto;
 }
 
 .swimlane-row__name {
+    flex-shrink: 0;
     font-size: 11px;
     font-weight: 600;
     color: var(--swimlane-color);
     text-transform: uppercase;
     letter-spacing: 0.07em;
-    margin-bottom: 4px;
+    margin-bottom: 10px;
 }
 
-.swimlane-row__goal {
+/* === Goal sub-row ==================================================== */
+
+.goal-sub-row {
+    display: flex;
+    flex-direction: column;
+    border-left: 3px solid var(--swimlane-color);
+    border-radius: 0 0 0 2px;
+    padding-left: 10px;
+    margin-bottom: 12px;
+}
+
+.goal-sub-row__header {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    margin-bottom: 8px;
+    flex-shrink: 0;
+}
+
+.goal-sub-row__title {
     font-size: 17px;
     font-weight: 500;
     color: #fff;
     line-height: 1.3;
+}
+
+.goal-sub-row__deadline {
+    font-size: 13px;
+    color: #555;
+}
+
+/* === Side quest section ============================================== */
+
+.side-quest-section {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding-left: 13px;
+    margin-bottom: 4px;
+}
+
+.side-quest-section__header {
+    font-size: 17px;
+    font-weight: 500;
+    color: #fff;
+    line-height: 1.3;
+    margin-bottom: 8px;
+    flex-shrink: 0;
+}
+
+.side-quest-section::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: var(--swimlane-color);
+    opacity: 0.35;
+    border-radius: 2px;
 }
 
 /* === Quarter scroller ================================================ */
@@ -225,9 +278,24 @@
     flex-shrink: 0;
 }
 
+.quarter-card__badge-group {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
 .quarter-card__badge {
     font-size: 11px;
     color: #555;
+}
+
+.quarter-card__side-quest-badge {
+    font-size: 10px;
+    color: #777;
+    border: 0.5px solid #3a3a3a;
+    border-radius: 99px;
+    padding: 1px 6px;
+    white-space: nowrap;
 }
 
 .quarter-card[data-status="active"] .quarter-card__badge {

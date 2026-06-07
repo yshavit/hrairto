@@ -37,6 +37,7 @@ export default function QuarterScroller({
                         goal={findGoal(goals, q)}
                         status={statusMap.get(quarterKey(q)) ?? 'future'}
                         activeQuarterLabel={activeQuarterLabel}
+                        isSideQuest={false}
                         locale={locale}
                     />
                 ))}

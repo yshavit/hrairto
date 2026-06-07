@@ -2,6 +2,7 @@ import { forwardRef, useEffect, useImperativeHandle, useRef } from 'react'
 import type { PointerEventHandler } from 'react'
 import type { AnnualGoal, QuarterDisplay, QuarterlyGoal, Swimlane } from '../bindings'
 import { isCurrentQuarter } from '../utils/calendar'
+import { packSideQuests } from './packSideQuests'
 import SwimlaneRow from './SwimlaneRow'
 
 export const CARD_WIDTH = 220
@@ -30,6 +31,15 @@ function quarterKey(q: QuarterDisplay) {
     return `${q.year}-${q.quarter}`
 }
 
+// Returns the global quarters array trimmed to the goal's deadline + 1 peek card.
+function trimQuartersForGoal(goal: AnnualGoal, quarters: QuarterDisplay[]): QuarterDisplay[] {
+    const deadlineIdx = quarters.findIndex(
+        q => q.quarter === goal.due_quarter && q.year === goal.due_year
+    )
+    if (deadlineIdx === -1) return quarters
+    return quarters.slice(0, deadlineIdx + 2)
+}
+
 const SwimlanesContainer = forwardRef<ScrollAPI, Props>(function SwimlanesContainer(
     { swimlanes, annualGoals, quarterlyGoals, quarters, locale },
     ref,
@@ -44,6 +54,14 @@ const SwimlanesContainer = forwardRef<ScrollAPI, Props>(function SwimlanesContai
 
     function defaultTarget(): number {
         return activeIdx > 0 ? activeIdx * STEP - CARD_WIDTH * 0.1 : 0
+    }
+
+    // Rubber-band wall = position where the longest strip's last planned card is fully visible.
+    function getHardMax(): number {
+        return scrollerRefs.current.reduce((max, el) => {
+            if (!el) return max
+            return Math.max(max, Math.max(0, el.scrollWidth - el.clientWidth - STEP))
+        }, 0)
     }
 
     function animateAll(targetScroll: number, durationMs: number) {
@@ -66,7 +84,7 @@ const SwimlanesContainer = forwardRef<ScrollAPI, Props>(function SwimlanesContai
     useEffect(() => {
         const target = defaultTarget()
         scrollerRefs.current.forEach(el => { if (el) el.scrollLeft = target })
-    }, [activeIdx]) // reset scroll when active quarter changes
+    }, [activeIdx])
 
     const handleScroll = (sourceIdx: number) => {
         if (isAnimating.current) return
@@ -76,7 +94,6 @@ const SwimlanesContainer = forwardRef<ScrollAPI, Props>(function SwimlanesContai
         scrollerRefs.current.forEach((el, i) => {
             if (i !== sourceIdx && el) el.scrollLeft = source.scrollLeft
         })
-        // Release the guard after the reflected scroll event would have fired.
         requestAnimationFrame(() => { isSyncing.current = false })
     }
 
@@ -117,13 +134,10 @@ const SwimlanesContainer = forwardRef<ScrollAPI, Props>(function SwimlanesContai
                     document.body.style.cursor = 'grabbing'
                     document.body.style.userSelect = 'none'
                 }
-                // Snap boundary sits at the end of the last "real" quarter (Q4); the
-                // peek quarter (Q1 2027) lives in the rubber-band zone beyond it.
-                const maxScroll = Math.max(0, el.scrollWidth - el.clientWidth - STEP)
+                const maxScroll = getHardMax()
                 const rawScroll = startScroll - dx
 
                 if (rawScroll > maxScroll) {
-                    // Past the snap boundary: pin scrollLeft, apply visual stretch via transform.
                     const over = rawScroll - maxScroll
                     rubberOffset = Math.min(over * 0.3, 90)
                     isSyncing.current = true
@@ -166,7 +180,7 @@ const SwimlanesContainer = forwardRef<ScrollAPI, Props>(function SwimlanesContai
             const el = scrollerRefs.current.find(Boolean)
             if (!el) return
             const currentQ = Math.round(el.scrollLeft / STEP)
-            const hardMax = Math.max(0, el.scrollWidth - el.clientWidth - STEP)
+            const hardMax = getHardMax()
             animateAll(Math.min(hardMax, (currentQ + 1) * STEP), 300)
         },
         today() {
@@ -185,21 +199,47 @@ const SwimlanesContainer = forwardRef<ScrollAPI, Props>(function SwimlanesContai
 
     const activeQuarterLabel = quarters.find(isCurrentQuarter)?.label ?? ''
 
+    // Pre-compute per-swimlane layout: assign a flat integer index to every scroller
+    // (annual goal strips first, then side quest strips) across all swimlanes.
+    let scrollerIdx = 0
+    const swimlaneLayouts = swimlanes.map(swimlane => {
+        const swimlaneAnnualGoals = annualGoals.filter(g => g.swimlane_id === swimlane.id)
+        const mainQuestGoals = quarterlyGoals.filter(
+            g => g.swimlane_id === swimlane.id && g.annual_goal.type === 'MainQuest'
+        )
+        const sideQuestGoals = quarterlyGoals.filter(
+            g => g.swimlane_id === swimlane.id && g.annual_goal.type === 'SideQuest'
+        )
+        const packed = packSideQuests(sideQuestGoals)
+        const annualGoalIndices = swimlaneAnnualGoals.map(() => scrollerIdx++)
+        const sideQuestIndices = packed.map(() => scrollerIdx++)
+        return { swimlane, swimlaneAnnualGoals, mainQuestGoals, packed, annualGoalIndices, sideQuestIndices }
+    })
+
+    function makeScrollerProps(idx: number) {
+        return {
+            scrollRef: (el: HTMLDivElement | null) => { scrollerRefs.current[idx] = el },
+            innerRef: (el: HTMLDivElement | null) => { innerRefs.current[idx] = el },
+            onScroll: () => handleScroll(idx),
+            onPointerDown: makeDragHandler(idx),
+        }
+    }
+
     return (
         <div className="swimlanes-container">
-            {swimlanes.map((swimlane, i) => (
+            {swimlaneLayouts.map(({ swimlane, swimlaneAnnualGoals, mainQuestGoals, packed, annualGoalIndices, sideQuestIndices }) => (
                 <SwimlaneRow
                     key={swimlane.id}
                     swimlane={swimlane}
-                    annualGoal={annualGoals.find(g => g.swimlane_id === swimlane.id)}
-                    quarters={quarters}
-                    goals={quarterlyGoals.filter(g => g.swimlane_id === swimlane.id)}
+                    annualGoals={swimlaneAnnualGoals}
+                    annualGoalScrollers={annualGoalIndices.map(makeScrollerProps)}
+                    annualGoalQuarters={swimlaneAnnualGoals.map(g => trimQuartersForGoal(g, quarters))}
+                    mainQuestGoals={mainQuestGoals}
+                    packedSideQuestStrips={packed}
+                    sideQuestScrollers={sideQuestIndices.map(makeScrollerProps)}
+                    allQuarters={quarters}
                     statusMap={statusMap}
                     activeQuarterLabel={activeQuarterLabel}
-                    scrollRef={el => { scrollerRefs.current[i] = el }}
-                    innerRef={el => { innerRefs.current[i] = el }}
-                    onScroll={() => handleScroll(i)}
-                    onPointerDown={makeDragHandler(i)}
                     locale={locale}
                 />
             ))}

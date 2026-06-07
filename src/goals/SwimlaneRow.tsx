@@ -1,20 +1,28 @@
 import type { PointerEventHandler } from 'react'
 import type { AnnualGoal, QuarterDisplay, QuarterlyGoal, Swimlane } from '../bindings'
-import QuarterScroller from './QuarterScroller'
+import GoalSubRow from './GoalSubRow'
+import SideQuestSection from './SideQuestSection'
 
 type Status = 'past' | 'active' | 'future'
 
-interface Props {
-    swimlane: Swimlane
-    annualGoal: AnnualGoal | undefined
-    quarters: QuarterDisplay[]
-    goals: QuarterlyGoal[]
-    statusMap: Map<string, Status>
-    activeQuarterLabel: string
+interface ScrollerProps {
     scrollRef: (el: HTMLDivElement | null) => void
     innerRef: (el: HTMLDivElement | null) => void
     onScroll: () => void
     onPointerDown: PointerEventHandler<HTMLDivElement>
+}
+
+interface Props {
+    swimlane: Swimlane
+    annualGoals: AnnualGoal[]
+    annualGoalScrollers: ScrollerProps[]
+    annualGoalQuarters: QuarterDisplay[][]
+    mainQuestGoals: QuarterlyGoal[]
+    packedSideQuestStrips: QuarterlyGoal[][]
+    sideQuestScrollers: ScrollerProps[]
+    allQuarters: QuarterDisplay[]
+    statusMap: Map<string, Status>
+    activeQuarterLabel: string
     locale: string
 }
 
@@ -26,7 +34,8 @@ function hexToRgba(hex: string, alpha: number): string {
 }
 
 export default function SwimlaneRow({
-    swimlane, annualGoal, quarters, goals, statusMap, activeQuarterLabel, scrollRef, innerRef, onScroll, onPointerDown, locale,
+    swimlane, annualGoals, annualGoalScrollers, annualGoalQuarters, mainQuestGoals,
+    packedSideQuestStrips, sideQuestScrollers, allQuarters, statusMap, activeQuarterLabel, locale,
 }: Props) {
     return (
         <div
@@ -36,23 +45,33 @@ export default function SwimlaneRow({
                 '--swimlane-tint': hexToRgba(swimlane.color, 0.1),
             }}
         >
-            <div className="swimlane-row__header">
-                <div className="swimlane-row__name">{swimlane.name}</div>
-                {annualGoal && (
-                    <div className="swimlane-row__goal">{annualGoal.text}</div>
-                )}
-            </div>
-            <QuarterScroller
-                quarters={quarters}
-                goals={goals}
-                statusMap={statusMap}
-                activeQuarterLabel={activeQuarterLabel}
-                scrollRef={scrollRef}
-                innerRef={innerRef}
-                onScroll={onScroll}
-                onPointerDown={onPointerDown}
-                locale={locale}
-            />
+            <div className="swimlane-row__name">{swimlane.name}</div>
+            {annualGoals.map((goal, i) => (
+                <GoalSubRow
+                    key={goal.id}
+                    annualGoal={goal}
+                    quarters={annualGoalQuarters[i]}
+                    goals={mainQuestGoals.filter(
+                        g => g.annual_goal.type === 'MainQuest' && g.annual_goal.id === goal.id
+                    )}
+                    statusMap={statusMap}
+                    activeQuarterLabel={activeQuarterLabel}
+                    scrollRef={annualGoalScrollers[i].scrollRef}
+                    innerRef={annualGoalScrollers[i].innerRef}
+                    onScroll={annualGoalScrollers[i].onScroll}
+                    onPointerDown={annualGoalScrollers[i].onPointerDown}
+                    locale={locale}
+                />
+            ))}
+            {packedSideQuestStrips.length > 0 && (
+                <SideQuestSection
+                    strips={packedSideQuestStrips}
+                    quarters={allQuarters}
+                    statusMap={statusMap}
+                    scrollers={sideQuestScrollers}
+                    locale={locale}
+                />
+            )}
         </div>
     )
 }

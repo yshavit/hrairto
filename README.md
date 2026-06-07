@@ -41,10 +41,16 @@ Watch interaction tests run with a live timeline and DOM snapshots:
 pnpm playwright test --ui
 ```
 
-Rust (run from `src-tauri/`):
+Rust:
 
 ```shell
-cargo test
+pnpm test:rust
+```
+
+All three suites together:
+
+```shell
+pnpm test:all
 ```
 
 Each window has a test entry point in `ui-test-entrypoints/` that renders it

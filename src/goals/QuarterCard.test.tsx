@@ -25,6 +25,7 @@ const goal: QuarterlyGoal = {
 const baseProps = {
     quarter,
     activeQuarterLabel: 'Q2 · Apr–Jun',
+    isSideQuest: false,
     locale: 'en-US',
 }
 
@@ -55,5 +56,15 @@ describe('QuarterCard', () => {
         render(<QuarterCard {...baseProps} goal={null} status="future"/>)
         expect(screen.getByText(/Plan during/)).toBeInTheDocument()
         expect(screen.queryByText('Launch closed beta')).not.toBeInTheDocument()
+    })
+
+    it('isSideQuest=true: shows side quest badge', () => {
+        render(<QuarterCard {...baseProps} goal={goal} status="future" isSideQuest={true}/>)
+        expect(screen.getByText('side quest')).toBeInTheDocument()
+    })
+
+    it('isSideQuest=false: no side quest badge', () => {
+        render(<QuarterCard {...baseProps} goal={goal} status="future" isSideQuest={false}/>)
+        expect(screen.queryByText('side quest')).not.toBeInTheDocument()
     })
 })

@@ -9,6 +9,7 @@ interface Props {
     status: Status
     activeQuarterLabel: string
     locale: string
+    isSideQuest: boolean
 }
 
 const BADGE_LABEL: Record<Status, string> = {
@@ -17,12 +18,15 @@ const BADGE_LABEL: Record<Status, string> = {
     future: 'future',
 }
 
-export default function QuarterCard({ quarter, goal, status, activeQuarterLabel, locale }: Props) {
+export default function QuarterCard({ quarter, goal, status, activeQuarterLabel, locale, isSideQuest }: Props) {
     return (
         <div className="quarter-card" data-status={status}>
             <div className="quarter-card__header">
                 <span className="quarter-card__label">{quarter.label}</span>
-                <span className="quarter-card__badge">{BADGE_LABEL[status]}</span>
+                <div className="quarter-card__badge-group">
+                    {isSideQuest && <span className="quarter-card__side-quest-badge">side quest</span>}
+                    <span className="quarter-card__badge">{BADGE_LABEL[status]}</span>
+                </div>
             </div>
             {goal ? (
                 <>

@@ -303,12 +303,19 @@ Guidelines:
     </GoalTreeHeader>
     <SwimlanesContainer>           // owns all scroll state and rubber-band logic
       <SwimlaneRow>                // one per swimlane, tinted background
-        <SwimlaneHeader />         // lane name, annual goal text
-        <QuarterScroller>          // the horizontally scrolling strip
-          <QuarterCard />          // one per quarter (past/active/future)
-            <WaypointList />       // waypoints within the quarter
-          </QuarterCard>
-        </QuarterScroller>
+        [swimlane name label]      // colored uppercase label, above all sub-rows
+        <GoalSubRow>               // one per annual goal: stationary left panel + scroller
+          <QuarterScroller>        // horizontally scrolling strip, trimmed to goal deadline
+            <QuarterCard />        // one per quarter (past/active/future)
+              <WaypointList />     // waypoints within the quarter
+            </QuarterCard>
+          </QuarterScroller>
+        </GoalSubRow>
+        <SideQuestSection>         // present only if the swimlane has side quests; "Intentional side quests" header
+          <SideQuestStrip>         // one per packed strip (interval-scheduled)
+            <QuarterCard isSideQuest /> // shows "side quest" badge; blank spacer if empty
+          </SideQuestStrip>
+        </SideQuestSection>
       </SwimlaneRow>
     </SwimlanesContainer>
   </GoalTreeView>
@@ -327,29 +334,53 @@ to `SwimlanesContainer`. Passes `onPrev`/`onNext`/`onToday` callbacks to
 
 **GoalTreeHeader** — single-row flex header. Props: `currentQuarterLabel`,
 `entries`, `swimlanes`, `onPrev`, `onNext`, `onToday`. Renders `WeightDisplay`
-inline on the right side, next to the current-quarter label. No `onNavigate(direction)`
-— the three callbacks are separate.
+inline on the right side, next to the current-quarter label.
 
 **WeightDisplay** — renders a small donut chart (SVG arc, no library needed for
 two segments) showing current swimlane weight split. Accepts
 `entries: SwimlaneWeightEntry[]` and `swimlanes: Swimlane[]`.
 
-**SwimlanesContainer** — owns all scroll state and behavior. Uses a ref array (one
-entry per swimlane scroller) and syncs `scrollLeft` between them. Also owns
-rubber-band logic and exposes a `ScrollAPI` handle via `forwardRef`. Passes scroll
-refs and handlers down to each `SwimlaneRow`.
+**SwimlanesContainer** — owns all scroll state and behavior. Pre-computes the
+full scroller layout (one index per annual-goal strip + one per side-quest strip,
+across all swimlanes) before rendering, then holds a flat `scrollerRefs` array
+covering all of them. Syncs `scrollLeft` across all scrollers. The rubber-band wall
+(`getHardMax()`) uses `max(scrollWidth - clientWidth - STEP)` over all scrollers so
+the boundary is always set by the longest strip. Exposes a `ScrollAPI` handle via
+`forwardRef`. Also calls `packSideQuests` per swimlane and passes packed strips + scroller
+props down to `SwimlaneRow`.
 
 **SwimlaneRow** — renders one swimlane. Tinted background using the swimlane's
-color at low opacity (`${color}22` for ~13% opacity hex alpha). Header shows lane
-name and annual goal text prominently.
+color at low opacity. Renders the swimlane name once at the top, then N `GoalSubRow`
+components (one per annual goal) followed by a `SideQuestSection` if side quests exist.
+
+**GoalSubRow** — one annual goal's sub-row. Full-width heading line: goal title
+(17px) + `"by end of Q{N} {year}"` (13px, dimmed) inline at baseline. Left border
+(3px, swimlane color) spans the full sub-row height (heading + scroller). Below the
+heading: a `QuarterScroller` whose `quarters` prop is trimmed to the goal's deadline
++ 1 peek (`trimQuartersForGoal` in `SwimlanesContainer`).
+
+**SideQuestSection** — the shared side-quest area within a swimlane. Renders an
+"Intentional side quests" header (17px, same style as goal titles, no deadline),
+then N `SideQuestStrip` components stacked vertically. A CSS `::before`
+pseudo-element provides a 3px left bar at 35% opacity (same swimlane color) so the
+bar's opacity doesn't affect the content.
+
+**SideQuestStrip** — one packed strip of side quests. Renders all global quarters;
+quarter positions with a side quest show a `QuarterCard` (with `isSideQuest={true}`);
+empty positions render a blank 220px spacer to preserve column alignment.
+
+**`packSideQuests` (src/goals/packSideQuests.ts)** — pure function. Greedy
+interval-scheduling: two side quests share a strip only if they are in different
+quarters. Input: array of side-quest `QuarterlyGoal`s; output: `QuarterlyGoal[][]`.
 
 **QuarterScroller** — the horizontally scrollable strip. Fixed card width (220px),
 10px gap. Accepts a ref for scroll sync. Does not handle scroll events itself —
 delegates to SwimlanesContainer.
 
 **QuarterCard** — renders one quarter. Receives a `QuarterDisplay` and a
-`QuarterlyGoal | null` (null = not yet planned). Past cards: `opacity: 0.5`. Future
-unplanned: shows a "Plan during {activeQuarterLabel} review →" placeholder.
+`QuarterlyGoal | null` (null = not yet planned). Optional `isSideQuest` flag adds a
+"side quest" badge in the card header. Past cards: `opacity: 0.6`. Future unplanned:
+shows a "Plan during {activeQuarterLabel} review →" placeholder.
 
 **WaypointList** — renders waypoints within a quarter card. Each waypoint shows
 its month label (from `getMonthInfo`), text, and completion state. "Current" = first
@@ -359,16 +390,20 @@ incomplete waypoint in the active quarter.
 
 ## Step 5: Scroll behavior
 
-> **Step 5 is implemented.** `src/components/SwimlanesContainer.tsx` is the
+> **Step 5 is implemented.** `src/goals/SwimlanesContainer.tsx` is the
 > canonical source. The descriptions below reflect the delivered design.
 
 ### Scroll sync
 
-Use a ref array (one element per swimlane scroller), not individual named refs.
-Use a boolean `isSyncing` ref to prevent feedback loops. Sync is handled in
-`onScroll` callbacks — not via `useEffect` scroll listeners — so cleanup is
-automatic. During animations, `isAnimating` is set to suppress scroll-event
-propagation (the animation drives all scrollers directly).
+Use a flat ref array spanning **all scrollers** (annual-goal strips + side-quest
+strips across all swimlanes), not one per swimlane. A boolean `isSyncing` ref
+prevents feedback loops. Sync is handled in `onScroll` callbacks — not via
+`useEffect` scroll listeners — so cleanup is automatic. During animations,
+`isAnimating` is set to suppress scroll-event propagation.
+
+Scrollers for the same quarter are at the same `scrollLeft` positions because all
+strips start from the same Q1 and use the same card width. Strips with fewer cards
+are clamped by the browser at their natural scroll maximum and fall behind gracefully.
 
 ### Default scroll position
 
@@ -411,8 +446,9 @@ to `scrollWidth - clientWidth`, so rubber-band overshoot is applied via CSS
 `scrollLeft`.
 
 ```typescript
-// Snap boundary: same formula used by both drag handler and › nav button.
-const maxScroll = Math.max(0, el.scrollWidth - el.clientWidth - STEP)
+// Snap boundary: max across all scrollers so the wall is set by the longest strip.
+const maxScroll = scrollerRefs.current.reduce((max, el) =>
+    el ? Math.max(max, Math.max(0, el.scrollWidth - el.clientWidth - STEP)) : max, 0)
 
 // When dragging past maxScroll: pin scrollLeft at maxScroll, stretch visually.
 const rubberOffset = Math.min(overshoot * 0.3, 90)  // cap at 90px

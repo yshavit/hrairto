@@ -10,10 +10,10 @@ test.beforeEach(async ({ page }) => {
 
 test('› button cannot scroll into the peek quarter', async ({ page }) => {
     const nextBtn = page.locator('button', { hasText: '›' })
-    const hardMax = await page.evaluate(() => {
+    const hardMax = await page.evaluate((step) => {
         const el = document.querySelector('.quarter-scroller') as HTMLDivElement
-        return Math.max(0, el.scrollWidth - el.clientWidth - 230)
-    })
+        return Math.max(0, el.scrollWidth - el.clientWidth - step)
+    }, STEP)
 
     // Click more times than there are real quarters.
     for (let i = 0; i < 8; i++) await nextBtn.click()
@@ -24,7 +24,7 @@ test('› button cannot scroll into the peek quarter', async ({ page }) => {
     expect(scrollLeft).toBeLessThanOrEqual(hardMax + 1) // +1 for rounding
 })
 
-test('both swimlane scrollers stay in sync after drag', async ({ page }) => {
+test('all scrollers stay in sync after drag', async ({ page }) => {
     const scroller = page.locator('.quarter-scroller').first()
     const box = await scroller.boundingBox()
     if (!box) throw new Error('scroller not found')
@@ -37,13 +37,24 @@ test('both swimlane scrollers stay in sync after drag', async ({ page }) => {
     await page.mouse.move(cx - 150, cy, { steps: 10 })
     await page.mouse.up()
 
-    const scrollLefts = await page.evaluate(() =>
-        Array.from(document.querySelectorAll('.quarter-scroller')).map(
-            el => (el as HTMLDivElement).scrollLeft
-        )
+    const scrollData = await page.evaluate(() =>
+        Array.from(document.querySelectorAll('.quarter-scroller')).map(el => {
+            const div = el as HTMLDivElement
+            return {
+                scrollLeft: div.scrollLeft,
+                maxScrollLeft: Math.max(0, div.scrollWidth - div.clientWidth),
+            }
+        })
     )
-    // All scrollers must agree.
-    expect(scrollLefts.every(v => v === scrollLefts[0])).toBe(true)
+
+    // The intended target is the longest scroller's scrollLeft.
+    const target = Math.max(...scrollData.map(s => s.scrollLeft))
+
+    // Each scroller should be at the target, or at its own maximum if it has fewer cards.
+    for (const s of scrollData) {
+        const expected = Math.min(target, s.maxScrollLeft)
+        expect(s.scrollLeft).toBeCloseTo(expected, 0)
+    }
 })
 
 test('rubber-band springs back after dragging past end', async ({ page }) => {
@@ -51,10 +62,10 @@ test('rubber-band springs back after dragging past end', async ({ page }) => {
     const box = await scroller.boundingBox()
     if (!box) throw new Error('scroller not found')
 
-    const hardMax = await page.evaluate(() => {
+    const hardMax = await page.evaluate((step) => {
         const el = document.querySelector('.quarter-scroller') as HTMLDivElement
-        return Math.max(0, el.scrollWidth - el.clientWidth - 230)
-    })
+        return Math.max(0, el.scrollWidth - el.clientWidth - step)
+    }, STEP)
 
     // First scroll to the end via nav so rubber-band drag starts near hardMax.
     const nextBtn = page.locator('button', { hasText: '›' })

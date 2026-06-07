@@ -25,12 +25,16 @@ const TEAM_ID: SwimlaneId = '00000000-0000-0000-0000-000000000010'
 const PERSONAL_ID: SwimlaneId = '00000000-0000-0000-0000-000000000011'
 const WEIGHT_PERIOD_ID: SwimlaneWeightPeriodId = '00000000-0000-0000-0000-000000000020'
 const TEAM_ANNUAL_ID: AnnualGoalId = '00000000-0000-0000-0000-000000000030'
+const TEAM_ANNUAL_2_ID: AnnualGoalId = '00000000-0000-0000-0000-000000000032'
 const PERSONAL_ANNUAL_ID: AnnualGoalId = '00000000-0000-0000-0000-000000000031'
 const QG_TEAM_Q1_ID: QuarterlyGoalId = '00000000-0000-0000-0000-000000000040'
 const QG_PERSONAL_Q1_ID: QuarterlyGoalId = '00000000-0000-0000-0000-000000000041'
 const QG_TEAM_Q2_ID: QuarterlyGoalId = '00000000-0000-0000-0000-000000000042'
-const QG_PERSONAL_Q2_ID: QuarterlyGoalId = '00000000-0000-0000-0000-000000000043'
+
 const QG_TEAM_Q3_ID: QuarterlyGoalId = '00000000-0000-0000-0000-000000000044'
+const QG_TEAM2_Q2_ID: QuarterlyGoalId = '00000000-0000-0000-0000-000000000045'
+const QG_TEAM_SQ1_ID: QuarterlyGoalId = '00000000-0000-0000-0000-000000000046'
+const QG_TEAM_SQ2_ID: QuarterlyGoalId = '00000000-0000-0000-0000-000000000047'
 
 const W: (suffix: string) => WaypointId = (s) => `00000000-0000-0000-0000-0000000000${s}`
 
@@ -65,6 +69,14 @@ const annual_goals: AnnualGoal[] = [
         due_quarter: 4,
         due_year: 2026,
         text: 'Ship the v1 product',
+        created_at: utc(2025, 12, 15),
+    },
+    {
+        id: TEAM_ANNUAL_2_ID,
+        swimlane_id: TEAM_ID,
+        due_quarter: 3,
+        due_year: 2026,
+        text: 'Build the team playbook',
         created_at: utc(2025, 12, 15),
     },
     {
@@ -128,6 +140,7 @@ function mixedWaypoints(
 }
 
 const quarterly_goals: QuarterlyGoal[] = [
+    // ── Team / goal 1 ─────────────────────────────────────────────────
     {
         id: QG_TEAM_Q1_ID,
         swimlane_id: TEAM_ID,
@@ -139,16 +152,6 @@ const quarterly_goals: QuarterlyGoal[] = [
         waypoints: completedWaypoints(QG_TEAM_Q1_ID, 2026, [1, 2, 3], ['50', '51', '52']),
     },
     {
-        id: QG_PERSONAL_Q1_ID,
-        swimlane_id: PERSONAL_ID,
-        annual_goal: { type: 'MainQuest', id: PERSONAL_ANNUAL_ID },
-        due_quarter: 1,
-        due_year: 2026,
-        text: 'Build base mileage',
-        created_at: utc(2026, 1, 3),
-        waypoints: completedWaypoints(QG_PERSONAL_Q1_ID, 2026, [1, 2, 3], ['53', '54', '55']),
-    },
-    {
         id: QG_TEAM_Q2_ID,
         swimlane_id: TEAM_ID,
         annual_goal: { type: 'MainQuest', id: TEAM_ANNUAL_ID },
@@ -157,16 +160,6 @@ const quarterly_goals: QuarterlyGoal[] = [
         text: 'Launch closed beta',
         created_at: utc(2026, 4, 2),
         waypoints: mixedWaypoints(QG_TEAM_Q2_ID, 2026, [4, 5, 6], ['60', '61', '62']),
-    },
-    {
-        id: QG_PERSONAL_Q2_ID,
-        swimlane_id: PERSONAL_ID,
-        annual_goal: { type: 'SideQuest' },
-        due_quarter: 2,
-        due_year: 2026,
-        text: 'Read three books on product design',
-        created_at: utc(2026, 4, 2),
-        waypoints: mixedWaypoints(QG_PERSONAL_Q2_ID, 2026, [4, 5, 6], ['63', '64', '65']),
     },
     {
         id: QG_TEAM_Q3_ID,
@@ -186,6 +179,84 @@ const quarterly_goals: QuarterlyGoal[] = [
                 completed_at: null,
             },
         ],
+    },
+    // ── Team / goal 2 (shorter deadline: Q3 2026) ─────────────────────
+    {
+        id: QG_TEAM2_Q2_ID,
+        swimlane_id: TEAM_ID,
+        annual_goal: { type: 'MainQuest', id: TEAM_ANNUAL_2_ID },
+        due_quarter: 2,
+        due_year: 2026,
+        text: 'Define hiring criteria',
+        created_at: utc(2026, 4, 2),
+        waypoints: [
+            {
+                id: W('80'),
+                quarterly_goal_id: QG_TEAM2_Q2_ID,
+                target_month: 4,
+                target_year: 2026,
+                text: 'Draft job descriptions',
+                completed_at: utc(2026, 4, 20),
+            },
+            {
+                id: W('81'),
+                quarterly_goal_id: QG_TEAM2_Q2_ID,
+                target_month: 5,
+                target_year: 2026,
+                text: 'Align with exec on comp bands',
+                completed_at: null,
+            },
+        ],
+    },
+    // ── Team / side quests (both in Q2 → two strips) ──────────────────
+    {
+        id: QG_TEAM_SQ1_ID,
+        swimlane_id: TEAM_ID,
+        annual_goal: { type: 'SideQuest' },
+        due_quarter: 2,
+        due_year: 2026,
+        text: 'Set up deployment pipeline',
+        created_at: utc(2026, 4, 1),
+        waypoints: [
+            {
+                id: W('90'),
+                quarterly_goal_id: QG_TEAM_SQ1_ID,
+                target_month: 5,
+                target_year: 2026,
+                text: 'CI/CD for staging env',
+                completed_at: null,
+            },
+        ],
+    },
+    {
+        id: QG_TEAM_SQ2_ID,
+        swimlane_id: TEAM_ID,
+        annual_goal: { type: 'SideQuest' },
+        due_quarter: 2,
+        due_year: 2026,
+        text: 'Migrate to monorepo',
+        created_at: utc(2026, 4, 1),
+        waypoints: [
+            {
+                id: W('91'),
+                quarterly_goal_id: QG_TEAM_SQ2_ID,
+                target_month: 4,
+                target_year: 2026,
+                text: 'Move repos + update CI',
+                completed_at: null,
+            },
+        ],
+    },
+    // ── Personal / goal 1 ─────────────────────────────────────────────
+    {
+        id: QG_PERSONAL_Q1_ID,
+        swimlane_id: PERSONAL_ID,
+        annual_goal: { type: 'MainQuest', id: PERSONAL_ANNUAL_ID },
+        due_quarter: 1,
+        due_year: 2026,
+        text: 'Build base mileage',
+        created_at: utc(2026, 1, 3),
+        waypoints: completedWaypoints(QG_PERSONAL_Q1_ID, 2026, [1, 2, 3], ['53', '54', '55']),
     },
 ]
 
