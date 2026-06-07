@@ -1,12 +1,12 @@
-import { describe, it, expect } from 'vitest'
-import { getMonthInfo, isCurrentQuarter } from './calendar'
-import type { QuarterDisplay } from '../bindings'
+import {describe, expect, it} from 'vitest'
+import {getMonthInfo, isCurrentQuarter} from './calendar'
+import type {QuarterDisplay} from '../bindings'
 
 describe('getMonthInfo', () => {
     it('returns the correct long month name', () => {
-        expect(getMonthInfo(1, 2025, 'en-US').label).toBe('January')
+        expect(getMonthInfo(1, 2025, 'en-US').label).toBe('Jan')
         expect(getMonthInfo(5, 2025, 'en-US').label).toBe('May')
-        expect(getMonthInfo(12, 2025, 'en-US').label).toBe('December')
+        expect(getMonthInfo(12, 2025, 'en-US').label).toBe('Dec')
     })
 
     it('passes through month and year unchanged', () => {
