@@ -92,6 +92,12 @@ timezone: string;
 locale: string }
 export type CalendarId = string
 /**
+ * A global distraction label. Editing the text propagates everywhere the
+ * label is referenced.
+ */
+export type DistractionLabel = { id: DistractionLabelId; text: string; created_at: Epoch }
+export type DistractionLabelId = string
+/**
  * Unix timestamp in **milliseconds** UTC.
  * 
  * Milliseconds (not seconds) so that the wire format is native to JavaScript —
@@ -104,6 +110,13 @@ export type CalendarId = string
  * and specta exports it as `number` in TypeScript.
  */
 export type Epoch = number
+/**
+ * Whether a weekly goal was achieved.
+ * 
+ * `at` is when the user marked the goal — this can happen at any point
+ * during the week, not only during a formal reflection session.
+ */
+export type GoalOutcome = { type: "Hit"; at: Epoch } | { type: "Miss"; at: Epoch }
 /**
  * Full data payload for the goal tree view.
  * This is the shape of what the eventual Tauri command will return.
@@ -163,17 +176,33 @@ export type Swimlane = { id: SwimlaneId; name: string;
  */
 color: string }
 export type SwimlaneId = string
-export type SwimlaneWeightEntry = { target: WeightTarget; 
 /**
- * 0.0–1.0. All entries within a [`SwimlaneWeightPeriod`] must sum to 1.0.
+ * Read-only quarter context for one swimlane, shown during the planning phase
+ * so the user can set weekly goals relative to their quarterly commitments.
+ */
+export type SwimlanePlanningContext = { swimlane_id: SwimlaneId; quarter: QuarterDisplay; 
+/**
+ * `None` if the swimlane has no quarterly goal for the active quarter.
+ */
+quarterly_goal: QuarterlyGoal | null }
+export type SwimlaneWeight = { target: WeightTarget; 
+/**
+ * 0.0–1.0.
  */
 weight: number }
 export type SwimlaneWeightPeriod = { id: SwimlaneWeightPeriodId; 
 /**
  * When these weights take effect.
  */
-start_at: Epoch; note: string | null; entries: SwimlaneWeightEntry[] }
+start_at: Epoch; note: string | null; entries: SwimlaneWeight[] }
 export type SwimlaneWeightPeriodId = string
+/**
+ * How focus is distributed across swimlanes and distractions.
+ * 
+ * All weights should sum to 1.0. Use [`SwimlanesFocus::new`] to construct
+ * from raw weights — it normalizes the total automatically.
+ */
+export type SwimlanesFocus = { weights: SwimlaneWeight[] }
 /**
  * Waypoint — a monthly milestone within a quarterly goal.
  */
@@ -194,7 +223,87 @@ target_year: number; text: string;
 completed_at: Epoch | null }
 export type WaypointId = string
 /**
- * What a [`SwimlaneWeightEntry`] allocates weight toward.
+ * A single weekly goal, used for both past goals (reflected on) and future
+ * goals (being planned). `outcome` is `None` until the user marks it.
+ */
+export type WeeklyGoal = { id: WeeklyGoalId; 
+/**
+ * The weekly plan this goal belongs to (the week it was created for).
+ */
+plan_id: WeeklyPlanId; created_at: Epoch; text: string; 
+/**
+ * `None` while unmarked. Set to `Hit` or `Miss` when the user marks it —
+ * this can happen during the week or during the following week's reflection.
+ */
+outcome: GoalOutcome | null; goal_ref: WeeklyGoalRef }
+export type WeeklyGoalId = string
+/**
+ * What kind of work a [`WeeklyGoal`] represents.
+ */
+export type WeeklyGoalRef = 
+/**
+ * Planned work belonging to a swimlane, optionally tied to a waypoint.
+ */
+{ type: "Planned"; swimlane_id: SwimlaneId; waypoint_id: WaypointId | null } | 
+/**
+ * Unplanned work; may carry one or more distraction labels.
+ */
+{ type: "Distraction"; label_ids: DistractionLabelId[] }
+/**
+ * The planning artifact for a single week: what the user intends to do.
+ */
+export type WeeklyPlan = { id: WeeklyPlanId; 
+/**
+ * First millisecond of the week being planned (inclusive).
+ */
+start_at: Epoch; 
+/**
+ * First millisecond of the following week (exclusive end).
+ */
+end_at: Epoch; focus: SwimlanesFocus }
+export type WeeklyPlanId = string
+/**
+ * The reflection artifact for a completed week.
+ */
+export type WeeklyReflection = { id: WeeklyReflectionId; 
+/**
+ * The weekly plan this reflection is about.
+ */
+plan_id: WeeklyPlanId; notes: string; completed_at: Epoch; 
+/**
+ * User-adjusted actual time split for the past week. Starts as a
+ * backend estimate; the user can edit it during the reflection session.
+ */
+actual_split: SwimlanesFocus }
+export type WeeklyReflectionId = string
+/**
+ * Full payload for the weekly planning/reflection session UI.
+ * The backend computes all derived fields; the frontend just renders.
+ */
+export type WeeklySessionData = { 
+/**
+ * The plan for the coming week (focus weights + new goals).
+ */
+plan: WeeklyPlan; 
+/**
+ * Reflection on the previous week. `None` if there is no prior plan to
+ * reflect on (e.g. first ever weekly session).
+ */
+reflection: WeeklyReflection | null; 
+/**
+ * Goals from the previous week's plan, to be marked during reflection.
+ */
+past_goals: WeeklyGoal[]; 
+/**
+ * Goals already entered for the coming week's plan.
+ */
+planned_goals: WeeklyGoal[]; swimlanes: Swimlane[]; distraction_labels: DistractionLabel[]; 
+/**
+ * Active quarter context per swimlane, for the planning section.
+ */
+quarter_context: SwimlanePlanningContext[] }
+/**
+ * What a [`SwimlaneWeight`] allocates weight toward.
  * 
  * Including `Distractions` as a first-class target lets the user budget
  * intentionally for unplanned work rather than having it silently erode

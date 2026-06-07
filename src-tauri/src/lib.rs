@@ -37,9 +37,10 @@ fn quit(app: tauri::AppHandle) {
 fn specta_builder() -> Builder<tauri::Wry> {
     Builder::<tauri::Wry>::new()
         .commands(collect_commands![ui::goals::open_yearly_goals, quit])
-        // No command returns this yet (phase 1 has no data commands), so register it
-        // explicitly; this transitively exports every nested model type too.
+        // No commands return these yet (phase 1 has no data commands), so register
+        // them explicitly; each transitively exports every nested model type too.
         .typ::<models::GoalTreeData>()
+        .typ::<models::WeeklySessionData>()
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]

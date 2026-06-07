@@ -1,9 +1,9 @@
-//! Data model for the goal tree view.
+//! Data model for Hrairto.
 //!
-//! These structs are the single source of truth for the shape of goal-planning
-//! data. They derive [`specta::Type`] so that TypeScript definitions are
-//! generated from them (see the `tauri-specta` setup in `lib.rs`); the frontend
-//! never hand-writes types that duplicate these.
+//! These structs are the single source of truth for the shape of all
+//! planning and tracking data. They derive [`specta::Type`] so that TypeScript
+//! definitions are generated from them (see the `tauri-specta` setup in
+//! `lib.rs`); the frontend never hand-writes types that duplicate these.
 //!
 //! Conventions (see `claude-instructions/0000-hrairto-overview.md`):
 //! - All point-in-time values are [`Epoch`] (milliseconds UTC).
@@ -51,6 +51,10 @@ id_types! {
     AnnualGoalId,
     QuarterlyGoalId,
     WaypointId,
+    WeeklyPlanId,
+    WeeklyReflectionId,
+    WeeklyGoalId,
+    DistractionLabelId,
 }
 
 /// Defines the fiscal calendar for the user or org.
@@ -109,13 +113,13 @@ pub struct SwimlaneWeightPeriod {
     /// When these weights take effect.
     pub start_at: Epoch,
     pub note: Option<String>,
-    pub entries: Vec<SwimlaneWeightEntry>,
+    pub entries: Vec<SwimlaneWeight>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
-pub struct SwimlaneWeightEntry {
+pub struct SwimlaneWeight {
     pub target: WeightTarget,
-    /// 0.0–1.0. All entries within a [`SwimlaneWeightPeriod`] must sum to 1.0.
+    /// 0.0–1.0.
     pub weight: f64,
 }
 
@@ -134,7 +138,7 @@ pub struct AnnualGoal {
     pub created_at: Epoch,
 }
 
-/// What a [`SwimlaneWeightEntry`] allocates weight toward.
+/// What a [`SwimlaneWeight`] allocates weight toward.
 ///
 /// Including `Distractions` as a first-class target lets the user budget
 /// intentionally for unplanned work rather than having it silently erode
@@ -226,4 +230,137 @@ pub struct GoalTreeData {
     /// Computed by the backend at invocation time (see `calendar::quarters_to_display`).
     /// Typically one past quarter, the current quarter, and two or more future quarters.
     pub quarters_to_display: Vec<QuarterDisplay>,
+}
+
+// ── Weekly planning / reflection ─────────────────────────────────────────────
+
+/// How focus is distributed across swimlanes and distractions.
+///
+/// All weights should sum to 1.0. Use [`SwimlanesFocus::new`] to construct
+/// from raw weights — it normalizes the total automatically.
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct SwimlanesFocus {
+    pub weights: Vec<SwimlaneWeight>,
+}
+
+impl SwimlanesFocus {
+    /// Normalizes `weights` so they sum to 1.0. If the total is zero, returns
+    /// the weights as-is (avoids division by zero).
+    pub fn new(weights: Vec<SwimlaneWeight>) -> Self {
+        let total: f64 = weights.iter().map(|w| w.weight).sum();
+        if total == 0.0 {
+            return Self { weights };
+        }
+        let weights = weights
+            .into_iter()
+            .map(|w| SwimlaneWeight {
+                target: w.target,
+                weight: w.weight / total,
+            })
+            .collect();
+        Self { weights }
+    }
+}
+
+/// Whether a weekly goal was achieved.
+///
+/// `at` is when the user marked the goal — this can happen at any point
+/// during the week, not only during a formal reflection session.
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+#[serde(tag = "type")]
+pub enum GoalOutcome {
+    Hit { at: Epoch },
+    Miss { at: Epoch },
+}
+
+/// The planning artifact for a single week: what the user intends to do.
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct WeeklyPlan {
+    pub id: WeeklyPlanId,
+    /// First millisecond of the week being planned (inclusive).
+    pub start_at: Epoch,
+    /// First millisecond of the following week (exclusive end).
+    pub end_at: Epoch,
+    pub focus: SwimlanesFocus,
+}
+
+/// The reflection artifact for a completed week.
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct WeeklyReflection {
+    pub id: WeeklyReflectionId,
+    /// The weekly plan this reflection is about.
+    pub plan_id: WeeklyPlanId,
+    pub notes: String,
+    pub completed_at: Epoch,
+    /// User-adjusted actual time split for the past week. Starts as a
+    /// backend estimate; the user can edit it during the reflection session.
+    pub actual_split: SwimlanesFocus,
+}
+
+/// A single weekly goal, used for both past goals (reflected on) and future
+/// goals (being planned). `outcome` is `None` until the user marks it.
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct WeeklyGoal {
+    pub id: WeeklyGoalId,
+    /// The weekly plan this goal belongs to (the week it was created for).
+    pub plan_id: WeeklyPlanId,
+    pub created_at: Epoch,
+    pub text: String,
+    /// `None` while unmarked. Set to `Hit` or `Miss` when the user marks it —
+    /// this can happen during the week or during the following week's reflection.
+    pub outcome: Option<GoalOutcome>,
+    pub goal_ref: WeeklyGoalRef,
+}
+
+/// What kind of work a [`WeeklyGoal`] represents.
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+#[serde(tag = "type")]
+pub enum WeeklyGoalRef {
+    /// Planned work belonging to a swimlane, optionally tied to a waypoint.
+    Planned {
+        swimlane_id: SwimlaneId,
+        waypoint_id: Option<WaypointId>,
+    },
+    /// Unplanned work; may carry one or more distraction labels.
+    Distraction {
+        label_ids: Vec<DistractionLabelId>,
+    },
+}
+
+/// A global distraction label. Editing the text propagates everywhere the
+/// label is referenced.
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct DistractionLabel {
+    pub id: DistractionLabelId,
+    pub text: String,
+    pub created_at: Epoch,
+}
+
+/// Read-only quarter context for one swimlane, shown during the planning phase
+/// so the user can set weekly goals relative to their quarterly commitments.
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct SwimlanePlanningContext {
+    pub swimlane_id: SwimlaneId,
+    pub quarter: QuarterDisplay,
+    /// `None` if the swimlane has no quarterly goal for the active quarter.
+    pub quarterly_goal: Option<QuarterlyGoal>,
+}
+
+/// Full payload for the weekly planning/reflection session UI.
+/// The backend computes all derived fields; the frontend just renders.
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct WeeklySessionData {
+    /// The plan for the coming week (focus weights + new goals).
+    pub plan: WeeklyPlan,
+    /// Reflection on the previous week. `None` if there is no prior plan to
+    /// reflect on (e.g. first ever weekly session).
+    pub reflection: Option<WeeklyReflection>,
+    /// Goals from the previous week's plan, to be marked during reflection.
+    pub past_goals: Vec<WeeklyGoal>,
+    /// Goals already entered for the coming week's plan.
+    pub planned_goals: Vec<WeeklyGoal>,
+    pub swimlanes: Vec<Swimlane>,
+    pub distraction_labels: Vec<DistractionLabel>,
+    /// Active quarter context per swimlane, for the planning section.
+    pub quarter_context: Vec<SwimlanePlanningContext>,
 }

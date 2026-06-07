@@ -57,98 +57,95 @@ Reuses from existing code:
 
 ## Data model additions
 
-Source of truth: `src-tauri/src/models.rs`. Add these structs (with
-`#[derive(Debug, Clone, Serialize, Deserialize, Type)]` on each):
+Source of truth: `src-tauri/src/models.rs` (already implemented as of Step 1).
+
+### Key design decisions
+
+**`WeeklyPlan` and `WeeklyReflection` are separate entities.** The UI combines them into one
+pane (with collapsing), but the model separates them — they represent genuinely different acts.
+
+**Unified weight type.** `SwimlaneWeightEntry` was renamed to `SwimlaneWeight` and is now used
+everywhere weights appear: long-term periods (`SwimlaneWeightPeriod`), weekly focus (`WeeklyPlan`),
+and actuals (`WeeklyReflection`). `SwimlanesFocus` is a struct wrapping `Vec<SwimlaneWeight>` with
+a `new` constructor that normalizes weights to sum to 1.0.
+
+**`GoalOutcome` is an enum with embedded timestamps.** Goals can be marked at any point during
+the week, not only during reflection, so `at: Epoch` lives in each variant. `WeeklyGoal.outcome`
+is `Option<GoalOutcome>` — `None` while unmarked, `Some(Hit|Miss)` once marked.
+
+**`actual_split` is user-editable.** The backend provides an estimate; the user can adjust it
+during reflection (half days, non-uniform days, etc.).
+
+### Structs added
 
 ```rust
-/// A weekly plan covers a contiguous time window (usually Mon–Fri, but
-/// configurable — the user may end the week on Thursday before a holiday).
+// SwimlaneWeightEntry renamed to SwimlaneWeight (same fields).
+
+pub struct SwimlanesFocus {
+    pub weights: Vec<SwimlaneWeight>,
+}
+// impl SwimlanesFocus::new normalizes weights to sum to 1.0.
+
+pub enum GoalOutcome {      // #[serde(tag = "type")]
+    Hit { at: Epoch },
+    Miss { at: Epoch },
+}
+
 pub struct WeeklyPlan {
     pub id: WeeklyPlanId,
-    pub start_at: Epoch,
-    pub end_at: Epoch,
+    pub start_at: Epoch,    // inclusive
+    pub end_at: Epoch,      // exclusive
+    pub focus: SwimlanesFocus,
 }
 
-/// Intended swimlane weight for a specific weekly plan.
-/// All entries for a plan must sum to 1.0.
-/// Uses the same WeightTarget enum as SwimlaneWeightPeriod
-/// (Swimlane(SwimlaneId) | Distractions).
-pub struct WeeklyPlanWeight {
-    pub id: WeeklyPlanWeightId,
-    pub weekly_plan_id: WeeklyPlanId,
-    pub target: WeightTarget,
-    pub weight: f64,
+pub struct WeeklyReflection {
+    pub id: WeeklyReflectionId,
+    pub plan_id: WeeklyPlanId,
+    pub notes: String,
+    pub completed_at: Epoch,
+    pub actual_split: SwimlanesFocus,
 }
 
-/// A single goal within a weekly plan.
-/// Exactly one of (swimlane_goal, distraction) is populated.
 pub struct WeeklyGoal {
     pub id: WeeklyGoalId,
-    pub weekly_plan_id: WeeklyPlanId,
+    pub plan_id: WeeklyPlanId,
     pub created_at: Epoch,
     pub text: String,
-    pub outcome: Option<GoalOutcome>,   // None = not yet saved (UI only)
+    pub outcome: Option<GoalOutcome>,
     pub goal_ref: WeeklyGoalRef,
 }
 
-pub enum GoalOutcome {
-    Hit,
-    Miss,
-}
-
-// Struct variants with multiple named fields require internally-tagged serde
-// (not the adjacently-tagged form used by WeightTarget/AnnualGoalRef).
 #[serde(tag = "type")]
 pub enum WeeklyGoalRef {
-    /// Planned work: belongs to a swimlane, optionally tied to a waypoint.
-    Planned {
-        swimlane_id: SwimlaneId,
-        waypoint_id: Option<WaypointId>,
-    },
-    /// Unplanned work: distraction with optional labels.
-    Distraction {
-        label_ids: Vec<DistractionLabelId>,
-    },
+    Planned { swimlane_id: SwimlaneId, waypoint_id: Option<WaypointId> },
+    Distraction { label_ids: Vec<DistractionLabelId> },
 }
 
-/// Global distraction label — editing text propagates everywhere.
 pub struct DistractionLabel {
     pub id: DistractionLabelId,
     pub text: String,
     pub created_at: Epoch,
 }
 
-/// Full payload for the weekly planning/reflection session.
-/// Backend computes all derived fields; frontend just renders.
+pub struct SwimlanePlanningContext {
+    pub swimlane_id: SwimlaneId,
+    pub quarter: QuarterDisplay,
+    pub quarterly_goal: Option<QuarterlyGoal>,
+}
+
 pub struct WeeklySessionData {
     pub plan: WeeklyPlan,
-    pub weights: Vec<WeeklyPlanWeight>,
-    pub goals: Vec<WeeklyGoal>,
+    pub reflection: Option<WeeklyReflection>,  // None on first-ever session
+    pub past_goals: Vec<WeeklyGoal>,            // previous week, for reflection
+    pub planned_goals: Vec<WeeklyGoal>,         // coming week, being planned
     pub swimlanes: Vec<Swimlane>,
     pub distraction_labels: Vec<DistractionLabel>,
-    /// Active quarter context per swimlane, for the planning section.
-    /// Key: SwimlaneId (as string on wire)
-    pub quarter_context: Vec<SwimlaneQuarterContext>,
-    /// Actual time split for the past week, derived from DailyWorkDistributions.
-    /// One entry per WeightTarget (Swimlane or Distractions).
-    pub actual_split: Vec<ActualSplitEntry>,
-}
-
-pub struct SwimlaneQuarterContext {
-    pub swimlane_id: SwimlaneId,
-    pub quarter: QuarterDisplay,         // from existing models
-    pub quarterly_goal: Option<QuarterlyGoal>,
-    // waypoints are accessed via quarterly_goal.waypoints — no separate field needed
-}
-
-pub struct ActualSplitEntry {
-    pub target: WeightTarget,
-    pub fraction: f64,   // 0.0–1.0, rounded to nearest 0.05 for display
+    pub quarter_context: Vec<SwimlanePlanningContext>,
 }
 ```
 
-Add typed ID newtypes following the existing pattern in `models.rs`:
-`WeeklyPlanId`, `WeeklyPlanWeightId`, `WeeklyGoalId`, `DistractionLabelId`.
+ID newtypes added to `id_types!`: `WeeklyPlanId`, `WeeklyReflectionId`, `WeeklyGoalId`,
+`DistractionLabelId`.
 
 ---
 
@@ -428,13 +425,14 @@ The past week should have:
     - Identify any conflicts or inconsistencies between this spec and those conventions
     - Amend this spec to resolve them — the codebase conventions win
     - Only proceed to Step 1 once the spec reflects the actual repo
-- [ ] **Step 1: Data model**
-  - [ ] Add `WeeklyGoal`, `WeeklyPlan`, `WeeklyPlanWeight`, `WeeklyGoalRef`,
+- [x] **Step 1: Data model**
+  - [x] Add `WeeklyGoal`, `WeeklyPlan`, `WeeklyReflection`, `WeeklyGoalRef`,
         `GoalOutcome`, `DistractionLabel`, `WeeklySessionData`,
-        `SwimlaneQuarterContext`, `ActualSplitEntry` to `src-tauri/src/models.rs`
-  - [ ] Add typed ID newtypes: `WeeklyPlanId`, `WeeklyPlanWeightId`,
+        `SwimlanePlanningContext`, `SwimlanesFocus`, `SwimlaneWeight` (renamed
+        from `SwimlaneWeightEntry`) to `src-tauri/src/models.rs`
+  - [x] Add typed ID newtypes: `WeeklyPlanId`, `WeeklyReflectionId`,
         `WeeklyGoalId`, `DistractionLabelId`
-  - [ ] Run `cargo check` — no errors
+  - [x] Run `cargo check` — no errors
   - [ ] Run app in dev mode to regenerate `src/bindings.ts`
   - [ ] Verify new types appear correctly in `bindings.ts`
 
