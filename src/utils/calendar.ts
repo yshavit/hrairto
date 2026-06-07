@@ -20,7 +20,7 @@ export function isCurrentQuarter(q: QuarterDisplay): boolean {
 
 /** Display name for a calendar month, e.g. "May". */
 export function getMonthInfo(month: number, year: number, locale: string): MonthInfo {
-    const label = new Intl.DateTimeFormat(locale, { month: 'long' }).format(
+    const label = new Intl.DateTimeFormat(locale, { month: 'short' }).format(
         new Date(year, month - 1, 1),
     )
     return { month, year, label }

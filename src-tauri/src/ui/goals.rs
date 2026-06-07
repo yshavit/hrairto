@@ -8,7 +8,7 @@ use tauri::{AppHandle, Manager, WebviewUrl, WebviewWindowBuilder};
 /// once the window closes so we go back to being a tray-only app.
 #[tauri::command]
 #[specta::specta]
-pub fn open_yearly_goals(app: AppHandle) {
+pub async fn open_yearly_goals(app: AppHandle) {
     if let Some(main) = app.get_webview_window(Window::Main.label()) {
         let _ = main.hide();
     }
@@ -25,7 +25,7 @@ pub fn open_yearly_goals(app: AppHandle) {
 
     let window = match WebviewWindowBuilder::new(&app, Window::Goals.label(), WebviewUrl::App("index.html".into()))
         .title("Yearly Goals")
-        .inner_size(900.0, 680.0)
+        .inner_size(1230.0, 580.0)
         .min_inner_size(480.0, 360.0)
         .build()
     {

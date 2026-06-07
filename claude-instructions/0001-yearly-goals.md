@@ -278,8 +278,11 @@ commands replace it. All objects must import and conform to types from `bindings
 Guidelines:
 
 - Two swimlanes: Team (`#378ADD`) and Personal (`#1D9E75`)
-- Four quarters: one past (all waypoints completed), one active (first waypoint
-  done, second in progress, third open), two future (no goals, placeholder only)
+- Five quarters in `quarters_to_display`: one past (all waypoints completed), one
+  active (first waypoint done, second in progress, third open), two future (no
+  goals, placeholder only), and one **peek quarter** (the quarter after the last
+  planned one — no goals, never navigated to by buttons, only visible via
+  rubber-band drag)
 - The active quarter should be the current fiscal quarter per a standard calendar
 - Use real unix timestamps (ms), not zeros
 - Annual goals: one per swimlane, due end of Q4 this fiscal year
@@ -427,13 +430,29 @@ function animateScroll(
 }
 ```
 
+### Peek quarter
+
+`quarters_to_display` always ends with one **peek quarter** — the next quarter
+beyond the planning horizon. It is intentionally unplanned and exists only as
+visual wallpaper in the rubber-band stretch zone.
+
+Rules that follow from this:
+- The rubber-band snap boundary is `scrollWidth - clientWidth - STEP`, not the
+  absolute content end, so spring-back lands at the last planned quarter.
+- The `›` nav button must be capped at the same boundary (use `scrollWidth -
+  clientWidth - STEP` as `hardMax`, not `(quarters.length - 1) * STEP`), so the
+  peek quarter is unreachable via buttons.
+- When the backend generates `quarters_to_display`, it should append one peek
+  quarter after the last planned quarter.
+
 ### Navigation buttons
 
-- **Prev/Next**: snap to nearest quarter boundary
+- **Prev/Next**: snap to nearest quarter boundary, capped at `hardMax` for next
   ```typescript
   const currentQ = Math.round(scrollLeft / STEP)
-  const targetQ = Math.max(0, Math.min(currentQ + direction, quarters.length - 1))
-  animateScroll(refs, targetQ * STEP, 300)
+  const hardMax = Math.max(0, el.scrollWidth - el.clientWidth - STEP)
+  const targetQ = Math.max(0, currentQ + direction)
+  animateScroll(refs, Math.min(hardMax, targetQ * STEP), 300)
   ```
 - **Today**: animate to default scroll position (active quarter with peek)
 

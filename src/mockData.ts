@@ -30,6 +30,7 @@ const QG_TEAM_Q1_ID: QuarterlyGoalId = '00000000-0000-0000-0000-000000000040'
 const QG_PERSONAL_Q1_ID: QuarterlyGoalId = '00000000-0000-0000-0000-000000000041'
 const QG_TEAM_Q2_ID: QuarterlyGoalId = '00000000-0000-0000-0000-000000000042'
 const QG_PERSONAL_Q2_ID: QuarterlyGoalId = '00000000-0000-0000-0000-000000000043'
+const QG_TEAM_Q3_ID: QuarterlyGoalId = '00000000-0000-0000-0000-000000000044'
 
 const W: (suffix: string) => WaypointId = (s) => `00000000-0000-0000-0000-0000000000${s}`
 
@@ -167,6 +168,25 @@ const quarterly_goals: QuarterlyGoal[] = [
         created_at: utc(2026, 4, 2),
         waypoints: mixedWaypoints(QG_PERSONAL_Q2_ID, 2026, [4, 5, 6], ['63', '64', '65']),
     },
+    {
+        id: QG_TEAM_Q3_ID,
+        swimlane_id: TEAM_ID,
+        annual_goal: { type: 'MainQuest', id: TEAM_ANNUAL_ID },
+        due_quarter: 3,
+        due_year: 2026,
+        text: 'Public launch',
+        created_at: utc(2026, 6, 1),
+        waypoints: [
+            {
+                id: W('70'),
+                quarterly_goal_id: QG_TEAM_Q3_ID,
+                target_month: 7,
+                target_year: 2026,
+                text: 'Launch blog post + landing page',
+                completed_at: null,
+            },
+        ],
+    },
 ]
 
 const quarters_to_display: QuarterDisplay[] = [
@@ -174,6 +194,7 @@ const quarters_to_display: QuarterDisplay[] = [
     { quarter: 2, year: 2026, label: 'Q2 · Apr–Jun', start_at: utc(2026, 4, 1), end_at: utc(2026, 7, 1) },
     { quarter: 3, year: 2026, label: 'Q3 · Jul–Sep', start_at: utc(2026, 7, 1), end_at: utc(2026, 10, 1) },
     { quarter: 4, year: 2026, label: 'Q4 · Oct–Dec', start_at: utc(2026, 10, 1), end_at: utc(2027, 1, 1) },
+    { quarter: 1, year: 2027, label: 'Q1 · Jan–Mar', start_at: utc(2027, 1, 1), end_at: utc(2027, 4, 1) },
 ]
 
 export const mockData: GoalTreeData = {

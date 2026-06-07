@@ -5,6 +5,16 @@ import "./index.css";
 import TrayPopup from "./TrayPopup";
 import YearlyGoals from "./YearlyGoals";
 
+// Catch errors that prevent React from mounting at all (module-load failures,
+// synchronous throws during evaluation). Shows error text in the window so we
+// don't have to open DevTools to diagnose a blank white screen.
+window.addEventListener("error", (e) => {
+  const root = document.getElementById("root");
+  if (root && !root.hasChildNodes()) {
+    root.innerHTML = `<pre style="color:#ff6b6b;background:#111;padding:20px;margin:0;height:100vh;font:12px monospace;white-space:pre-wrap;overflow:auto">${e.message}\n\n${e.error?.stack ?? ""}</pre>`;
+  }
+});
+
 const Root = getCurrentWindow().label === "goals" ? YearlyGoals : TrayPopup;
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(

@@ -11,7 +11,8 @@ Domains so far: `scaffolding`, `spec`, `yearlies`. Add a new domain when the wor
 doesn't fit an existing one.
 
 Body (if needed): explain the *what and why* at a level that's useful in `git log`.
-Don't list every file or struct changed — name concepts, not inventories.
+Don't list every file or struct changed — name concepts, not inventories. If the
+body needs to enumerate things, use bullet points rather than prose enumeration.
 
 ## Keeping claude-instructions up to date
 
