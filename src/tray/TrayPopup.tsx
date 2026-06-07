@@ -1,22 +1,22 @@
-import { invoke } from "@tauri-apps/api/core";
+import { invoke } from '@tauri-apps/api/core';
 
 // macOS calls it "Quit"; Windows (and elsewhere) calls it "Exit".
-const isMac = navigator.userAgent.includes("Mac");
-const quitLabel = isMac ? "Quit" : "Exit";
+const isMac = navigator.userAgent.includes('Mac');
+const quitLabel = isMac ? 'Quit' : 'Exit';
 
 function TrayPopup() {
   return (
     <div
       style={{
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-        height: "100vh",
-        padding: "0 1rem",
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        height: '100vh',
+        padding: '0 1rem',
       }}
     >
-      <button onClick={() => void invoke("open_yearly_goals")}>Yearly Goals</button>
-      <button onClick={() => void invoke("quit")}>{quitLabel}</button>
+      <button onClick={() => void invoke('open_yearly_goals')}>Yearly Goals</button>
+      <button onClick={() => void invoke('quit')}>{quitLabel}</button>
     </div>
   );
 }

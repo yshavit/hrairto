@@ -88,7 +88,7 @@ Original prescriptive structs (now superseded) follow for historical reference:
 
 Define these in `src-tauri/src/models.rs`:
 
-```rust
+````rust
 use specta::Type;
 use serde::{Serialize, Deserialize};
 
@@ -202,7 +202,7 @@ pub struct GoalTreeData {
     pub annual_goals: Vec<AnnualGoal>,
     pub quarterly_goals: Vec<QuarterlyGoal>,
 }
-```
+````
 
 ### Export TypeScript types
 
@@ -246,6 +246,7 @@ The implementation lives in `src-tauri/src/calendar.rs`. Key public functions:
 - `quarters_to_display(&Calendar, now: Epoch, past_count, future_count) -> Result<Vec<QuarterDisplay>, String>`
 
 `QuarterDisplay` is a specta-exported struct in `models.rs`:
+
 ```rust
 pub struct QuarterDisplay {
     pub quarter: u8,    // 1-based: 1–4
@@ -260,6 +261,7 @@ pub struct QuarterDisplay {
 command-invocation time by the backend. The mock data hardcodes this field.
 
 The TypeScript utility `src/utils/calendar.ts` is reduced to display-only helpers:
+
 - `isCurrentQuarter(q: QuarterDisplay): boolean` — compares `Date.now()` to the interval
 - `getMonthInfo(month, year): MonthInfo` — formats a month name via `Intl.DateTimeFormat`
 
@@ -357,7 +359,8 @@ components (one per annual goal) followed by a `SideQuestSection` if side quests
 (17px) + `"by end of Q{N} {year}"` (13px, dimmed) inline at baseline. Left border
 (3px, swimlane color) spans the full sub-row height (heading + scroller). Below the
 heading: a `QuarterScroller` whose `quarters` prop is trimmed to the goal's deadline
-+ 1 peek (`trimQuartersForGoal` in `SwimlanesContainer`).
+
+- 1 peek (`trimQuartersForGoal` in `SwimlanesContainer`).
 
 **SideQuestSection** — the shared side-quest area within a swimlane. Renders an
 "Intentional side quests" header (17px, same style as goal titles, no deadline),
@@ -411,12 +414,12 @@ On mount, scroll to show the active quarter with ~10% of the card peeking from
 the left:
 
 ```typescript
-const CARD_WIDTH = 220
-const GAP = 10
-const STEP = CARD_WIDTH + GAP
+const CARD_WIDTH = 220;
+const GAP = 10;
+const STEP = CARD_WIDTH + GAP;
 
 // activeIndex = index of active quarter in quarters array (0-based)
-const scrollTarget = activeIndex > 0 ? activeIndex * STEP - CARD_WIDTH * 0.1 : 0
+const scrollTarget = activeIndex > 0 ? activeIndex * STEP - CARD_WIDTH * 0.1 : 0;
 ```
 
 Set without animation on mount (direct `scrollLeft` assignment). Reset whenever
@@ -429,17 +432,18 @@ beyond the planning horizon. It is intentionally unplanned and exists only as
 visual wallpaper in the rubber-band stretch zone.
 
 Rules that follow from this:
+
 - The rubber-band snap boundary is `scrollWidth - clientWidth - STEP`, not the
   absolute content end, so spring-back lands at the last planned quarter.
 - The `›` nav button must be capped at the same boundary (use `scrollWidth -
-  clientWidth - STEP` as `hardMax`, not `(quarters.length - 1) * STEP`), so the
+clientWidth - STEP` as `hardMax`, not `(quarters.length - 1) * STEP`), so the
   peek quarter is unreachable via buttons.
 - When the backend generates `quarters_to_display`, it should append one peek
   quarter after the last planned quarter.
 
 ### Rubber-band scroll wall
 
-The snap boundary is the scroll position that leaves the last *planned* quarter
+The snap boundary is the scroll position that leaves the last _planned_ quarter
 fully in view (the peek quarter is just past it). The browser clamps `scrollLeft`
 to `scrollWidth - clientWidth`, so rubber-band overshoot is applied via CSS
 `translateX` on the inner wrapper (`.quarter-scroller__inner`), not via
@@ -447,12 +451,11 @@ to `scrollWidth - clientWidth`, so rubber-band overshoot is applied via CSS
 
 ```typescript
 // Snap boundary: max across all scrollers so the wall is set by the longest strip.
-const maxScroll = scrollerRefs.current.reduce((max, el) =>
-    el ? Math.max(max, Math.max(0, el.scrollWidth - el.clientWidth - STEP)) : max, 0)
+const maxScroll = scrollerRefs.current.reduce((max, el) => (el ? Math.max(max, Math.max(0, el.scrollWidth - el.clientWidth - STEP)) : max), 0);
 
 // When dragging past maxScroll: pin scrollLeft at maxScroll, stretch visually.
-const rubberOffset = Math.min(overshoot * 0.3, 90)  // cap at 90px
-inner.style.transform = `translateX(${-rubberOffset}px)`
+const rubberOffset = Math.min(overshoot * 0.3, 90); // cap at 90px
+inner.style.transform = `translateX(${-rubberOffset}px)`;
 
 // On pointer release: animate transform back to '' over ~350ms ease-out cubic.
 ```
@@ -460,7 +463,7 @@ inner.style.transform = `translateX(${-rubberOffset}px)`
 ### Easing function (used for all animated scrolls)
 
 ```typescript
-const easeOutCubic = (t: number): number => 1 - Math.pow(1 - t, 3)
+const easeOutCubic = (t: number): number => 1 - Math.pow(1 - t, 3);
 ```
 
 Both `animateAll` (scrollLeft-based, for nav and today) and `animateTransform`
@@ -471,9 +474,9 @@ via closure rather than passed as arguments.
 
 - **Prev/Next**: snap to nearest quarter boundary, capped at `hardMax` for next:
   ```typescript
-  const currentQ = Math.round(el.scrollLeft / STEP)
-  const hardMax = Math.max(0, el.scrollWidth - el.clientWidth - STEP)
-  animateAll(Math.min(hardMax, (currentQ + 1) * STEP), 300)
+  const currentQ = Math.round(el.scrollLeft / STEP);
+  const hardMax = Math.max(0, el.scrollWidth - el.clientWidth - STEP);
+  animateAll(Math.min(hardMax, (currentQ + 1) * STEP), 300);
   ```
 - **Today**: animate to default scroll position (active quarter with peek)
 
@@ -488,9 +491,9 @@ via closure rather than passed as arguments.
 - Additional swimlane palette (assign in order): `#E8820C`, `#9B59B6`, `#E74C3C`, `#F39C12`
 - Past quarters: `opacity: 0.5`
 - Waypoint states:
-    - Completed: `background: #EAF3DE`, green checkmark
-    - Current (first incomplete in active quarter): `border: 1.5px solid #378ADD`
-    - Future: `border: 0.5px solid #D0CEC7`
+  - Completed: `background: #EAF3DE`, green checkmark
+  - Current (first incomplete in active quarter): `border: 1.5px solid #378ADD`
+  - Future: `border: 0.5px solid #D0CEC7`
 
 ### Annual goal text
 

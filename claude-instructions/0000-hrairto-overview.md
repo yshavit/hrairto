@@ -68,7 +68,7 @@ Hrairto organizes all work into exactly three categories:
 
 3. **Distractions** — everything else. Definitionally: any work that wasn't in the
    quarterly plan. This includes both reactive work (oncall incidents, urgent bugs)
-   *and* unplanned work the user chose to take on mid-week. Conflating these is
+   _and_ unplanned work the user chose to take on mid-week. Conflating these is
    intentional — both are pulling the user away from their stated objectives,
    regardless of merit. Distractions are a first-class concept: they have labels
    ("bug", "customer request", "external team"), are tracked separately from planned
@@ -94,7 +94,7 @@ did the thinking; today-you just executes.
 ## Tech stack
 
 | Layer          | Choice                         | Why                                                         |
-|----------------|--------------------------------|-------------------------------------------------------------|
+| -------------- | ------------------------------ | ----------------------------------------------------------- |
 | Desktop shell  | Tauri                          | Cross-platform, lightweight, native tray support            |
 | Backend        | Rust                           | Local-first, fast, type-safe; all business logic lives here |
 | Frontend       | React + TypeScript             | Familiar ecosystem, strong Claude Code support              |

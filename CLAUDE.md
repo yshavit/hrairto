@@ -10,11 +10,12 @@ Subject line: `<domain>: brief description` — lowercase, imperative, no period
 Domains so far: `scaffolding`, `spec`, `yearlies`. Add a new domain when the work
 doesn't fit an existing one.
 
-Body (if needed): explain the *what and why* at a level that's useful in `git log`.
+Body (if needed): explain the _what and why_ at a level that's useful in `git log`.
 Don't list every file or struct changed — name concepts, not inventories. If the
 body needs to enumerate things, use bullet points rather than prose enumeration.
 
 GitHub issue references (add at the end of the commit message body):
+
 - Commit relates to an issue but doesn't resolve it: `In service of #<id>`
 - Commit resolves an issue: `Resolves #<id>` — but always ask for explicit
   confirmation before including this, even in auto mode.
@@ -50,6 +51,7 @@ that uses non-trivial libraries (datetime math, UUID generation) or that impleme
 domain rules.
 
 Two reasons:
+
 1. Single source of truth — Rust is the only place the app's business logic lives.
 2. CLI compatibility — a future Rust CLI can share the same library functions
    without re-implementing them in a second language.
