@@ -1,4 +1,4 @@
-import { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef } from 'react';
 import type { PointerEventHandler } from 'react';
 import type { AnnualGoal, QuarterDisplay, QuarterlyGoal, Swimlane } from '../bindings';
 import { isCurrentQuarter } from '../utils/calendar';
@@ -47,9 +47,9 @@ const SwimlanesContainer = forwardRef<ScrollAPI, Props>(function SwimlanesContai
 
   const activeIdx = quarters.findIndex(isCurrentQuarter);
 
-  function defaultTarget(): number {
+  const defaultTarget = useCallback((): number => {
     return activeIdx > 0 ? activeIdx * STEP - CARD_WIDTH * 0.1 : 0;
-  }
+  }, [activeIdx]);
 
   // Rubber-band wall = position where the longest strip's last planned card is fully visible.
   function getHardMax(): number {
@@ -83,7 +83,7 @@ const SwimlanesContainer = forwardRef<ScrollAPI, Props>(function SwimlanesContai
     scrollerRefs.current.forEach((el) => {
       if (el) el.scrollLeft = target;
     });
-  }, [activeIdx]);
+  }, [activeIdx, defaultTarget]);
 
   const handleScroll = (sourceIdx: number) => {
     if (isAnimating.current) return;
