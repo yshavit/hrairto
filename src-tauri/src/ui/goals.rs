@@ -25,7 +25,7 @@ pub async fn open_yearly_goals(app: AppHandle) {
 
     let window = match WebviewWindowBuilder::new(&app, Window::Goals.label(), WebviewUrl::App("index.html".into()))
         .title("Yearly Goals")
-        .inner_size(1230.0, 580.0)
+        .inner_size(1200.0, 580.0)
         .min_inner_size(480.0, 360.0)
         .build()
     {
