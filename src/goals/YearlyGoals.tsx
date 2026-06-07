@@ -1,8 +1,8 @@
 import { Component, useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
-import type { GoalTreeData } from './bindings'
-import { getGoalTreeData } from './api'
-import GoalTreeView from './components/GoalTreeView'
+import type { GoalTreeData } from '../bindings'
+import { getGoalTreeData } from '../api'
+import GoalTreeView from './GoalTreeView'
 
 class ErrorBoundary extends Component<{ children: ReactNode }, { error: Error | null }> {
     state = { error: null }

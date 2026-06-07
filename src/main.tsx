@@ -2,8 +2,8 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import "./index.css";
-import TrayPopup from "./TrayPopup";
-import YearlyGoals from "./YearlyGoals";
+import TrayPopup from "./tray/TrayPopup";
+import YearlyGoals from "./goals/YearlyGoals";
 
 // Catch errors that prevent React from mounting at all (module-load failures,
 // synchronous throws during evaluation). Shows error text in the window so we
