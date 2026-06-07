@@ -109,14 +109,18 @@ thin wrappers that call into Rust and return typed data to React.
 
 ## Data model (summary)
 
-Full details in `data_model.mermaid`. Key points:
+Source of truth: `src-tauri/src/models.rs`. Key points:
 
-- All timestamps are Unix timestamps (UTC) for point-in-time events
+- All point-in-time values are `Epoch(i64)` — milliseconds UTC. Milliseconds (not
+  seconds) so JavaScript's `Date.now()` and `Intl.DateTimeFormat` work without
+  any ×1000 conversion.
 - Quarter/month on planning objects are stored as `(year, quarter)` or
   `(year, month)` — never as timestamps — because they are calendar concepts,
   not instants. All are 1-based to match `chrono` conventions.
-- A `Calendar` config (quarter start month + IANA timezone) is the single source
-  of truth for deriving real time ranges from fiscal quarter/month values
+- IDs are typed newtypes (`SwimlaneId`, `AnnualGoalId`, etc.) wrapping `Uuid`.
+  They serialize as plain strings on the wire, so TypeScript sees them as `string`.
+- A `Calendar` config (quarter start month + IANA timezone + BCP 47 locale) is the
+  single source of truth for deriving real time ranges from fiscal quarter/month values
 - Swimlane weights are time-varying: stored as `SwimlaneWeightPeriod` records
   with a `start_at` timestamp, not as a property of the swimlane itself
 - Distraction labels are global and stable — editing a label propagates everywhere
@@ -139,13 +143,13 @@ daily tracking last).
 
 ## Current status
 
-Phase 1 in progress. Tray scaffold is working. Next: goal tree view (read-only).
+Phase 1 in progress. Goal tree view (read-only) is fully implemented.
 
-## Screens designed so far
+## Screens
 
-- ✅ Goal tree view (read-only) — see `hrairto_goal_tree_spec.md`
-- ✅ Weekly planning/reflection session
-- ✅ End-of-day check-in
+- ✅ Goal tree view (read-only) — designed and implemented; see `0001-yearly-goals.md`
+- ✅ Weekly planning/reflection session — UX designed
+- ✅ End-of-day check-in — UX designed
 - 🔲 Quarterly planning session (UX not yet designed)
 - 🔲 Mid-day check-in (simple variant of end-of-day zone 1)
 - 🔲 Tray popup container
