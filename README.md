@@ -2,6 +2,14 @@
 
 Local-first desktop app for cascading goal planning and daily work tracking. Tauri + React + TypeScript.
 
+## First-time setup
+
+Recommended:
+
+```shell
+git config core.hooksPath .githooks
+```
+
 ## Run (dev mode)
 
 ```shell
