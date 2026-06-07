@@ -8,6 +8,7 @@
     "build": "tsc && vite build",
     "preview": "vite preview",
     "tauri": "tauri",
+    "all": "pnpm test:all && pnpm format:check && pnpm lint",
     "lint": "eslint src",
     "format": "prettier --write .",
     "format:check": "prettier --check .",

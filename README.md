@@ -53,6 +53,12 @@ All three suites together:
 pnpm test:all
 ```
 
+All tests + formatting check + lint (full local CI check):
+
+```shell
+pnpm all
+```
+
 Each window has a test entry point in `ui-test-entrypoints/` that renders it
 directly in a browser, without going through the tray app.
 
