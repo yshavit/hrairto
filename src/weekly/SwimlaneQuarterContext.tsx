@@ -1,4 +1,5 @@
 import type { Swimlane, SwimlanePlanningContext } from '../bindings';
+import '../shared/swimlane-pill.css';
 import WaypointList from '../shared/WaypointList';
 
 interface Props {
@@ -13,7 +14,7 @@ export default function SwimlaneQuarterContext({ context, locale, swimlane }: Pr
   return (
     <div className="swimlane-quarter-context" style={{ '--swimlane-color': color } as React.CSSProperties}>
       <div className="swimlane-quarter-context__header">
-        {swimlane && <span className="swimlane-quarter-context__pill">{swimlane.name}</span>}
+        {swimlane && <span className="swimlane-pill">{swimlane.name}</span>}
         <span className="swimlane-quarter-context__label">{quarter.label}</span>
       </div>
       {quarterly_goal ? (

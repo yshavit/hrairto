@@ -1,4 +1,5 @@
 import type { Swimlane, WeeklyGoal } from '../bindings';
+import '../shared/swimlane-pill.css';
 
 interface Props {
   goals: WeeklyGoal[];
@@ -11,13 +12,17 @@ function GhostPill({ goal, swimlanes }: { goal: WeeklyGoal; swimlanes: Swimlane[
     const sw = swimlanes.find((s) => s.id === ref.swimlane_id);
     if (sw) {
       return (
-        <span className="swimlane-quarter-context__pill" style={{ '--swimlane-color': sw.color } as React.CSSProperties}>
+        <span className="swimlane-pill" style={{ '--swimlane-color': sw.color } as React.CSSProperties}>
           {sw.name}
         </span>
       );
     }
   }
-  return <span className="missed-goal-ghost__distraction-pill">Distraction</span>;
+  return (
+    <span className="swimlane-pill" style={{ '--swimlane-color': '#b4b2a9' } as React.CSSProperties}>
+      Distraction
+    </span>
+  );
 }
 
 export default function MissedGoalGhosts({ goals, swimlanes }: Props) {

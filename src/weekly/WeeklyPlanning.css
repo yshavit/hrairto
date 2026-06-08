@@ -527,18 +527,6 @@
   gap: 8px;
 }
 
-.swimlane-quarter-context__pill {
-  flex-shrink: 0;
-  padding: 1px 7px;
-  border-radius: 3px;
-  font-size: 11px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--swimlane-color, #888);
-  background: color-mix(in srgb, var(--swimlane-color, #888) 18%, transparent);
-}
-
 .swimlane-quarter-context__label {
   margin: 0;
   font-size: 11px;
