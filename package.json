@@ -8,14 +8,16 @@
     "build": "tsc && vite build",
     "preview": "vite preview",
     "tauri": "tauri",
-    "all": "pnpm test:all && pnpm format:check && pnpm lint",
+    "all": "pnpm all:quick && pnpm test:all",
+    "all:quick": "pnpm format:check && pnpm tsc && pnpm lint",
+    "tsc": "tsc --noEmit",
     "lint": "eslint src",
-    "format": "prettier --write .",
-    "format:check": "prettier --check .",
-    "test": "vitest run",
+    "format": "prettier --write . && cargo fmt --manifest-path src-tauri/Cargo.toml",
+    "format:check": "prettier --check . && cargo fmt --manifest-path src-tauri/Cargo.toml -- --check",
+    "test:ts-unit": "vitest run",
     "test:e2e": "playwright test",
     "test:rust": "cargo test --manifest-path src-tauri/Cargo.toml",
-    "test:all": "pnpm run test && pnpm run test:e2e && pnpm run test:rust"
+    "test:all": "pnpm run test:ts-unit && pnpm run test:e2e && pnpm run test:rust"
   },
   "dependencies": {
     "@tauri-apps/api": "^2",

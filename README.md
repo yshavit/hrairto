@@ -29,42 +29,33 @@ Run the built target:
 - Bare binary: `src-tauri/target/release/hrairto[.exe]`
 - Installers: `src-tauri/target/release/bundle/*` (system-dependent)
 
-## Test
+## Check / test
 
-Frontend unit tests (vitest):
+Quick checks — formatting (Prettier + `cargo fmt`), TypeScript types, lint — run automatically on every commit via the pre-commit hook, or manually:
 
 ```shell
-pnpm test
+pnpm all:quick
 ```
 
-Interaction tests — starts a local dev server automatically:
+Full CI check (all of the above + all three test suites):
 
 ```shell
-pnpm test:e2e
+pnpm all
+```
+
+Individual test suites:
+
+```shell
+pnpm test:ts-unit   # vitest unit tests
+pnpm test:rust      # cargo test
+pnpm test:e2e       # Playwright interaction tests (starts a local dev server automatically)
+pnpm test:all       # all three suites together
 ```
 
 Watch interaction tests run with a live timeline and DOM snapshots:
 
 ```shell
 pnpm playwright test --ui
-```
-
-Rust:
-
-```shell
-pnpm test:rust
-```
-
-All three suites together:
-
-```shell
-pnpm test:all
-```
-
-All tests + formatting check + lint (full local CI check):
-
-```shell
-pnpm all
 ```
 
 Each window has a test entry point in `ui-test-entrypoints/` that renders it
