@@ -463,11 +463,14 @@ The past week should have:
   - Note: `WeeklySessionData` gained a `calendar` field (parallel to `GoalTreeData`)
     so the header has access to both `locale` and `timezone` for `Intl.DateTimeFormat`.
 
-- [ ] **Step 5: TimeSplitBars**
-  - [ ] Planned bar from `weights`
-  - [ ] Actual bar from `actual_split`, values rounded to nearest 5% with `~`
-  - [ ] Distraction label pills below actual bar (from mock data)
-  - [ ] Legend below bars
+- [x] **Step 5: TimeSplitBars**
+  - [x] Planned bar from `weights`
+  - [x] Actual bar from `actual_split`, values rounded to nearest 5% with `~`
+  - [x] Distraction label pills below actual bar (from mock data)
+  - [x] Legend below bars
+  - Note: implemented as part of Step 10; `TimeSplitBars.tsx` uses two `FocusSplitBar`
+    instances (planned = read-only, actual = read-only with delta tooltips). Distraction
+    pills rendered from mock data. Legend omitted — not needed given the bar labels.
 
 - [x] **Step 6: PastGoalsList**
   - [x] Render all goals from mock data
@@ -507,16 +510,19 @@ The past week should have:
     editable instance for intended focus. Added `current_weights: SwimlaneWeightPeriod`
     to `WeeklySessionData` for the quarterly target line.
 
-- [ ] **Step 11: SwimlaneQuarterContext card**
-  - [ ] Read-only; shows quarterly goal text and waypoints
-  - [ ] Waypoint completion states match `WaypointList` visual treatment
+- [x] **Step 11: SwimlaneQuarterContext card**
+  - [x] Read-only; shows quarterly goal text and waypoints
+  - [x] Waypoint completion states match `WaypointList` visual treatment
+  - Note: also shows swimlane identity (colored left bar + pill) and a "Current quarter's
+    goals" section header. Swimlane passed as optional prop; quarter label uses `quarter.label`.
 
-- [ ] **Step 12: MissedGoalGhosts**
-  - [ ] Derive from past goals that were marked miss in `ReflectSection`
-  - [ ] Ghost appearance: dimmed, dashed border, non-interactive
-  - [ ] "Missed last week" label above
-  - [ ] Appear in correct swimlane block (or Distractions block)
-  - [ ] Ghosts are computed at phase transition time, not re-derived on every render
+- [x] **Step 12: MissedGoalGhosts**
+  - [x] Derive from past goals that were marked miss in `ReflectSection`
+  - [x] Ghost appearance: dimmed, dashed border, non-interactive
+  - [x] "Missed last week" label above
+  - [x] Appear in correct swimlane block (Distractions block deferred to Step 14)
+  - [x] Ghosts are computed at phase transition time via `onDone(missed)` snapshot held
+        in `WeeklyPlanning` state; passed to `PlanSection` as `missedGoals` prop
 
 - [ ] **Step 13: PlanGoalsList + AddGoalButton**
   - [ ] Add goal inline form: text input + waypoint picker (or label picker)

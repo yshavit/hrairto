@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { WeeklyGoalId, WeeklySessionData } from '../bindings';
+import type { WeeklyGoal, WeeklyGoalId, WeeklySessionData } from '../bindings';
 import { type LocalOutcome, initialOutcome, nextOutcome } from './PastGoalsList';
 import TimeSplitBars from './TimeSplitBars';
 import PastGoalsList from './PastGoalsList';
@@ -9,7 +9,7 @@ import ReflectionNotes from './ReflectionNotes';
 interface Props {
   data: WeeklySessionData;
   phase: 'reflecting' | 'planning';
-  onDone: () => void;
+  onDone: (missedGoals: WeeklyGoal[]) => void;
   onEdit: () => void;
 }
 
@@ -43,7 +43,8 @@ export default function ReflectSection({ data, phase, onDone, onEdit }: Props) {
     setGoalsInvalid(hasUnmarked);
     setNotesInvalid(!hasNotes);
     if (!hasUnmarked && hasNotes) {
-      onDone();
+      const missed = data.past_goals.filter((g) => outcomes.get(g.id) === 'miss');
+      onDone(missed);
     }
   }
 

@@ -1,11 +1,13 @@
 import { useState } from 'react';
-import type { Swimlane, SwimlaneWeight, WeeklySessionData } from '../bindings';
+import type { Swimlane, SwimlaneWeight, WeeklyGoal, WeeklySessionData } from '../bindings';
 import FocusSplitBar from '../shared/FocusSplitBar';
+import MissedGoalGhosts from './MissedGoalGhosts';
 import SwimlaneQuarterContext from './SwimlaneQuarterContext';
 
 interface Props {
   data: WeeklySessionData;
   phase: 'reflecting' | 'planning';
+  missedGoals: WeeklyGoal[];
 }
 
 function defaultWeights(swimlanes: Swimlane[]): SwimlaneWeight[] {
@@ -31,7 +33,7 @@ function ListIcon() {
   );
 }
 
-export default function PlanSection({ data, phase }: Props) {
+export default function PlanSection({ data, phase, missedGoals }: Props) {
   const [focusWeights, setFocusWeights] = useState<SwimlaneWeight[]>(() => data.prev_plan?.focus.weights ?? defaultWeights(data.swimlanes));
 
   const isActive = phase === 'planning';
@@ -76,6 +78,8 @@ export default function PlanSection({ data, phase }: Props) {
                 swimlane={data.swimlanes.find((s) => s.id === ctx.swimlane_id)}
               />
             ))}
+            <hr className="plan-section__divider" />
+            <MissedGoalGhosts goals={missedGoals} swimlanes={data.swimlanes} />
           </div>
         </div>
       </div>
