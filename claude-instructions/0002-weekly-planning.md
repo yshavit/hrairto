@@ -433,20 +433,23 @@ The past week should have:
   - [x] Add typed ID newtypes: `WeeklyPlanId`, `WeeklyReflectionId`,
         `WeeklyGoalId`, `DistractionLabelId`
   - [x] Run `cargo check` — no errors
-  - [ ] Run app in dev mode to regenerate `src/bindings.ts`
-  - [ ] Verify new types appear correctly in `bindings.ts`
+  - [x] Run app in dev mode to regenerate `src/bindings.ts`
+  - [x] Verify new types appear correctly in `bindings.ts`
 
-- [ ] **Step 2: Mock data**
-  - [ ] Extend `src/mockData.ts` with `weeklySessionData: WeeklySessionData`
+- [x] **Step 2: Mock data**
+  - [x] Extend `src/mockData.ts` with `weeklySessionData: WeeklySessionData`
         per the mock data spec above
-  - [ ] TypeScript compiles with no errors against the generated types
+  - [x] TypeScript compiles with no errors against the generated types
 
-- [ ] **Step 3: Test entrypoint**
-  - [ ] Create `ui-test-entrypoints/weekly.html` (copy from `goals.html`, change
+- [x] **Step 3: Test entrypoint**
+  - [x] Create `ui-test-entrypoints/weekly.html` (copy from `goals.html`, change
         script src to `../src/weekly-main.tsx`)
-  - [ ] Create `src/weekly-main.tsx` (copy from `goals-main.tsx`, render
+  - [x] Create `src/weekly-main.tsx` (copy from `goals-main.tsx`, render
         `<WeeklyPlanning data={weeklySessionData} />`)
-  - [ ] Verify the page loads in browser (no Tauri required)
+  - [x] Create stub `src/weekly/WeeklyPlanning.tsx` (accepts `data: WeeklySessionData`,
+        renders placeholder — filled in by Steps 4+)
+  - [x] Register `weekly.html` in `vite.config.ts` rollup inputs
+  - [x] Verify the page loads in browser (no Tauri required)
 
 - [ ] **Step 4: WeeklyHeader**
   - [ ] Title: "Week of [start date]", formatted via `Intl.DateTimeFormat`
