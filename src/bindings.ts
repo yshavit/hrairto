@@ -286,6 +286,12 @@ export type WeeklySessionData = {
  */
 plan: WeeklyPlan; 
 /**
+ * The plan being reflected on (previous week). `None` on the first ever
+ * session. Its `focus` is used for the "planned" bar in the time-split
+ * visualization alongside `reflection.actual_split`.
+ */
+prev_plan: WeeklyPlan | null; 
+/**
  * Reflection on the previous week. `None` if there is no prior plan to
  * reflect on (e.g. first ever weekly session).
  */

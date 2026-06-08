@@ -322,9 +322,7 @@ pub enum WeeklyGoalRef {
         waypoint_id: Option<WaypointId>,
     },
     /// Unplanned work; may carry one or more distraction labels.
-    Distraction {
-        label_ids: Vec<DistractionLabelId>,
-    },
+    Distraction { label_ids: Vec<DistractionLabelId> },
 }
 
 /// A global distraction label. Editing the text propagates everywhere the
@@ -352,6 +350,10 @@ pub struct SwimlanePlanningContext {
 pub struct WeeklySessionData {
     /// The plan for the coming week (focus weights + new goals).
     pub plan: WeeklyPlan,
+    /// The plan being reflected on (previous week). `None` on the first ever
+    /// session. Its `focus` is used for the "planned" bar in the time-split
+    /// visualization alongside `reflection.actual_split`.
+    pub prev_plan: Option<WeeklyPlan>,
     /// Reflection on the previous week. `None` if there is no prior plan to
     /// reflect on (e.g. first ever weekly session).
     pub reflection: Option<WeeklyReflection>,

@@ -3,6 +3,8 @@ import type {
   AnnualGoalId,
   Calendar,
   CalendarId,
+  DistractionLabel,
+  DistractionLabelId,
   Epoch,
   GoalTreeData,
   QuarterDisplay,
@@ -12,8 +14,16 @@ import type {
   SwimlaneId,
   SwimlaneWeightPeriod,
   SwimlaneWeightPeriodId,
+  SwimlanePlanningContext,
   Waypoint,
   WaypointId,
+  WeeklyGoal,
+  WeeklyGoalId,
+  WeeklyPlan,
+  WeeklyPlanId,
+  WeeklyReflection,
+  WeeklyReflectionId,
+  WeeklySessionData,
 } from './bindings';
 
 function utc(year: number, month: number, day: number): Epoch {
@@ -300,4 +310,122 @@ export const mockData: GoalTreeData = {
   annual_goals,
   quarterly_goals,
   quarters_to_display,
+};
+
+// ── Weekly session mock data ──────────────────────────────────────────────────
+
+const PREV_WEEKLY_PLAN_ID: WeeklyPlanId = '00000000-0000-0000-0000-000000000100';
+const WEEKLY_PLAN_ID: WeeklyPlanId = '00000000-0000-0000-0000-000000000102';
+const WEEKLY_REFLECTION_ID: WeeklyReflectionId = '00000000-0000-0000-0000-000000000101';
+const WG = (suffix: string): WeeklyGoalId => `00000000-0000-0000-0000-0000000001${suffix}`;
+const LABEL_CUSTOMER_REQUEST: DistractionLabelId = '00000000-0000-0000-0000-000000000120';
+const LABEL_BUG: DistractionLabelId = '00000000-0000-0000-0000-000000000121';
+
+const distractionLabels: DistractionLabel[] = [
+  { id: LABEL_CUSTOMER_REQUEST, text: 'customer request', created_at: utc(2026, 1, 1) },
+  { id: LABEL_BUG, text: 'bug', created_at: utc(2026, 1, 1) },
+];
+
+// Past week: May 19–23. Planned 65% team / 25% personal / 10% distractions.
+const prevWeeklyPlan: WeeklyPlan = {
+  id: PREV_WEEKLY_PLAN_ID,
+  start_at: utc(2026, 5, 19),
+  end_at: utc(2026, 5, 24),
+  focus: {
+    weights: [
+      { target: { type: 'Swimlane', id: TEAM_ID }, weight: 0.65 },
+      { target: { type: 'Swimlane', id: PERSONAL_ID }, weight: 0.25 },
+      { target: { type: 'Distractions' }, weight: 0.1 },
+    ],
+  },
+};
+
+// Coming week: May 26–30.
+const weeklyPlan: WeeklyPlan = {
+  id: WEEKLY_PLAN_ID,
+  start_at: utc(2026, 5, 26),
+  end_at: utc(2026, 5, 31),
+  focus: {
+    weights: [
+      { target: { type: 'Swimlane', id: TEAM_ID }, weight: 0.65 },
+      { target: { type: 'Swimlane', id: PERSONAL_ID }, weight: 0.25 },
+      { target: { type: 'Distractions' }, weight: 0.1 },
+    ],
+  },
+};
+
+// Actual split was ~50% team / ~20% personal / ~30% distractions.
+const weeklyReflection: WeeklyReflection = {
+  id: WEEKLY_REFLECTION_ID,
+  plan_id: PREV_WEEKLY_PLAN_ID,
+  notes: 'Took more distraction hits than expected — the oncall incident ate most of Thursday. Need to protect deep work time.',
+  completed_at: utc(2026, 5, 26),
+  actual_split: {
+    weights: [
+      { target: { type: 'Swimlane', id: TEAM_ID }, weight: 0.5 },
+      { target: { type: 'Swimlane', id: PERSONAL_ID }, weight: 0.2 },
+      { target: { type: 'Distractions' }, weight: 0.3 },
+    ],
+  },
+};
+
+// Goals 1 was marked Hit during the week; 2–4 are unmarked going into reflection.
+const pastGoals: WeeklyGoal[] = [
+  {
+    id: WG('10'),
+    plan_id: PREV_WEEKLY_PLAN_ID,
+    created_at: utc(2026, 5, 18),
+    text: 'Review API performance',
+    outcome: { type: 'Hit', at: utc(2026, 5, 21) },
+    goal_ref: { type: 'Planned', swimlane_id: TEAM_ID, waypoint_id: W('61') },
+  },
+  {
+    id: WG('11'),
+    plan_id: PREV_WEEKLY_PLAN_ID,
+    created_at: utc(2026, 5, 18),
+    text: 'Draft closed beta invite flow',
+    outcome: null,
+    goal_ref: { type: 'Planned', swimlane_id: TEAM_ID, waypoint_id: null },
+  },
+  {
+    id: WG('12'),
+    plan_id: PREV_WEEKLY_PLAN_ID,
+    created_at: utc(2026, 5, 18),
+    text: 'Long run (10 km)',
+    outcome: null,
+    goal_ref: { type: 'Planned', swimlane_id: PERSONAL_ID, waypoint_id: null },
+  },
+  {
+    id: WG('13'),
+    plan_id: PREV_WEEKLY_PLAN_ID,
+    created_at: utc(2026, 5, 18),
+    text: 'Oncall incident postmortem',
+    outcome: null,
+    goal_ref: { type: 'Distraction', label_ids: [LABEL_CUSTOMER_REQUEST] },
+  },
+];
+
+// Q2 2026 context: Team has an active quarterly goal; Personal has none this quarter.
+const quarterContext: SwimlanePlanningContext[] = [
+  {
+    swimlane_id: TEAM_ID,
+    quarter: quarters_to_display[1], // Q2 2026
+    quarterly_goal: quarterly_goals[1], // QG_TEAM_Q2_ID "Launch closed beta"
+  },
+  {
+    swimlane_id: PERSONAL_ID,
+    quarter: quarters_to_display[1],
+    quarterly_goal: null,
+  },
+];
+
+export const weeklySessionData: WeeklySessionData = {
+  plan: weeklyPlan,
+  prev_plan: prevWeeklyPlan,
+  reflection: weeklyReflection,
+  past_goals: pastGoals,
+  planned_goals: [],
+  swimlanes,
+  distraction_labels: distractionLabels,
+  quarter_context: quarterContext,
 };

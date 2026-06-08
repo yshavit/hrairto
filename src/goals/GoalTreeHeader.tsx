@@ -1,9 +1,9 @@
-import type { Swimlane, SwimlaneWeightEntry } from '../bindings';
+import type { Swimlane, SwimlaneWeight } from '../bindings';
 import WeightDisplay from './WeightDisplay';
 
 interface Props {
   currentQuarterLabel: string;
-  entries: SwimlaneWeightEntry[];
+  entries: SwimlaneWeight[];
   swimlanes: Swimlane[];
   onPrev(): void;
   onNext(): void;

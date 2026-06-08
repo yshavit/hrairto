@@ -1,11 +1,11 @@
-import type { Swimlane, SwimlaneWeightEntry } from '../bindings';
+import type { Swimlane, SwimlaneWeight } from '../bindings';
 
 interface Props {
-  entries: SwimlaneWeightEntry[];
+  entries: SwimlaneWeight[];
   swimlanes: Swimlane[];
 }
 
-function entryColor(entry: SwimlaneWeightEntry, swimlanes: Swimlane[]): string {
+function entryColor(entry: SwimlaneWeight, swimlanes: Swimlane[]): string {
   const { target } = entry;
   if (target.type === 'Swimlane') {
     return swimlanes.find((s) => s.id === target.id)?.color ?? '#555';
@@ -13,7 +13,7 @@ function entryColor(entry: SwimlaneWeightEntry, swimlanes: Swimlane[]): string {
   return '#555';
 }
 
-function entryLabel(entry: SwimlaneWeightEntry, swimlanes: Swimlane[]): string {
+function entryLabel(entry: SwimlaneWeight, swimlanes: Swimlane[]): string {
   const { target } = entry;
   if (target.type === 'Swimlane') {
     return swimlanes.find((s) => s.id === target.id)?.name ?? 'Unknown';
