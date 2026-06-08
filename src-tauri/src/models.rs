@@ -366,4 +366,7 @@ pub struct WeeklySessionData {
     pub distraction_labels: Vec<DistractionLabel>,
     /// Active quarter context per swimlane, for the planning section.
     pub quarter_context: Vec<SwimlanePlanningContext>,
+    /// Current long-term weight period, shown as the quarterly target reminder
+    /// below the focus weight sliders.
+    pub current_weights: SwimlaneWeightPeriod,
 }

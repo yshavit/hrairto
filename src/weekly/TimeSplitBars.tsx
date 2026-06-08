@@ -1,4 +1,6 @@
+import { useState } from 'react';
 import type { DistractionLabel, Swimlane, SwimlaneWeight, WeeklyGoal, WeeklyPlan, WeeklyReflection } from '../bindings';
+import FocusSplitBar, { DISTRACTIONS_COLOR, DISTRACTIONS_KEY, weightKey } from '../shared/FocusSplitBar';
 
 interface Props {
   prevPlan: WeeklyPlan | null;
@@ -6,49 +8,6 @@ interface Props {
   swimlanes: Swimlane[];
   pastGoals: WeeklyGoal[];
   distractionLabels: DistractionLabel[];
-}
-
-const DISTRACTIONS_COLOR = '#B4B2A9';
-const DISTRACTIONS_KEY = '__distractions__';
-const MIN_LABEL_PCT = 12;
-
-interface Segment {
-  key: string;
-  color: string;
-  pct: number;
-  text: string;
-  tooltip?: string;
-}
-
-function weightKey(w: SwimlaneWeight): string {
-  return w.target.type === 'Swimlane' ? w.target.id : DISTRACTIONS_KEY;
-}
-
-function buildSegments(weights: SwimlaneWeight[], swimlanes: Swimlane[], roundToFive: boolean, plannedPcts?: Map<string, number>): Segment[] {
-  return weights.map((w) => {
-    const pct = w.weight * 100;
-    const displayPct = roundToFive ? Math.round(pct / 5) * 5 : Math.round(pct);
-    const text = `${roundToFive ? '~' : ''}${displayPct}%`;
-    const target = w.target;
-    const key = weightKey(w);
-
-    let tooltip: string | undefined;
-    if (plannedPcts) {
-      const planned = plannedPcts.get(key);
-      if (planned !== undefined) {
-        const delta = Math.round(pct - planned);
-        if (delta !== 0) {
-          tooltip = `${delta > 0 ? '+' : ''}${delta}% from planned`;
-        }
-      }
-    }
-
-    if (target.type === 'Swimlane') {
-      const sw = swimlanes.find((s) => s.id === target.id);
-      return { key, color: sw?.color ?? '#666', pct, text, tooltip };
-    }
-    return { key, color: DISTRACTIONS_COLOR, pct, text, tooltip };
-  });
 }
 
 interface LegendEntry {
@@ -69,6 +28,22 @@ function buildLegend(weights: SwimlaneWeight[], swimlanes: Swimlane[]): LegendEn
   });
 }
 
+function buildActualTooltips(actualWeights: SwimlaneWeight[], plannedWeights: SwimlaneWeight[]): Record<string, string> {
+  const plannedMap = new Map(plannedWeights.map((w) => [weightKey(w), w.weight * 100]));
+  const tooltips: Record<string, string> = {};
+  for (const w of actualWeights) {
+    const key = weightKey(w);
+    const planned = plannedMap.get(key);
+    if (planned !== undefined) {
+      const delta = Math.round(w.weight * 100 - planned);
+      if (delta !== 0) {
+        tooltips[key] = `${delta > 0 ? '+' : ''}${delta}% from planned`;
+      }
+    }
+  }
+  return tooltips;
+}
+
 function countDistractionLabels(pastGoals: WeeklyGoal[], distractionLabels: DistractionLabel[]): { label: DistractionLabel; count: number }[] {
   // TODO (Phase 2): replace with actual split metadata from backend; backend will
   // track distraction instances separately from planned goals.
@@ -83,37 +58,29 @@ function countDistractionLabels(pastGoals: WeeklyGoal[], distractionLabels: Dist
   return distractionLabels.map((label) => ({ label, count: counts.get(label.id) ?? 0 })).filter(({ count }) => count > 0);
 }
 
-function Bar({ segments, label }: { segments: Segment[]; label: string }) {
-  return (
-    <div className="time-split-bar-row">
-      <span className="time-split-bar-row__label">{label}</span>
-      <div className="time-split-bar-row__track">
-        {segments.map((seg) => (
-          <div key={seg.key} className="time-split-bar-row__segment" style={{ width: `${seg.pct}%`, background: seg.color }} title={seg.tooltip}>
-            {seg.pct >= MIN_LABEL_PCT && <span className="time-split-bar-row__segment-text">{seg.text}</span>}
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
 export default function TimeSplitBars({ prevPlan, reflection, swimlanes, pastGoals, distractionLabels }: Props) {
-  const plannedSegments = prevPlan ? buildSegments(prevPlan.focus.weights, swimlanes, false) : null;
+  const [actualWeights, setActualWeights] = useState<SwimlaneWeight[]>(() => reflection?.actual_split.weights ?? []);
 
-  const plannedPcts: Map<string, number> | undefined = plannedSegments ? new Map(plannedSegments.map((s) => [s.key, s.pct])) : undefined;
+  const actualTooltips = prevPlan && actualWeights.length > 0 ? buildActualTooltips(actualWeights, prevPlan.focus.weights) : {};
 
-  const actualSegments = reflection ? buildSegments(reflection.actual_split.weights, swimlanes, true, plannedPcts) : null;
-
-  const legendWeights = prevPlan?.focus.weights ?? reflection?.actual_split.weights ?? [];
+  const legendWeights = prevPlan?.focus.weights ?? actualWeights;
   const legend = buildLegend(legendWeights, swimlanes);
-
   const pills = countDistractionLabels(pastGoals, distractionLabels);
 
   return (
     <div className="time-split-bars">
-      {plannedSegments && <Bar segments={plannedSegments} label="Planned" />}
-      {actualSegments && <Bar segments={actualSegments} label="Actual" />}
+      {prevPlan && (
+        <div className="time-split-bar-row">
+          <span className="time-split-bar-row__label">Planned</span>
+          <FocusSplitBar swimlanes={swimlanes} weights={prevPlan.focus.weights} />
+        </div>
+      )}
+      {actualWeights.length > 0 && (
+        <div className="time-split-bar-row">
+          <span className="time-split-bar-row__label">Actual</span>
+          <FocusSplitBar swimlanes={swimlanes} weights={actualWeights} isEditable approximate onChange={setActualWeights} tooltips={actualTooltips} />
+        </div>
+      )}
       <div className="time-split-bars__footer">
         <div className="time-split-bars__legend">
           {legend.map((entry) => (

@@ -495,10 +495,14 @@ The past week should have:
     Collapsed reflect section shows "Done" + "Edit" button; clicking header toggles a peek
     without triggering the edit transition. `PlanSection` is a stub (Steps 10–14 fill it).
 
-- [ ] **Step 10: FocusWeightSliders**
-  - [ ] One slider per swimlane + Distractions
-  - [ ] Running total with error hint when ≠ 100%
-  - [ ] Quarterly target reminder below
+- [x] **Step 10: FocusSplitBar (replaces slider spec)**
+  - [x] One draggable stacked bar instead of per-swimlane sliders
+  - [x] Running total error hint when ≠ 100%; quarterly target reminder below
+  - [x] `isEditable` makes segment boundaries draggable (snap to 5%, min 5% per segment)
+  - Note: lives in `src/shared/FocusSplitBar.tsx`. `TimeSplitBars` now uses two instances
+    (planned = read-only, actual = editable with delta tooltips). `PlanSection` uses one
+    editable instance for intended focus. Added `current_weights: SwimlaneWeightPeriod`
+    to `WeeklySessionData` for the quarterly target line.
 
 - [ ] **Step 11: SwimlaneQuarterContext card**
   - [ ] Read-only; shows quarterly goal text and waypoints

@@ -314,7 +314,12 @@ planned_goals: WeeklyGoal[]; swimlanes: Swimlane[]; distraction_labels: Distract
 /**
  * Active quarter context per swimlane, for the planning section.
  */
-quarter_context: SwimlanePlanningContext[] }
+quarter_context: SwimlanePlanningContext[]; 
+/**
+ * Current long-term weight period, shown as the quarterly target reminder
+ * below the focus weight sliders.
+ */
+current_weights: SwimlaneWeightPeriod }
 /**
  * What a [`SwimlaneWeight`] allocates weight toward.
  * 

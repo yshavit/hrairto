@@ -429,4 +429,5 @@ export const weeklySessionData: WeeklySessionData = {
   swimlanes,
   distraction_labels: distractionLabels,
   quarter_context: quarterContext,
+  current_weights,
 };

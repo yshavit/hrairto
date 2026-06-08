@@ -1,0 +1,74 @@
+.focus-split-bar {
+  position: relative;
+  display: flex;
+  height: 24px;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.focus-split-bar__segment {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  transition: width 0.1s ease;
+}
+
+.focus-split-bar--editable .focus-split-bar__segment {
+  transition: none;
+}
+
+.focus-split-bar__segment-text {
+  font-size: 11px;
+  font-weight: 500;
+  color: #fff;
+  white-space: nowrap;
+}
+
+.focus-split-bar__handle {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 12px;
+  transform: translateX(-50%);
+  cursor: ew-resize;
+  z-index: 1;
+}
+
+/* thin spine — full height */
+.focus-split-bar__handle::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 1.5px;
+  transform: translateX(-50%);
+  background: rgba(255, 255, 255, 0.25);
+  transition: background 0.12s;
+}
+
+/* thicker center grip */
+.focus-split-bar__handle::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 5px;
+  height: 17px;
+  transform: translate(-50%, -50%);
+  background: rgba(255, 255, 255, 0.55);
+  border-radius: 2px;
+  transition:
+    background 0.12s,
+    width 0.12s;
+}
+
+.focus-split-bar__handle:hover::before {
+  background: rgba(255, 255, 255, 0.55);
+}
+
+.focus-split-bar__handle:hover::after {
+  width: 6px;
+  background: rgba(255, 255, 255, 0.9);
+}
