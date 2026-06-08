@@ -27,8 +27,6 @@ export default function ReflectSection({ data, phase, onDone, onEdit }: Props) {
   const [notes, setNotes] = useState('');
   const [notesInvalid, setNotesInvalid] = useState(false);
   const [goalsInvalid, setGoalsInvalid] = useState(false);
-  const [expanded, setExpanded] = useState(false);
-
   function toggle(id: WeeklyGoalId) {
     setOutcomes((prev) => new Map(prev).set(id, nextOutcome(prev.get(id) ?? 'unmarked')));
     setGoalsInvalid(false);
@@ -45,20 +43,15 @@ export default function ReflectSection({ data, phase, onDone, onEdit }: Props) {
     setGoalsInvalid(hasUnmarked);
     setNotesInvalid(!hasNotes);
     if (!hasUnmarked && hasNotes) {
-      setExpanded(false);
       onDone();
     }
   }
 
   const isReflecting = phase === 'reflecting';
-  const showContent = isReflecting || expanded;
 
   return (
     <section className="weekly-section">
-      <div
-        className={`weekly-section-header${!isReflecting ? ' weekly-section-header--clickable' : ''}`}
-        onClick={!isReflecting ? () => setExpanded((e) => !e) : undefined}
-      >
+      <div className="weekly-section-header">
         <div className="weekly-section-header__left">
           <RefreshIcon />
           <span className="weekly-section-header__title">Reflect on past week</span>
@@ -69,13 +62,7 @@ export default function ReflectSection({ data, phase, onDone, onEdit }: Props) {
           ) : (
             <>
               <span className="weekly-section-header__status weekly-section-header__status--done">Done</span>
-              <button
-                className="weekly-section-header__edit-btn"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onEdit();
-                }}
-              >
+              <button className="weekly-section-header__edit-btn" onClick={onEdit}>
                 Edit
               </button>
             </>
@@ -83,7 +70,7 @@ export default function ReflectSection({ data, phase, onDone, onEdit }: Props) {
         </div>
       </div>
 
-      {showContent && (
+      {isReflecting && (
         <div className="weekly-section__body">
           <p className="weekly-step-label">How did the week go?</p>
           <PastGoalsList

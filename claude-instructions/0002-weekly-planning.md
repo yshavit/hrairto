@@ -411,6 +411,9 @@ The past week should have:
 - Blocked transitions: verify planning section is not accessible before reflection
 - Edit cycle: complete reflection, enter planning, click Edit, verify planning
   collapses, re-complete reflection, verify planning re-expands with data intact
+- Header non-clickable: while in planning phase, clicking the reflection section
+  header background (anywhere except the Edit button) must NOT expand the reflection
+  or collapse planning — only the Edit button should trigger that transition
 
 ---
 
