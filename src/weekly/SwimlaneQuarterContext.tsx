@@ -16,14 +16,13 @@ export default function SwimlaneQuarterContext({ context, locale, swimlane }: Pr
       <div className="swimlane-quarter-context__header">
         {swimlane && <span className="swimlane-pill">{swimlane.name}</span>}
         <span className="swimlane-quarter-context__label">{quarter.label}</span>
+        {!quarterly_goal && <span className="swimlane-quarter-context__empty">— No quarterly goal set</span>}
       </div>
-      {quarterly_goal ? (
+      {quarterly_goal && (
         <>
           <p className="swimlane-quarter-context__goal-text">{quarterly_goal.text}</p>
           <WaypointList waypoints={quarterly_goal.waypoints} isActiveQuarter locale={locale} />
         </>
-      ) : (
-        <p className="swimlane-quarter-context__empty">No quarterly goal set</p>
       )}
     </div>
   );
