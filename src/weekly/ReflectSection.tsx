@@ -70,54 +70,54 @@ export default function ReflectSection({ data, phase, onDone, onEdit }: Props) {
         </div>
       </div>
 
-      {isReflecting && (
-        <div className="weekly-section__body">
-          <p className="weekly-step-label">How did the week go?</p>
-          <PastGoalsList
-            goals={data.past_goals}
-            outcomes={outcomes}
-            onToggle={toggle}
-            swimlanes={data.swimlanes}
-            quarterContext={data.quarter_context}
-            distractionLabels={data.distraction_labels}
-          />
-          {goalsInvalid && <p className="weekly-validation-error">Mark every goal as hit or missed before continuing.</p>}
+      <div className={`weekly-section__collapse${isReflecting ? ' weekly-section__collapse--open' : ''}`}>
+        <div className="weekly-section__collapse-inner">
+          <div className="weekly-section__body">
+            <p className="weekly-step-label">How did the week go?</p>
+            <PastGoalsList
+              goals={data.past_goals}
+              outcomes={outcomes}
+              onToggle={toggle}
+              swimlanes={data.swimlanes}
+              quarterContext={data.quarter_context}
+              distractionLabels={data.distraction_labels}
+            />
+            {goalsInvalid && <p className="weekly-validation-error">Mark every goal as hit or missed before continuing.</p>}
 
-          <p className="weekly-step-label">Time split</p>
-          <TimeSplitBars
-            prevPlan={data.prev_plan ?? null}
-            reflection={data.reflection ?? null}
-            swimlanes={data.swimlanes}
-            pastGoals={data.past_goals}
-            distractionLabels={data.distraction_labels}
-          />
+            <p className="weekly-step-label">Time split</p>
+            <TimeSplitBars
+              prevPlan={data.prev_plan ?? null}
+              reflection={data.reflection ?? null}
+              swimlanes={data.swimlanes}
+              pastGoals={data.past_goals}
+              distractionLabels={data.distraction_labels}
+            />
 
-          <p className="weekly-step-label">Quarterly waypoint health</p>
-          <WaypointHealthList swimlanes={data.swimlanes} quarterContext={data.quarter_context} locale={data.calendar.locale} />
+            <p className="weekly-step-label">Quarterly waypoint health</p>
+            <WaypointHealthList swimlanes={data.swimlanes} quarterContext={data.quarter_context} locale={data.calendar.locale} />
 
-          <p className="weekly-step-label">Reflection</p>
-          <ReflectionNotes
-            missedCount={missedCount}
-            allHit={allHit}
-            prevPlan={data.prev_plan ?? null}
-            reflection={data.reflection ?? null}
-            pastGoals={data.past_goals}
-            distractionLabels={data.distraction_labels}
-            invalid={notesInvalid}
-            value={notes}
-            onChange={(v) => {
-              setNotes(v);
-              setNotesInvalid(false);
-            }}
-          />
+            <p className="weekly-step-label">Reflection</p>
+            <ReflectionNotes
+              missedCount={missedCount}
+              allHit={allHit}
+              prevPlan={data.prev_plan ?? null}
+              reflection={data.reflection ?? null}
+              pastGoals={data.past_goals}
+              distractionLabels={data.distraction_labels}
+              invalid={notesInvalid}
+              value={notes}
+              onChange={(v) => {
+                setNotes(v);
+                setNotesInvalid(false);
+              }}
+            />
 
-          {isReflecting && (
             <button className="reflect-done-btn" onClick={handleDone}>
               Done reflecting — start planning
             </button>
-          )}
+          </div>
         </div>
-      )}
+      </div>
     </section>
   );
 }

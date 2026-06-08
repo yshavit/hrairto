@@ -59,24 +59,26 @@ export default function PlanSection({ data, phase }: Props) {
           </div>
         )}
       </div>
-      {isActive && (
-        <div className="weekly-section__body">
-          <p className="weekly-step-label">Intended focus</p>
-          <FocusSplitBar swimlanes={data.swimlanes} weights={focusWeights} isEditable onChange={setFocusWeights} />
-          {total !== 100 && <p className="weekly-validation-error">Total is {total}% — adjust to reach 100%</p>}
-          {targetParts.length > 0 && <p className="plan-section__target">Quarterly target: {targetParts.join(' · ')}</p>}
-          <hr className="plan-section__divider" />
-          <p className="weekly-step-label">Current quarter's goals</p>
-          {data.quarter_context.map((ctx) => (
-            <SwimlaneQuarterContext
-              key={ctx.swimlane_id}
-              context={ctx}
-              locale={data.calendar.locale}
-              swimlane={data.swimlanes.find((s) => s.id === ctx.swimlane_id)}
-            />
-          ))}
+      <div className={`weekly-section__collapse${isActive ? ' weekly-section__collapse--open' : ''}`}>
+        <div className="weekly-section__collapse-inner">
+          <div className="weekly-section__body">
+            <p className="weekly-step-label">Intended focus</p>
+            <FocusSplitBar swimlanes={data.swimlanes} weights={focusWeights} isEditable onChange={setFocusWeights} />
+            {total !== 100 && <p className="weekly-validation-error">Total is {total}% — adjust to reach 100%</p>}
+            {targetParts.length > 0 && <p className="plan-section__target">Quarterly target: {targetParts.join(' · ')}</p>}
+            <hr className="plan-section__divider" />
+            <p className="weekly-step-label">Current quarter's goals</p>
+            {data.quarter_context.map((ctx) => (
+              <SwimlaneQuarterContext
+                key={ctx.swimlane_id}
+                context={ctx}
+                locale={data.calendar.locale}
+                swimlane={data.swimlanes.find((s) => s.id === ctx.swimlane_id)}
+              />
+            ))}
+          </div>
         </div>
-      )}
+      </div>
     </section>
   );
 }

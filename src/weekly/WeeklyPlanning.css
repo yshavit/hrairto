@@ -152,6 +152,21 @@
   color: #ccc;
 }
 
+.weekly-section__collapse {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.5s ease;
+}
+
+.weekly-section__collapse--open {
+  grid-template-rows: 1fr;
+}
+
+.weekly-section__collapse-inner {
+  overflow: hidden;
+  min-height: 0;
+}
+
 .weekly-section__body {
   padding: 16px;
   display: flex;
