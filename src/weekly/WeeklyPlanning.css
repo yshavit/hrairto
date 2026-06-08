@@ -451,6 +451,12 @@
   color: #555;
 }
 
+.plan-section__divider {
+  border: none;
+  border-top: 0.5px solid #2a2a2a;
+  margin: 0;
+}
+
 .time-split-bars__footer {
   display: flex;
   align-items: center;
@@ -497,13 +503,31 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
+  box-shadow: inset 3px 0 0 0 var(--swimlane-color, #555);
+}
+
+.swimlane-quarter-context__header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.swimlane-quarter-context__pill {
+  flex-shrink: 0;
+  padding: 1px 7px;
+  border-radius: 3px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--swimlane-color, #888);
+  background: color-mix(in srgb, var(--swimlane-color, #888) 18%, transparent);
 }
 
 .swimlane-quarter-context__label {
   margin: 0;
   font-size: 11px;
-  font-weight: 600;
-  text-transform: uppercase;
+  font-weight: 500;
   letter-spacing: 0.05em;
   color: #555;
 }

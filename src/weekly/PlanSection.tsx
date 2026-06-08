@@ -65,8 +65,15 @@ export default function PlanSection({ data, phase }: Props) {
           <FocusSplitBar swimlanes={data.swimlanes} weights={focusWeights} isEditable onChange={setFocusWeights} />
           {total !== 100 && <p className="weekly-validation-error">Total is {total}% — adjust to reach 100%</p>}
           {targetParts.length > 0 && <p className="plan-section__target">Quarterly target: {targetParts.join(' · ')}</p>}
+          <hr className="plan-section__divider" />
+          <p className="weekly-step-label">Current quarter's goals</p>
           {data.quarter_context.map((ctx) => (
-            <SwimlaneQuarterContext key={ctx.swimlane_id} context={ctx} locale={data.calendar.locale} />
+            <SwimlaneQuarterContext
+              key={ctx.swimlane_id}
+              context={ctx}
+              locale={data.calendar.locale}
+              swimlane={data.swimlanes.find((s) => s.id === ctx.swimlane_id)}
+            />
           ))}
         </div>
       )}
