@@ -472,10 +472,12 @@ The past week should have:
   - [x] Stats row updates live
   - [x] Strikethrough on hit goals
 
-- [ ] **Step 7: WaypointHealthList**
-  - [ ] One card per swimlane
-  - [ ] Three confidence buttons, single-select, correct colors
-  - [ ] No deselect on re-click
+- [x] **Step 7: WaypointHealthList**
+  - [x] One card per swimlane (skipped if no active waypoint)
+  - [x] Three confidence buttons, single-select
+  - [x] No deselect on re-click
+  - Note: button colors use darker/more saturated shades than the spec's pastels,
+    which are designed for light themes and read poorly on the dark background.
 
 - [ ] **Step 8: ReflectionNotes + validation**
   - [ ] `buildReflectionPrompt` helper with all four placeholder rules

@@ -3,6 +3,7 @@ import './WeeklyPlanning.css';
 import WeeklyHeader from './WeeklyHeader';
 import TimeSplitBars from './TimeSplitBars';
 import PastGoalsList from './PastGoalsList';
+import WaypointHealthList from './WaypointHealthList';
 
 interface Props {
   data: WeeklySessionData;
@@ -21,6 +22,7 @@ export default function WeeklyPlanning({ data }: Props) {
           distractionLabels={data.distraction_labels}
         />
         <PastGoalsList goals={data.past_goals} swimlanes={data.swimlanes} quarterContext={data.quarter_context} distractionLabels={data.distraction_labels} />
+        <WaypointHealthList swimlanes={data.swimlanes} quarterContext={data.quarter_context} locale={data.calendar.locale} />
       </div>
     </div>
   );
