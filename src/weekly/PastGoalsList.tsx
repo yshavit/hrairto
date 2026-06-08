@@ -1,21 +1,22 @@
-import { useState } from 'react';
 import type { DistractionLabel, Swimlane, SwimlanePlanningContext, WeeklyGoal, WeeklyGoalId } from '../bindings';
 
 interface Props {
   goals: WeeklyGoal[];
+  outcomes: Map<WeeklyGoalId, LocalOutcome>;
+  onToggle: (id: WeeklyGoalId) => void;
   swimlanes: Swimlane[];
   quarterContext: SwimlanePlanningContext[];
   distractionLabels: DistractionLabel[];
 }
 
-type LocalOutcome = 'unmarked' | 'hit' | 'miss';
+export type LocalOutcome = 'unmarked' | 'hit' | 'miss';
 
-function initialOutcome(goal: WeeklyGoal): LocalOutcome {
+export function initialOutcome(goal: WeeklyGoal): LocalOutcome {
   if (!goal.outcome) return 'unmarked';
   return goal.outcome.type === 'Hit' ? 'hit' : 'miss';
 }
 
-function nextOutcome(current: LocalOutcome): LocalOutcome {
+export function nextOutcome(current: LocalOutcome): LocalOutcome {
   if (current === 'unmarked') return 'hit';
   if (current === 'hit') return 'miss';
   return 'hit';
@@ -77,13 +78,7 @@ function OutcomeIcon({ outcome }: { outcome: LocalOutcome }) {
   );
 }
 
-export default function PastGoalsList({ goals, swimlanes, quarterContext, distractionLabels }: Props) {
-  const [outcomes, setOutcomes] = useState<Map<WeeklyGoalId, LocalOutcome>>(() => new Map(goals.map((g) => [g.id, initialOutcome(g)])));
-
-  function toggle(id: WeeklyGoalId) {
-    setOutcomes((prev) => new Map(prev).set(id, nextOutcome(prev.get(id) ?? 'unmarked')));
-  }
-
+export default function PastGoalsList({ goals, outcomes, onToggle, swimlanes, quarterContext, distractionLabels }: Props) {
   const hitCount = [...outcomes.values()].filter((o) => o === 'hit').length;
   const missCount = [...outcomes.values()].filter((o) => o === 'miss').length;
   const unmarkedCount = goals.length - hitCount - missCount;
@@ -117,7 +112,7 @@ export default function PastGoalsList({ goals, swimlanes, quarterContext, distra
           const meta = goalMeta(goal, swimlanes, quarterContext, distractionLabels);
           return (
             <li key={goal.id} className="past-goal-row">
-              <button className="past-goal-row__toggle" onClick={() => toggle(goal.id)} aria-label="Toggle outcome">
+              <button className="past-goal-row__toggle" onClick={() => onToggle(goal.id)} aria-label="Toggle outcome">
                 <OutcomeIcon outcome={outcome} />
               </button>
               <span className="past-goal-row__chip" style={{ '--chip-color': meta.chipColor } as React.CSSProperties}>

@@ -66,6 +66,142 @@
   border-color: #666;
 }
 
+/* === Weekly body + section containers =================================== */
+
+.weekly-planning__body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.weekly-section {
+  flex-shrink: 0;
+  border: 0.5px solid #333;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.weekly-section--locked {
+  opacity: 0.45;
+}
+
+.weekly-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: #1a1a1a;
+}
+
+.weekly-section-header--clickable {
+  cursor: pointer;
+}
+
+.weekly-section-header--clickable:hover {
+  background: #1e1e1e;
+}
+
+.weekly-section-header__left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.weekly-section-header__title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #e0e0e0;
+}
+
+.weekly-section-header__right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.weekly-section-header__status {
+  font-size: 12px;
+  color: #666;
+}
+
+.weekly-section-header__status--done {
+  color: #4a8e20;
+}
+
+.weekly-section-header__status--waiting {
+  color: #444;
+}
+
+.weekly-section-header__edit-btn {
+  padding: 3px 10px;
+  font-size: 12px;
+  background: transparent;
+  color: #888;
+  border: 0.5px solid #444;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.weekly-section-header__edit-btn:hover {
+  border-color: #666;
+  color: #ccc;
+}
+
+.weekly-section__body {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  border-top: 0.5px solid #222;
+}
+
+/* === Step labels ========================================================= */
+
+.weekly-step-label {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: #555;
+}
+
+/* === Validation errors =================================================== */
+
+.weekly-validation-error {
+  margin: 0;
+  font-size: 12px;
+  color: #c94040;
+}
+
+/* === Done reflecting button ============================================== */
+
+.reflect-done-btn {
+  width: 100%;
+  padding: 12px;
+  background: #1e1e1e;
+  color: #e0e0e0;
+  border: 0.5px solid #444;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: inherit;
+  transition:
+    background 0.1s,
+    border-color 0.1s;
+}
+
+.reflect-done-btn:hover {
+  background: #252525;
+  border-color: #666;
+}
+
 /* === Reflection notes =================================================== */
 
 .reflection-notes {

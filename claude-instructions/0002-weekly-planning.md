@@ -486,10 +486,14 @@ The past week should have:
     (low-opacity color-mix background) rather than a stacked subtitle, for compactness.
     Chip width is fixed at 76px so all goals align regardless of swimlane name length.
 
-- [ ] **Step 9: ReflectSection assembly + phase transition**
-  - [ ] Assemble steps 5–8 into `ReflectSection`
-  - [ ] "Done reflecting" validates goals + notes before transitioning
-  - [ ] On success: collapse reflection, show "Edit" button, expand planning
+- [x] **Step 9: ReflectSection assembly + phase transition**
+  - [x] Assemble steps 5–8 into `ReflectSection`
+  - [x] "Done reflecting" validates goals + notes before transitioning
+  - [x] On success: collapse reflection, show "Edit" button, expand planning
+  - Note: `LocalOutcome`, `initialOutcome`, `nextOutcome` exported from `PastGoalsList.tsx`
+    so `ReflectSection` owns outcome state and passes `outcomes`/`onToggle` props down.
+    Collapsed reflect section shows "Done" + "Edit" button; clicking header toggles a peek
+    without triggering the edit transition. `PlanSection` is a stub (Steps 10–14 fill it).
 
 - [ ] **Step 10: FocusWeightSliders**
   - [ ] One slider per swimlane + Distractions
