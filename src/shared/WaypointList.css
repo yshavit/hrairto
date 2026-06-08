@@ -1,0 +1,49 @@
+.waypoint-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.waypoint-item {
+  display: grid;
+  grid-template-columns: 14px max-content 1fr;
+  column-gap: 6px;
+  align-items: start;
+}
+
+.waypoint-check {
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  margin-top: 1px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px;
+  color: white;
+  border: 1px solid #555;
+}
+
+.waypoint-item[data-state='completed'] .waypoint-check {
+  background: #378add;
+  border-color: #378add;
+}
+
+.waypoint-item[data-state='current'] .waypoint-check {
+  border: 1.5px solid #378add;
+}
+
+.waypoint-month {
+  color: #555;
+}
+
+.waypoint-label {
+  color: #ccc;
+}
+
+.waypoint-item[data-state='completed'] .waypoint-label {
+  color: #555;
+  text-decoration: line-through;
+}

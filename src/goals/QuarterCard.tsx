@@ -1,5 +1,5 @@
 import type { QuarterDisplay, QuarterlyGoal } from '../bindings';
-import WaypointList from './WaypointList';
+import WaypointList from '../shared/WaypointList';
 
 type Status = 'past' | 'active' | 'future';
 

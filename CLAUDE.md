@@ -7,7 +7,7 @@ built. This file records working conventions that aren't obvious from the code.
 ## Commit messages
 
 Subject line: `<domain>: brief description` — lowercase, imperative, no period.
-Domains so far: `scaffolding`, `spec`, `yearlies`. Add a new domain when the work
+Domains so far: `scaffolding`, `spec`, `yearlies`, `shared-ui`, `weeklies`. Add a new domain when the work
 doesn't fit an existing one.
 
 Body (if needed): explain the _what and why_ at a level that's useful in `git log`.

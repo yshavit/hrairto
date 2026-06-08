@@ -1,5 +1,6 @@
 import type { Waypoint } from '../bindings';
 import { getMonthInfo } from '../utils/calendar';
+import './WaypointList.css';
 
 interface Props {
   waypoints: Waypoint[];
