@@ -36,7 +36,11 @@ fn quit(app: tauri::AppHandle) {
 /// between what the app exposes and what the frontend is typed against.
 fn specta_builder() -> Builder<tauri::Wry> {
     Builder::<tauri::Wry>::new()
-        .commands(collect_commands![ui::goals::open_yearly_goals, quit])
+        .commands(collect_commands![
+            ui::goals::open_yearly_goals,
+            ui::weekly::open_weekly_planning,
+            quit
+        ])
         // No commands return these yet (phase 1 has no data commands), so register
         // them explicitly; each transitively exports every nested model type too.
         .typ::<models::GoalTreeData>()

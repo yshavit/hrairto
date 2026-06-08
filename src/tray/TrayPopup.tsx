@@ -16,6 +16,7 @@ function TrayPopup() {
       }}
     >
       <button onClick={() => void invoke('open_yearly_goals')}>Yearly Goals</button>
+      <button onClick={() => void invoke('open_weekly_planning')}>Weekly Planning</button>
       <button onClick={() => void invoke('quit')}>{quitLabel}</button>
     </div>
   );

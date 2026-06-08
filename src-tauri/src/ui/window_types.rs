@@ -1,6 +1,7 @@
 pub enum Window {
     Main,
     Goals,
+    Weekly,
 }
 
 impl Window {
@@ -8,6 +9,7 @@ impl Window {
         match self {
             Window::Main => "main",
             Window::Goals => "goals",
+            Window::Weekly => "weekly",
         }
     }
 }

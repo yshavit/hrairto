@@ -18,6 +18,13 @@ async openYearlyGoals() : Promise<void> {
     await TAURI_INVOKE("open_yearly_goals");
 },
 /**
+ * Opens the Weekly Planning & Reflection window and hides the tray popup.
+ * Reuses the window if it is already open.
+ */
+async openWeeklyPlanning() : Promise<void> {
+    await TAURI_INVOKE("open_weekly_planning");
+},
+/**
  * Quits the application, exiting the process.
  */
 async quit() : Promise<void> {

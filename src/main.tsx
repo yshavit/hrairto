@@ -4,6 +4,8 @@ import { getCurrentWindow } from '@tauri-apps/api/window';
 import './index.css';
 import TrayPopup from './tray/TrayPopup';
 import YearlyGoals from './goals/YearlyGoals';
+import WeeklyPlanning from './weekly/WeeklyPlanning';
+import { weeklySessionData } from './mockData';
 
 // Catch errors that prevent React from mounting at all (module-load failures,
 // synchronous throws during evaluation). Shows error text in the window so we
@@ -15,7 +17,8 @@ window.addEventListener('error', (e) => {
   }
 });
 
-const Root = getCurrentWindow().label === 'goals' ? YearlyGoals : TrayPopup;
+const label = getCurrentWindow().label;
+const Root = label === 'goals' ? YearlyGoals : label === 'weekly' ? () => <WeeklyPlanning data={weeklySessionData} /> : TrayPopup;
 
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>
