@@ -451,12 +451,14 @@ The past week should have:
   - [x] Register `weekly.html` in `vite.config.ts` rollup inputs
   - [x] Verify the page loads in browser (no Tauri required)
 
-- [ ] **Step 4: WeeklyHeader**
-  - [ ] Title: "Week of [start date]", formatted via `Intl.DateTimeFormat`
-  - [ ] Subtitle: "Q2 · week N of 13" (derive from `plan.start_at` and calendar)
-  - [ ] Week-end picker: dropdown with options for each remaining day of the week,
+- [x] **Step 4: WeeklyHeader**
+  - [x] Title: "Week of [start date]", formatted via `Intl.DateTimeFormat`
+  - [x] Subtitle: "Q2 · week N of 13" (derive from `plan.start_at` and calendar)
+  - [x] Week-end picker: dropdown with options for each remaining day of the week,
         plus one option for "next Monday". Default: Friday of the current week.
         (Phase 1: purely cosmetic — no logic needed beyond rendering)
+  - Note: `WeeklySessionData` gained a `calendar` field (parallel to `GoalTreeData`)
+    so the header has access to both `locale` and `timezone` for `Intl.DateTimeFormat`.
 
 - [ ] **Step 5: TimeSplitBars**
   - [ ] Planned bar from `weights`

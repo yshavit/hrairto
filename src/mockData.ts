@@ -420,6 +420,7 @@ const quarterContext: SwimlanePlanningContext[] = [
 ];
 
 export const weeklySessionData: WeeklySessionData = {
+  calendar,
   plan: weeklyPlan,
   prev_plan: prevWeeklyPlan,
   reflection: weeklyReflection,

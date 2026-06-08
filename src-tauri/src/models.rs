@@ -348,6 +348,7 @@ pub struct SwimlanePlanningContext {
 /// The backend computes all derived fields; the frontend just renders.
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 pub struct WeeklySessionData {
+    pub calendar: Calendar,
     /// The plan for the coming week (focus weights + new goals).
     pub plan: WeeklyPlan,
     /// The plan being reflected on (previous week). `None` on the first ever

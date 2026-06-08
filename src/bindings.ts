@@ -287,7 +287,7 @@ export type WeeklyReflectionId = string
  * Full payload for the weekly planning/reflection session UI.
  * The backend computes all derived fields; the frontend just renders.
  */
-export type WeeklySessionData = { 
+export type WeeklySessionData = { calendar: Calendar; 
 /**
  * The plan for the coming week (focus weights + new goals).
  */
