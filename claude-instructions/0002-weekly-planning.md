@@ -479,9 +479,12 @@ The past week should have:
   - Note: button colors use darker/more saturated shades than the spec's pastels,
     which are designed for light themes and read poorly on the dark background.
 
-- [ ] **Step 8: ReflectionNotes + validation**
-  - [ ] `buildReflectionPrompt` helper with all four placeholder rules
-  - [ ] Red ring + inline error when empty on submit attempt
+- [x] **Step 8: ReflectionNotes + validation**
+  - [x] `buildReflectionPrompt` helper with all four placeholder rules
+  - [x] Red ring + inline error when empty on submit attempt (invalid prop; wired up in Step 9)
+  - Note: goal rows use a single-line layout with a fixed-width muted swimlane chip
+    (low-opacity color-mix background) rather than a stacked subtitle, for compactness.
+    Chip width is fixed at 76px so all goals align regardless of swimlane name length.
 
 - [ ] **Step 9: ReflectSection assembly + phase transition**
   - [ ] Assemble steps 5–8 into `ReflectSection`

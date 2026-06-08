@@ -21,23 +21,36 @@ function nextOutcome(current: LocalOutcome): LocalOutcome {
   return 'hit';
 }
 
-function buildSubtitle(goal: WeeklyGoal, swimlanes: Swimlane[], quarterContext: SwimlanePlanningContext[], distractionLabels: DistractionLabel[]): string {
+const DISTRACTIONS_COLOR = '#B4B2A9';
+
+interface GoalMeta {
+  chipLabel: string;
+  chipColor: string;
+  detail: string | null;
+}
+
+function goalMeta(goal: WeeklyGoal, swimlanes: Swimlane[], quarterContext: SwimlanePlanningContext[], distractionLabels: DistractionLabel[]): GoalMeta {
   const ref = goal.goal_ref;
   if (ref.type === 'Planned') {
-    const swimlaneName = swimlanes.find((s) => s.id === ref.swimlane_id)?.name ?? '';
+    const sw = swimlanes.find((s) => s.id === ref.swimlane_id);
+    let detail: string | null = null;
     if (ref.waypoint_id) {
       for (const ctx of quarterContext) {
         const wp = ctx.quarterly_goal?.waypoints.find((w) => w.id === ref.waypoint_id);
-        if (wp) return `${swimlaneName} · ${wp.text}`;
+        if (wp) {
+          detail = wp.text;
+          break;
+        }
       }
     }
-    return swimlaneName;
+    return { chipLabel: sw?.name ?? 'Unknown', chipColor: sw?.color ?? '#666', detail };
   }
-  const labelNames = ref.label_ids
-    .map((id) => distractionLabels.find((l) => l.id === id)?.text)
-    .filter(Boolean)
-    .join(', ');
-  return labelNames || 'Distraction';
+  const labelNames =
+    ref.label_ids
+      .map((id) => distractionLabels.find((l) => l.id === id)?.text)
+      .filter(Boolean)
+      .join(', ') || null;
+  return { chipLabel: 'Distraction', chipColor: DISTRACTIONS_COLOR, detail: labelNames };
 }
 
 function OutcomeIcon({ outcome }: { outcome: LocalOutcome }) {
@@ -101,16 +114,17 @@ export default function PastGoalsList({ goals, swimlanes, quarterContext, distra
       <ul className="past-goals-list__goals">
         {goals.map((goal) => {
           const outcome = outcomes.get(goal.id) ?? 'unmarked';
-          const subtitle = buildSubtitle(goal, swimlanes, quarterContext, distractionLabels);
+          const meta = goalMeta(goal, swimlanes, quarterContext, distractionLabels);
           return (
             <li key={goal.id} className="past-goal-row">
               <button className="past-goal-row__toggle" onClick={() => toggle(goal.id)} aria-label="Toggle outcome">
                 <OutcomeIcon outcome={outcome} />
               </button>
-              <div className="past-goal-row__body">
-                <span className={`past-goal-row__text${outcome === 'hit' ? ' past-goal-row__text--hit' : ''}`}>{goal.text}</span>
-                {subtitle && <span className="past-goal-row__subtitle">→ {subtitle}</span>}
-              </div>
+              <span className="past-goal-row__chip" style={{ '--chip-color': meta.chipColor } as React.CSSProperties}>
+                {meta.chipLabel}
+              </span>
+              <span className={`past-goal-row__text${outcome === 'hit' ? ' past-goal-row__text--hit' : ''}`}>{goal.text}</span>
+              {meta.detail && <span className="past-goal-row__detail">{meta.detail}</span>}
             </li>
           );
         })}
