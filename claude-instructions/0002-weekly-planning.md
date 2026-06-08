@@ -466,11 +466,11 @@ The past week should have:
   - [ ] Distraction label pills below actual bar (from mock data)
   - [ ] Legend below bars
 
-- [ ] **Step 6: PastGoalsList**
-  - [ ] Render all goals from mock data
-  - [ ] Click cycles: unmarked → hit → miss → hit → … (never back to unmarked)
-  - [ ] Stats row updates live
-  - [ ] Strikethrough on hit goals
+- [x] **Step 6: PastGoalsList**
+  - [x] Render all goals from mock data
+  - [x] Click cycles: unmarked → hit → miss → hit → … (never back to unmarked)
+  - [x] Stats row updates live
+  - [x] Strikethrough on hit goals
 
 - [ ] **Step 7: WaypointHealthList**
   - [ ] One card per swimlane
