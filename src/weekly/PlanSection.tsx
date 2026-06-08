@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { Swimlane, SwimlaneWeight, WeeklySessionData } from '../bindings';
 import FocusSplitBar from '../shared/FocusSplitBar';
+import SwimlaneQuarterContext from './SwimlaneQuarterContext';
 
 interface Props {
   data: WeeklySessionData;
@@ -64,6 +65,9 @@ export default function PlanSection({ data, phase }: Props) {
           <FocusSplitBar swimlanes={data.swimlanes} weights={focusWeights} isEditable onChange={setFocusWeights} />
           {total !== 100 && <p className="weekly-validation-error">Total is {total}% — adjust to reach 100%</p>}
           {targetParts.length > 0 && <p className="plan-section__target">Quarterly target: {targetParts.join(' · ')}</p>}
+          {data.quarter_context.map((ctx) => (
+            <SwimlaneQuarterContext key={ctx.swimlane_id} context={ctx} locale={data.calendar.locale} />
+          ))}
         </div>
       )}
     </section>
