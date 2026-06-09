@@ -4,7 +4,7 @@ import FocusSplitBar from '../shared/FocusSplitBar';
 import '../shared/swimlane-pill.css';
 import MissedGoalGhosts from './MissedGoalGhosts';
 import PlanGoalsList, { WaypointGroup } from './PlanGoalsList';
-import SwimlaneQuarterContext from './SwimlaneQuarterContext';
+import QuarterlyGoalCard from './QuarterlyGoalCard';
 
 // ── helpers ────────────────────────────────────────────────────────────────
 
@@ -151,16 +151,35 @@ export default function PlanSection({ data, phase, missedGoals }: Props) {
 
             <hr className="plan-section__divider" />
 
-            {/* ── Quarter context (all swimlanes) ── */}
+            {/* ── Quarter context (all swimlanes, all current-quarter goals) ── */}
             <p className="weekly-step-label">Current quarter's goals</p>
-            {data.quarter_context.map((ctx) => (
-              <SwimlaneQuarterContext
-                key={ctx.swimlane_id}
-                context={ctx}
-                locale={data.calendar.locale}
-                swimlane={data.swimlanes.find((s) => s.id === ctx.swimlane_id)}
-              />
-            ))}
+            {data.swimlanes.map((sw) => {
+              const ctx = data.quarter_context.find((c) => c.swimlane_id === sw.id);
+              const currentGoals = ctx
+                ? data.upcoming_quarterly_goals.filter(
+                    (qg) => qg.swimlane_id === sw.id && qg.due_quarter === ctx.quarter.quarter && qg.due_year === ctx.quarter.year,
+                  )
+                : [];
+              return (
+                <div key={sw.id} className="swimlane-context-group">
+                  <div className="swimlane-context-group__header">
+                    <span className="swimlane-pill" style={{ '--swimlane-color': sw.color } as React.CSSProperties}>
+                      {sw.name}
+                    </span>
+                    {ctx && <span className="swimlane-context-group__quarter">{ctx.quarter.label}</span>}
+                  </div>
+                  {currentGoals.length === 0 ? (
+                    <p className="swimlane-context-group__empty">No quarterly goal set</p>
+                  ) : (
+                    <div className="swimlane-context-group__cards">
+                      {currentGoals.map((qg) => (
+                        <QuarterlyGoalCard key={qg.id} goal={qg} locale={data.calendar.locale} color={sw.color} />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
 
             {/* ── Missed goal ghosts (all lanes together) ── */}
             {missedGoals.length > 0 && (

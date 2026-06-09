@@ -162,7 +162,8 @@ WeeklyPlanning                  — top-level; owns phase state (reflecting | pl
     ReflectDoneButton           — validates and transitions to planning phase
   PlanSection                   — collapsible; starts collapsed
     FocusSplitBar               — draggable stacked bar; must sum to 100%
-    SwimlaneQuarterContext      — one read-only context card per swimlane (all together)
+    [per swimlane: pill + quarter label header, then wrapping row of cards]
+      QuarterlyGoalCard         — one card per current-quarter goal (incl. side quests)
     MissedGoalGhosts            — all last week's misses together, below context cards
     PlanGoalsList               — one per swimlane + one for distractions
       PlanGoalItem              — goal text + waypoint picker (or distraction label picker)
@@ -304,11 +305,15 @@ One slider per swimlane plus one for `Distractions`. All weights must sum to 100
 
 The body of `PlanSection` flows top-to-bottom in three flat groups:
 
-**1. Quarter context cards** — one `SwimlaneQuarterContext` per swimlane, all
-grouped together under the step label "Current quarter's goals". Each card is
-read-only and shows the active quarter label, quarterly goal text, and waypoints
-with completion state (matching the `WaypointList` visual treatment in the goal
-tree). No interactions.
+**1. Quarter context cards** — under the step label "Current quarter's goals",
+one group per swimlane. Each group has a header (swimlane pill + quarter label)
+followed by a `flex-wrap` row of `QuarterlyGoalCard`s — one per current-quarter
+goal for that swimlane, including side quests. Cards are atomic: each either fits
+on the current row or wraps to the next as a whole. Cards are sourced from
+`upcoming_quarterly_goals` filtered to `due_quarter/year` matching the swimlane's
+active quarter (from `quarter_context`). If a swimlane has no goals, a "No
+quarterly goal set" placeholder is shown instead. Each card shows the goal text
+and its waypoints (using the `WaypointList` visual treatment). No interactions.
 
 **2. Missed goal ghosts** — all last week's misses collected together below the
 context cards (conditional; hidden when nothing was missed). Each ghost is a
