@@ -549,6 +549,197 @@
   font-style: italic;
 }
 
+/* === Goal list sections (flat layout: one per swimlane + distractions) === */
+
+.plan-goal-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.plan-goal-section__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 0 2px;
+}
+
+.plan-goal-section__targeting {
+  font-size: 12px;
+  color: #666;
+}
+
+.plan-goal-section__distractions-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #888;
+}
+
+/* === Plan goals list ===================================================== */
+
+.plan-goals-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.plan-goal-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #1a1a1a;
+  border: 0.5px solid #333;
+  border-radius: 6px;
+  padding: 8px 12px;
+}
+
+.plan-goal-item__text {
+  flex: 1;
+  font-size: 14px;
+  color: #e0e0e0;
+  line-height: 1.4;
+}
+
+.plan-goal-item__wp-picker {
+  flex-shrink: 0;
+  background: #1e1e1e;
+  color: #aaa;
+  border: 0.5px solid #444;
+  border-radius: 4px;
+  padding: 3px 6px;
+  font-size: 12px;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.plan-goal-item__wp-picker:focus {
+  outline: none;
+  border-color: #666;
+}
+
+.plan-goal-item__labels {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.plan-goal-item__label-check {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: #aaa;
+  cursor: pointer;
+  user-select: none;
+}
+
+.plan-goal-item__delete {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  color: #666;
+  font-size: 17px;
+  line-height: 1;
+  padding: 0 2px;
+  cursor: pointer;
+  font-family: inherit;
+  opacity: 0;
+  transition: opacity 0.1s;
+}
+
+.plan-goal-item:hover .plan-goal-item__delete {
+  opacity: 1;
+}
+
+/* === Add goal button & form ============================================== */
+
+.add-goal-btn {
+  width: 100%;
+  padding: 8px 12px;
+  background: transparent;
+  color: #555;
+  border: 1px dashed #333;
+  border-radius: 6px;
+  font-size: 13px;
+  font-family: inherit;
+  cursor: pointer;
+  text-align: left;
+  transition:
+    border-color 0.1s,
+    color 0.1s;
+}
+
+.add-goal-btn:hover {
+  border-color: #555;
+  color: #888;
+}
+
+.add-goal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 12px;
+  background: #1e1e1e;
+  border: 0.5px solid #555;
+  border-radius: 6px;
+}
+
+.add-goal-form__input {
+  background: transparent;
+  border: none;
+  border-bottom: 0.5px solid #444;
+  color: #e0e0e0;
+  font-size: 14px;
+  font-family: inherit;
+  padding: 4px 0;
+  outline: none;
+  width: 100%;
+}
+
+.add-goal-form__input:focus {
+  border-bottom-color: #666;
+}
+
+.add-goal-form__input::placeholder {
+  color: #555;
+}
+
+.add-goal-form__actions {
+  display: flex;
+  gap: 8px;
+}
+
+.add-goal-form__submit,
+.add-goal-form__cancel {
+  padding: 4px 12px;
+  font-size: 12px;
+  font-family: inherit;
+  border-radius: 4px;
+  cursor: pointer;
+  border: 0.5px solid #444;
+}
+
+.add-goal-form__submit {
+  background: #2a2a2a;
+  color: #e0e0e0;
+}
+
+.add-goal-form__submit:hover {
+  background: #333;
+  border-color: #666;
+}
+
+.add-goal-form__cancel {
+  background: transparent;
+  color: #666;
+}
+
+.add-goal-form__cancel:hover {
+  color: #999;
+  border-color: #555;
+}
+
 /* === Missed goal ghosts ================================================= */
 
 .missed-goal-ghosts {

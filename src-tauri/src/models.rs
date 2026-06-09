@@ -369,4 +369,9 @@ pub struct WeeklySessionData {
     /// Current long-term weight period, shown as the quarterly target reminder
     /// below the focus weight sliders.
     pub current_weights: SwimlaneWeightPeriod,
+    /// Quarterly goals (all swimlanes) available for waypoint selection when
+    /// entering this week's goals. Includes the current quarter and any future
+    /// quarters; the backend excludes goals whose every waypoint is already
+    /// completed.
+    pub upcoming_quarterly_goals: Vec<QuarterlyGoal>,
 }

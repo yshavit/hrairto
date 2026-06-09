@@ -419,6 +419,10 @@ const quarterContext: SwimlanePlanningContext[] = [
   },
 ];
 
+// Quarterly goals with at least one incomplete waypoint, for the waypoint
+// picker when entering this week's goals.
+const upcomingQuarterlyGoals = quarterly_goals.filter((qg) => qg.waypoints.some((wp) => wp.completed_at === null));
+
 export const weeklySessionData: WeeklySessionData = {
   calendar,
   plan: weeklyPlan,
@@ -430,4 +434,5 @@ export const weeklySessionData: WeeklySessionData = {
   distraction_labels: distractionLabels,
   quarter_context: quarterContext,
   current_weights,
+  upcoming_quarterly_goals: upcomingQuarterlyGoals,
 };

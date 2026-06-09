@@ -161,12 +161,11 @@ WeeklyPlanning                  — top-level; owns phase state (reflecting | pl
     ReflectionNotes             — required textarea; blocks completion if empty
     ReflectDoneButton           — validates and transitions to planning phase
   PlanSection                   — collapsible; starts collapsed
-    FocusWeightSliders          — one slider per swimlane + distractions; must sum to 100%
-    SwimlanePlanBlocks          — one block per swimlane + one for distractions
-      SwimlaneQuarterContext    — read-only quarter goal + waypoints reference card
-      MissedGoalGhosts          — dimmed, non-interactive echoes of last week's misses
-      PlanGoalsList             — user-entered goals for this week
-        PlanGoalItem            — goal text + waypoint picker (or distraction label picker)
+    FocusSplitBar               — draggable stacked bar; must sum to 100%
+    SwimlaneQuarterContext      — one read-only context card per swimlane (all together)
+    MissedGoalGhosts            — all last week's misses together, below context cards
+    PlanGoalsList               — one per swimlane + one for distractions
+      PlanGoalItem              — goal text + waypoint picker (or distraction label picker)
       AddGoalButton             — inline goal entry form
     SavePlanButton              — validates weights sum to 100%, then saves
 ```
@@ -301,47 +300,45 @@ One slider per swimlane plus one for `Distractions`. All weights must sum to 100
   reminder below the sliders: `Quarterly target: 70% team · 30% personal`
 - The `targeting ~X%` label in each swimlane plan block updates live as sliders move.
 
-### Swimlane plan blocks
+### Planning section layout
 
-One block per swimlane, one block for Distractions. Each block has:
+The body of `PlanSection` flows top-to-bottom in three flat groups:
 
-**Header**: tinted background (swimlane color), lane name, `targeting ~X%` label.
-Colors follow the existing swimlane color system from `GoalTree.css`.
+**1. Quarter context cards** — one `SwimlaneQuarterContext` per swimlane, all
+grouped together under the step label "Current quarter's goals". Each card is
+read-only and shows the active quarter label, quarterly goal text, and waypoints
+with completion state (matching the `WaypointList` visual treatment in the goal
+tree). No interactions.
 
-**Quarter context card** (swimlane blocks only, not Distractions):
-A read-only reference card showing:
+**2. Missed goal ghosts** — all last week's misses collected together below the
+context cards (conditional; hidden when nothing was missed). Each ghost is a
+dimmed, dashed-border, non-interactive card with a swimlane pill identifying its
+lane. A `missed last week` label appears above the group.
 
-- The active quarter label (e.g. "Q2 quarterly goal")
-- The quarterly goal text
-- Waypoints with their completion state (done / current / open), using the same
-  visual treatment as `WaypointList` in the goal tree
+Ghost appearance: `opacity: 0.65`, `border: 0.5px dashed`, muted background.
 
-This card is informational only — no interactions.
+**3. Goal lists** — under the step label "Goals for this week", one section per
+swimlane plus one for Distractions. Each section has a lightweight header row
+(swimlane pill + `targeting ~X%` label, updating live as the focus bar changes)
+followed by a `PlanGoalsList`.
 
-**Missed goal ghosts** (if any goals were missed last week in this swimlane):
-Dimmed, dashed-border, non-interactive cards at the top of the goal list. They
-echo missed goals from the reflection phase. They are visual reminders only —
-not pre-populated entries, not interactive. A small label above them reads
-`missed last week`.
-
-Ghost appearance: `opacity: 0.65`, `border: 0.5px dashed var(--color-border-secondary)`,
-`background: var(--color-background-secondary)`.
-
-**Goal list**: user-entered goals for this week. Each goal shows:
+**Goal list contents** (per section):
 
 - Goal text
-- For swimlane goals: a waypoint picker dropdown (optional; shows only existing
-  waypoints for this swimlane's active quarter; includes a `(no specific waypoint)`
-  option)
-- For distraction goals: a label picker (multi-select from `DistractionLabel` list;
-  optional)
+- For swimlane goals: a waypoint picker `<select>` with `<optgroup>` separators by
+  quarter (e.g. "Q2 2026", "Q3 2026"). Shows all incomplete waypoints from the
+  current and future quarterly goals for that swimlane, sourced from
+  `WeeklySessionData.upcoming_quarterly_goals`. Includes a "No specific waypoint"
+  option.
+- For distraction goals: a label picker (multi-select checkboxes from
+  `DistractionLabel` list; optional)
 - A delete button (visible on hover, `×` icon)
 
 **Add goal button**: dashed border, full width, opens an inline entry form with:
 
 - Text input (autofocused)
 - Waypoint picker or label picker (depending on lane)
-- Enter key submits
+- Enter key submits; Escape cancels
 
 ### "Save week plan" button
 
@@ -360,13 +357,6 @@ Section containers:
 - Border radius: `var(--border-radius-lg)`
 - Section header padding: `12px 16px`
 - Active section header background: `var(--color-background-secondary)`
-
-Swimlane block headers (tinted):
-
-- Team: background `#E6F1FB`, border-bottom `#B5D4F4`, text `#0C447C`
-- Personal: background `#E1F5EE`, border-bottom `#9FE1CB`, text `#085041`
-- Distractions: background `#F1EFE8`, border-bottom `#D3D1C7`, text `#444441`
-- Additional swimlanes: use the palette from the goal tree
 
 Step labels (e.g. "HOW DID THE WEEK GO?"):
 
@@ -524,13 +514,16 @@ The past week should have:
   - [x] Ghosts are computed at phase transition time via `onDone(missed)` snapshot held
         in `WeeklyPlanning` state; passed to `PlanSection` as `missedGoals` prop
 
-- [ ] **Step 13: PlanGoalsList + AddGoalButton**
-  - [ ] Add goal inline form: text input + waypoint picker (or label picker)
-  - [ ] Enter key submits
-  - [ ] Delete button on hover
-  - [ ] Waypoint picker: only shows existing waypoints for active quarter;
+- [x] **Step 13: PlanGoalsList + AddGoalButton**
+  - [x] Add goal inline form: text input + waypoint picker (or label picker)
+  - [x] Enter key submits
+  - [x] Delete button on hover
+  - [x] Waypoint picker: only shows existing waypoints for active quarter;
         includes `(no specific waypoint)` option
-  - [ ] Label picker: multi-select from `DistractionLabel` list
+  - [x] Label picker: multi-select from `DistractionLabel` list
+  - Note: waypoint picker uses `<optgroup>` separators by quarter (e.g. "Q2 2026").
+    Shows all incomplete waypoints across current + future quarters, sourced from
+    `upcoming_quarterly_goals` (added to `WeeklySessionData` for this purpose).
 
 - [ ] **Step 14: PlanSection assembly + save**
   - [ ] Assemble steps 10–13 into `PlanSection`
