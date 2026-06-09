@@ -766,6 +766,32 @@
   letter-spacing: 0.05em;
   text-transform: uppercase;
   color: #555;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.missed-goal-ghosts__icon {
+  flex-shrink: 0;
+  fill: none;
+  stroke: #7a3030;
+  stroke-width: 1.5;
+  color: #7a3030;
+}
+
+.missed-goal-ghosts__icon circle {
+  fill: color-mix(in srgb, #7a3030 15%, transparent);
+}
+
+.missed-goal-ghosts__icon text {
+  fill: #7a3030;
+  stroke: none;
+  font-size: 10px;
+  font-weight: 700;
+  font-family:
+    system-ui,
+    -apple-system,
+    sans-serif;
 }
 
 .missed-goal-ghost {
