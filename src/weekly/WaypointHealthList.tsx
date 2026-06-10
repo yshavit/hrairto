@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { Swimlane, SwimlanePlanningContext, Waypoint } from '../bindings';
 
 interface Props {
@@ -79,6 +79,13 @@ export default function WaypointHealthList({ swimlanes, quarterContext, locale, 
       return swimlane && waypoint ? { ctx, swimlane, waypoint } : null;
     })
     .filter((x): x is NonNullable<typeof x> => x !== null);
+
+  // When there are no health cards, the check is trivially satisfied.
+  // This must be before the early return so the hook always runs.
+  const nCards = cards.length;
+  useEffect(() => {
+    if (nCards === 0) onAllSelected?.(true);
+  }, [nCards, onAllSelected]);
 
   if (cards.length === 0) return null;
 

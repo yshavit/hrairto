@@ -13,7 +13,7 @@ The session enforces phase ordering: the planning section is collapsed and
 inaccessible until the reflection is marked complete. Editing the reflection after
 planning has begun re-collapses the planning section (but does not discard plan data).
 
-**Status: Steps 0–15 implemented (mock data, no Tauri persistence). Tests pending (Steps 16–17).**
+**Status: Steps 0–17 implemented (mock data, no Tauri persistence). Step 18 (doc graduation) pending.**
 
 If helpful, there is an overview of the project in `0000-hairto-overview.md`.
 
@@ -47,7 +47,7 @@ the doc stays an accurate picture of what's actually built.
 | Test entrypoint HTML  | `ui-test-entrypoints/weekly.html`        |
 | Test entrypoint TS    | `src/weekly-main.tsx`                    |
 | RTL unit tests        | `src/weekly/*.test.tsx`                  |
-| Playwright e2e tests  | `e2e/weekly.spec.ts`                     |
+| Playwright e2e tests  | `tests/weekly.spec.ts`                   |
 
 Reuses from existing code:
 
@@ -429,22 +429,29 @@ The past week should have:
 
 ### RTL unit tests (`src/weekly/*.test.tsx`)
 
-- `ReflectSection`: "Done reflecting" is blocked with unmarked goals
-- `ReflectSection`: "Done reflecting" is blocked with empty notes
-- `ReflectSection`: transitions to planning when all goals marked and notes filled
+- `PastGoalsList`: `--unmarked` class present on initial render; disappears when goal is marked
 - `PastGoalsList`: first click sets hit; second sets miss; never returns to unmarked
+- `ReflectionNotes`: `buildReflectionPrompt` — placeholder contains missed-goals text when missedCount > 0
+- `ReflectionNotes`: `buildReflectionPrompt` — placeholder contains all-hit text when allHit
+- `ReflectionNotes`: `--invalid` class present when textarea empty; gone when filled
+- `WaypointHealthList`: `--unselected` class present on initial render; gone after confidence click
+- `WaypointHealthList`: error message shown only when `invalid=true` with unselected card
+- `ReflectSection`: "Done reflecting" blocked with unmarked goals
+- `ReflectSection`: "Done reflecting" blocked with empty notes
+- `ReflectSection`: "Done reflecting" blocked with unselected waypoint health
+- `ReflectSection`: transitions to planning when there are no waypoint health cards (trivially satisfied)
+- `ReflectSection`: transitions to planning when all goals marked, notes filled, health selected
 - `PlanSection`: "Set Plan" calls `onSave` with a `Plan` payload when goals exist
 - `PlanSection`: "No plan for next week." shows confirmation panel; confirm calls `onSave` with `NoPlan` payload
-- `PlanSection`: "Edit" re-collapses planning section
-- `PlanSection`: plan data survives the edit/re-complete cycle
-- `FocusSplitBar`: segment boundaries drag correctly and always sum to 100%
-- `ReflectionNotes`: placeholder text is correct for all-hit scenario
-- `ReflectionNotes`: placeholder text is correct for missed-goals scenario
+- `PlanSection`: "No plan for next week." — Cancel dismisses confirmation panel
+- `WeeklyPlanning`: "Edit" re-collapses planning section
+- `WeeklyPlanning`: plan data survives the edit/re-complete cycle
+- `FocusSplitBar`: segment boundaries drag correctly and always sum to 100% (mock `getBoundingClientRect` if needed; move to Playwright if too fragile in jsdom)
 
-### Playwright e2e (`e2e/weekly.spec.ts`)
+### Playwright e2e (`tests/weekly.spec.ts`)
 
-- Full happy path: mark all goals, write notes, complete reflection, set weights,
-  add a goal, save
+- Full happy path: mark all goals, write notes, select waypoint health, complete
+  reflection, add a goal, save; assert `body[data-saved-payload]` contains Plan payload
 - Blocked transitions: verify planning section is not accessible before reflection
 - Edit cycle: complete reflection, enter planning, click Edit, verify planning
   collapses, re-complete reflection, verify planning re-expands with data intact
@@ -589,13 +596,13 @@ The past week should have:
   - [x] Phase state correctly gates section visibility
   - [x] Full flow works end-to-end with mock data
 
-- [ ] **Step 16: RTL unit tests**
-  - [ ] Write all tests listed in "Tests to write" above
-  - [ ] All pass: `pnpm test`
+- [x] **Step 16: RTL unit tests**
+  - [x] Write all tests listed in "Tests to write" above
+  - [x] All pass: `pnpm test`
 
-- [ ] **Step 17: Playwright e2e tests**
-  - [ ] Write all e2e tests listed above
-  - [ ] All pass: `pnpm test:e2e`
+- [x] **Step 17: Playwright e2e tests**
+  - [x] Write all e2e tests listed above
+  - [x] All pass: `pnpm test:e2e`
 
 - [ ] **Step 18: Graduate this doc**
   - [ ] Remove the implementation checklist from this file

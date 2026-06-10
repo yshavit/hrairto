@@ -5,6 +5,11 @@ import WeeklyPlanning from './weekly/WeeklyPlanning';
 
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>
-    <WeeklyPlanning data={weeklySessionData} onSave={(req) => console.log('plan saved', req)} />
+    <WeeklyPlanning
+      data={weeklySessionData}
+      onSave={(req) => {
+        document.body.dataset.savedPayload = JSON.stringify(req);
+      }}
+    />
   </React.StrictMode>,
 );
