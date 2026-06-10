@@ -82,7 +82,6 @@ function OutcomeIcon({ outcome }: { outcome: LocalOutcome }) {
 export default function PastGoalsList({ goals, outcomes, onToggle, swimlanes, quarterContext, distractionLabels }: Props) {
   const hitCount = [...outcomes.values()].filter((o) => o === 'hit').length;
   const missCount = [...outcomes.values()].filter((o) => o === 'miss').length;
-  const unmarkedCount = goals.length - hitCount - missCount;
 
   return (
     <div className="past-goals-list">
@@ -99,12 +98,6 @@ export default function PastGoalsList({ goals, outcomes, onToggle, swimlanes, qu
           <span className="past-goals-stat__label">Missed</span>
           <span className="past-goals-stat__value past-goals-stat__value--miss">{missCount}</span>
         </div>
-        {unmarkedCount > 0 && (
-          <div className="past-goals-stat">
-            <span className="past-goals-stat__label">Unmarked</span>
-            <span className="past-goals-stat__value past-goals-stat__value--unmarked">{unmarkedCount}</span>
-          </div>
-        )}
       </div>
 
       <ul className="past-goals-list__goals">

@@ -252,8 +252,9 @@ State display:
 
 Goal text for hit goals gets a strikethrough.
 
-A summary stat row at the top shows `N hit / N missed / N unmarked` and updates
-live as the user marks goals.
+A summary stat row at the top shows total goals set, hit count, and missed count,
+updating live as the user marks goals. The unmarked count is not shown — the
+per-row red border serves as that signal.
 
 Validation: "Done reflecting" is blocked until all goals are marked (unmarked count
 = 0). Show an inline error "Mark every goal as hit or missed before continuing." if
