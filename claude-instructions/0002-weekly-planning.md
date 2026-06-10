@@ -264,16 +264,23 @@ is the primary one).
 ### Waypoint health
 
 One card per swimlane showing the current quarter's active waypoint (first
-incomplete waypoint in the active quarter). The user selects a confidence level:
+incomplete waypoint in the active quarter). Each card is a single row: waypoint
+text + subtitle on the left, confidence buttons right-justified.
 
-- **On track** — `#EAF3DE` / `#3B6D11`
-- **At risk** — `#FAEEDA` / `#633806`
-- **Behind** — `#FCEBEB` / `#791F1F`
+The user selects a confidence level:
+
+- **On track** — `#2a6b18` bg / `#a8e080` text
+- **At risk** — `#7a4800` bg / `#f5c050` text
+- **Behind** — `#7a1818` bg / `#f08080` text
 
 Confidence is a single-select — clicking a button selects it (highlighted),
 clicking again does nothing (it stays selected; no deselect). The previously
-selected button deselects automatically. No validation required — confidence is
-optional.
+selected button deselects automatically.
+
+Validation: each unselected card shows a red border + shadow (always-on, from
+first render). "Done reflecting" is blocked until all cards have a selection;
+clicking the button with any unselected shows "Rate your confidence for each
+waypoint before continuing." below the list.
 
 ### Reflection notes
 

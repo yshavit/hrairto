@@ -5,6 +5,8 @@ interface Props {
   swimlanes: Swimlane[];
   quarterContext: SwimlanePlanningContext[];
   locale: string;
+  invalid?: boolean;
+  onAllSelected?: (allSelected: boolean) => void;
 }
 
 type Confidence = 'on-track' | 'at-risk' | 'behind';
@@ -40,12 +42,14 @@ function WaypointHealthCard({ swimlane, ctx, waypoint, locale, confidence, onSel
   const subtitle = `${quarterPrefix(ctx.quarter.label)} ${monthName(waypoint.target_month, locale)} waypoint`;
 
   return (
-    <div className="waypoint-health-card">
-      <div className="waypoint-health-card__swimlane-label" style={{ color: swimlane.color }}>
-        {swimlane.name}
+    <div className={`waypoint-health-card${confidence === null ? ' waypoint-health-card--unselected' : ''}`}>
+      <div className="waypoint-health-card__content">
+        <div className="waypoint-health-card__swimlane-label" style={{ color: swimlane.color }}>
+          {swimlane.name}
+        </div>
+        <p className="waypoint-health-card__waypoint-text">{waypoint.text}</p>
+        <p className="waypoint-health-card__subtitle">{subtitle}</p>
       </div>
-      <p className="waypoint-health-card__waypoint-text">{waypoint.text}</p>
-      <p className="waypoint-health-card__subtitle">{subtitle}</p>
       <div className="waypoint-health-card__buttons">
         {CONFIDENCE_OPTIONS.map((opt) => {
           const selected = confidence === opt.value;
@@ -65,7 +69,7 @@ function WaypointHealthCard({ swimlane, ctx, waypoint, locale, confidence, onSel
   );
 }
 
-export default function WaypointHealthList({ swimlanes, quarterContext, locale }: Props) {
+export default function WaypointHealthList({ swimlanes, quarterContext, locale, invalid, onAllSelected }: Props) {
   const [confidences, setConfidences] = useState<Map<string, Confidence>>(() => new Map());
 
   const cards = quarterContext
@@ -78,6 +82,14 @@ export default function WaypointHealthList({ swimlanes, quarterContext, locale }
 
   if (cards.length === 0) return null;
 
+  const anyUnselected = cards.some((c) => !confidences.has(c.swimlane.id));
+
+  function handleSelect(swimlaneId: string, val: Confidence) {
+    const next = new Map(confidences).set(swimlaneId, val);
+    setConfidences(next);
+    onAllSelected?.(cards.every((c) => next.has(c.swimlane.id)));
+  }
+
   return (
     <div className="waypoint-health-list">
       {cards.map(({ ctx, swimlane, waypoint }) => (
@@ -88,9 +100,10 @@ export default function WaypointHealthList({ swimlanes, quarterContext, locale }
           waypoint={waypoint}
           locale={locale}
           confidence={confidences.get(swimlane.id) ?? null}
-          onSelect={(val) => setConfidences((prev) => new Map(prev).set(swimlane.id, val))}
+          onSelect={(val) => handleSelect(swimlane.id, val)}
         />
       ))}
+      {invalid && anyUnselected && <p className="weekly-validation-error">Rate your confidence for each waypoint before continuing.</p>}
     </div>
   );
 }

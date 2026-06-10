@@ -27,6 +27,9 @@ export default function ReflectSection({ data, phase, onDone, onEdit }: Props) {
   const [notes, setNotes] = useState('');
   const [notesInvalid, setNotesInvalid] = useState(false);
   const [goalsInvalid, setGoalsInvalid] = useState(false);
+  const [healthInvalid, setHealthInvalid] = useState(false);
+  const [allHealthSelected, setAllHealthSelected] = useState(false);
+
   function toggle(id: WeeklyGoalId) {
     setOutcomes((prev) => new Map(prev).set(id, nextOutcome(prev.get(id) ?? 'unmarked')));
     setGoalsInvalid(false);
@@ -42,7 +45,8 @@ export default function ReflectSection({ data, phase, onDone, onEdit }: Props) {
     const hasNotes = notes.trim().length > 0;
     setGoalsInvalid(hasUnmarked);
     setNotesInvalid(!hasNotes);
-    if (!hasUnmarked && hasNotes) {
+    setHealthInvalid(!allHealthSelected);
+    if (!hasUnmarked && hasNotes && allHealthSelected) {
       const missed = data.past_goals.filter((g) => outcomes.get(g.id) === 'miss');
       onDone(missed);
     }
@@ -95,7 +99,13 @@ export default function ReflectSection({ data, phase, onDone, onEdit }: Props) {
             />
 
             <p className="weekly-step-label">Quarterly waypoint health</p>
-            <WaypointHealthList swimlanes={data.swimlanes} quarterContext={data.quarter_context} locale={data.calendar.locale} />
+            <WaypointHealthList
+              swimlanes={data.swimlanes}
+              quarterContext={data.quarter_context}
+              locale={data.calendar.locale}
+              invalid={healthInvalid}
+              onAllSelected={setAllHealthSelected}
+            />
 
             <p className="weekly-step-label">Reflection</p>
             <ReflectionNotes
