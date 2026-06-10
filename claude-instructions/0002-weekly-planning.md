@@ -245,9 +245,10 @@ toggle between hit and miss. It **never returns to unmarked** once touched.
 
 State display:
 
-- Unmarked: empty square border
-- Hit: green fill + checkmark (`#EAF3DE` background, `#3B6D11` icon)
-- Miss: red fill + × (`#FCEBEB` background, `#A32D2D` icon)
+- Unmarked: empty square border; **row gets a red border + shadow** (always-on,
+  from first render — no button press required)
+- Hit: green fill + checkmark (`#EAF3DE` background, `#3B6D11` icon); red border removed
+- Miss: red fill + × (`#FCEBEB` background, `#A32D2D` icon); red border removed
 
 Goal text for hit goals gets a strikethrough.
 
@@ -255,7 +256,9 @@ A summary stat row at the top shows `N hit / N missed / N unmarked` and updates
 live as the user marks goals.
 
 Validation: "Done reflecting" is blocked until all goals are marked (unmarked count
-= 0). Show an inline error message if the user tries to proceed with unmarked goals.
+= 0). Show an inline error "Mark every goal as hit or missed before continuing." if
+the user tries to proceed with unmarked goals (secondary signal; the per-row border
+is the primary one).
 
 ### Waypoint health
 
@@ -273,8 +276,10 @@ optional.
 
 ### Reflection notes
 
-A `<textarea>` that is required before proceeding. If the user clicks "Done
-reflecting" with an empty textarea, show a red focus ring and an inline error.
+A `<textarea>` that is required before proceeding. The red border is shown
+**always when the textarea is empty** (from first render). If the user clicks
+"Done reflecting" with an empty textarea, also show the inline error
+"Reflection notes are required before continuing." below it.
 
 Placeholder text is dynamically assembled from the week's data. Rules:
 

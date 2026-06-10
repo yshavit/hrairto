@@ -112,7 +112,7 @@ export default function PastGoalsList({ goals, outcomes, onToggle, swimlanes, qu
           const outcome = outcomes.get(goal.id) ?? 'unmarked';
           const meta = goalMeta(goal, swimlanes, quarterContext, distractionLabels);
           return (
-            <li key={goal.id} className="past-goal-row">
+            <li key={goal.id} className={`past-goal-row${outcome === 'unmarked' ? ' past-goal-row--unmarked' : ''}`}>
               <button className="past-goal-row__toggle" onClick={() => onToggle(goal.id)} aria-label="Toggle outcome">
                 <OutcomeIcon outcome={outcome} />
               </button>

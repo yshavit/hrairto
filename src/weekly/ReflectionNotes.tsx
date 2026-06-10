@@ -71,7 +71,7 @@ export default function ReflectionNotes({ missedCount, allHit, prevPlan, reflect
   return (
     <div className="reflection-notes">
       <textarea
-        className={`reflection-notes__textarea${invalid ? ' reflection-notes__textarea--invalid' : ''}`}
+        className={`reflection-notes__textarea${!value.trim() ? ' reflection-notes__textarea--invalid' : ''}`}
         placeholder={placeholder}
         value={value}
         onChange={(e) => onChange(e.target.value)}

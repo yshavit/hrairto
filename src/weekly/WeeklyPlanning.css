@@ -486,6 +486,11 @@
   padding: 8px 14px;
 }
 
+.past-goal-row--unmarked {
+  border-color: #a32d2d;
+  box-shadow: 0 0 0 2px rgba(163, 45, 45, 0.2);
+}
+
 .past-goal-row__toggle {
   flex-shrink: 0;
   background: none;
