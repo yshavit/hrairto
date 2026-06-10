@@ -13,7 +13,9 @@ The session enforces phase ordering: the planning section is collapsed and
 inaccessible until the reflection is marked complete. Editing the reflection after
 planning has begun re-collapses the planning section (but does not discard plan data).
 
-**Status: UX designed, not yet implemented.**
+**Status: Steps 0–15 implemented (mock data, no Tauri persistence). Tests pending (Steps 16–17).**
+
+If helpful, there is an overview of the project in `0000-hairto-overview.md`.
 
 ---
 
@@ -134,13 +136,24 @@ pub struct SwimlanePlanningContext {
 }
 
 pub struct WeeklySessionData {
+    pub calendar: Calendar,
     pub plan: WeeklyPlan,
+    pub prev_plan: Option<WeeklyPlan>,          // None on first-ever session
     pub reflection: Option<WeeklyReflection>,  // None on first-ever session
     pub past_goals: Vec<WeeklyGoal>,            // previous week, for reflection
     pub planned_goals: Vec<WeeklyGoal>,         // coming week, being planned
     pub swimlanes: Vec<Swimlane>,
     pub distraction_labels: Vec<DistractionLabel>,
     pub quarter_context: Vec<SwimlanePlanningContext>,
+    pub current_weights: SwimlaneWeightPeriod, // quarterly target shown below focus bar
+    pub upcoming_quarterly_goals: Vec<QuarterlyGoal>, // for waypoint picker + context cards
+}
+
+// Submitted when the user finishes the planning session.
+#[serde(tag = "type")]
+pub enum WeeklyPlanRequest {
+    Plan { focus: SwimlanesFocus, goals: Vec<WeeklyGoal> },
+    NoPlan { reason: String },  // reason is empty string if user left it blank
 }
 ```
 
@@ -152,23 +165,23 @@ ID newtypes added to `id_types!`: `WeeklyPlanId`, `WeeklyReflectionId`, `WeeklyG
 ## Component hierarchy
 
 ```
-WeeklyPlanning                  — top-level; owns phase state (reflecting | planning)
+WeeklyPlanning                  — top-level; owns phase state; accepts onSave(WeeklyPlanRequest)
   WeeklyHeader                  — "Week of May 19" title, quarter/week label, week-end picker
   ReflectSection                — collapsible; always starts expanded
-    TimeSplitBars               — planned vs actual stacked bars
+    TimeSplitBars               — planned vs actual stacked bars (two FocusSplitBar instances)
     PastGoalsList               — past week's goals, each togglable hit/miss
     WaypointHealthList          — per-swimlane confidence call
     ReflectionNotes             — required textarea; blocks completion if empty
-    ReflectDoneButton           — validates and transitions to planning phase
-  PlanSection                   — collapsible; starts collapsed
-    FocusSplitBar               — draggable stacked bar; must sum to 100%
+    [inline button]             — "Done reflecting — start planning"
+  PlanSection                   — collapsible; starts collapsed; accepts onSave(WeeklyPlanRequest)
+    FocusSplitBar               — draggable stacked bar (enforces 100% structurally)
     [per swimlane: pill + quarter label header, then wrapping row of cards]
       QuarterlyGoalCard         — one card per current-quarter goal (incl. side quests)
     MissedGoalGhosts            — all last week's misses together, below context cards
     PlanGoalsList               — one per swimlane + one for distractions
       PlanGoalItem              — goal text + waypoint picker (or distraction label picker)
       AddGoalButton             — inline goal entry form
-    SavePlanButton              — validates weights sum to 100%, then saves
+    [inline buttons]            — "Set Plan" or "No plan for next week." + confirm panel
 ```
 
 ---
@@ -290,16 +303,16 @@ On click:
 
 ## Planning section details
 
-### Focus weight sliders
+### Focus weight bar
 
-One slider per swimlane plus one for `Distractions`. All weights must sum to 100%.
+A single draggable stacked `FocusSplitBar` replaces the per-swimlane slider design.
+Dragging any boundary redistributes adjacent segments; the bar structurally enforces
+a sum of 100% — no separate validation needed. Segments snap to 5%, minimum 5% each.
 
-- Sliders range 0–100, step 5.
-- A running total is shown; if it doesn't equal 100, a red hint appears:
-  `"Total is X% — adjust to reach 100%"`
 - The quarterly target weights (from `SwimlaneWeightPeriod`) are shown as a
-  reminder below the sliders: `Quarterly target: 70% team · 30% personal`
-- The `targeting ~X%` label in each swimlane plan block updates live as sliders move.
+  reminder below the bar: `Quarterly target: 70% team · 30% personal`
+- The `targeting ~X%` label in each swimlane goal-list section updates live as the
+  bar changes.
 
 ### Planning section layout
 
@@ -345,10 +358,25 @@ followed by a `PlanGoalsList`.
 - Waypoint picker or label picker (depending on lane)
 - Enter key submits; Escape cancels
 
-### "Save week plan" button
+### "Set Plan" / "No plan" button
 
-Validates that all weight sliders sum to 100%. If not, shows an error and blocks
-save. On success, transitions to a saved state (button text changes to `Saved.`).
+Both paths call `onSave(req: WeeklyPlanRequest)` on `WeeklyPlanning`. The Tauri
+entry point will invoke the backend command and close the calling window via the
+injected `tauri::Window` parameter — no window ID is needed from the frontend.
+
+**When any goals exist:** a full-width "Set Plan" button calls
+`onSave({ type: 'Plan', focus, goals })`.
+
+**When no goals are set:** the button shows "No plan for next week." in muted red
+(matching the "missed last week" indicator color, `#7a3030`). Clicking it replaces
+the button with an inline confirmation panel, containing:
+
+- An optional 2-row `<textarea>` ("Why no plan? (optional)")
+- A "Cancel" button (restores the warning button) and a "Confirm: no plan for next
+  week" button that calls `onSave({ type: 'NoPlan', reason })`
+
+Weight-sum validation is not needed — `FocusSplitBar` enforces 100% structurally
+by redistributing remaining weight on every drag.
 
 ---
 
@@ -392,10 +420,11 @@ The past week should have:
 - `ReflectSection`: "Done reflecting" is blocked with empty notes
 - `ReflectSection`: transitions to planning when all goals marked and notes filled
 - `PastGoalsList`: first click sets hit; second sets miss; never returns to unmarked
-- `PlanSection`: "Save" is blocked when weights don't sum to 100%
+- `PlanSection`: "Set Plan" calls `onSave` with a `Plan` payload when goals exist
+- `PlanSection`: "No plan for next week." shows confirmation panel; confirm calls `onSave` with `NoPlan` payload
 - `PlanSection`: "Edit" re-collapses planning section
 - `PlanSection`: plan data survives the edit/re-complete cycle
-- `FocusWeightSliders`: total hint shows when sum ≠ 100%
+- `FocusSplitBar`: segment boundaries drag correctly and always sum to 100%
 - `ReflectionNotes`: placeholder text is correct for all-hit scenario
 - `ReflectionNotes`: placeholder text is correct for missed-goals scenario
 
@@ -530,15 +559,22 @@ The past week should have:
     Shows all incomplete waypoints across current + future quarters, sourced from
     `upcoming_quarterly_goals` (added to `WeeklySessionData` for this purpose).
 
-- [ ] **Step 14: PlanSection assembly + save**
-  - [ ] Assemble steps 10–13 into `PlanSection`
-  - [ ] "Edit" button re-collapses planning (does not discard data)
-  - [ ] "Save" validates weights, then shows saved state
+- [x] **Step 14: PlanSection assembly + save**
+  - [x] Assemble steps 10–13 into `PlanSection`
+  - [x] "Edit" button re-collapses planning (does not discard data) — already
+        working via ReflectSection's Edit button + phase state; no new code needed
+  - [x] "Save" — implemented as "Set Plan" button calling `onSave({ type: 'Plan', ... })`;
+        when no goals are set, replaced by a muted-red "No plan for next week." button
+        with an inline confirmation panel that calls `onSave({ type: 'NoPlan', reason })`.
+        `WeeklyPlanRequest` enum added to `models.rs` and registered with specta.
+        `WeeklyPlanning` accepts `onSave: (req: WeeklyPlanRequest) => void` from its parent;
+        the test entrypoint passes `console.log`; the Tauri entry point will invoke the
+        backend command and close via the injected `tauri::Window`.
 
-- [ ] **Step 15: WeeklyPlanning assembly**
-  - [ ] Assemble all sections into `WeeklyPlanning`
-  - [ ] Phase state correctly gates section visibility
-  - [ ] Full flow works end-to-end with mock data
+- [x] **Step 15: WeeklyPlanning assembly**
+  - [x] Assemble all sections into `WeeklyPlanning`
+  - [x] Phase state correctly gates section visibility
+  - [x] Full flow works end-to-end with mock data
 
 - [ ] **Step 16: RTL unit tests**
   - [ ] Write all tests listed in "Tests to write" above

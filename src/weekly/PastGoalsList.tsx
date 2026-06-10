@@ -1,3 +1,4 @@
+import { type CSSProperties } from 'react';
 import type { DistractionLabel, Swimlane, SwimlanePlanningContext, WeeklyGoal, WeeklyGoalId } from '../bindings';
 
 interface Props {
@@ -115,7 +116,7 @@ export default function PastGoalsList({ goals, outcomes, onToggle, swimlanes, qu
               <button className="past-goal-row__toggle" onClick={() => onToggle(goal.id)} aria-label="Toggle outcome">
                 <OutcomeIcon outcome={outcome} />
               </button>
-              <span className="past-goal-row__chip" style={{ '--chip-color': meta.chipColor } as React.CSSProperties}>
+              <span className="past-goal-row__chip" style={{ '--chip-color': meta.chipColor } as CSSProperties}>
                 {meta.chipLabel}
               </span>
               <span className={`past-goal-row__text${outcome === 'hit' ? ' past-goal-row__text--hit' : ''}`}>{goal.text}</span>

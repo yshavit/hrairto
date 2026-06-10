@@ -1,3 +1,4 @@
+import { type CSSProperties } from 'react';
 import type { Swimlane, WeeklyGoal } from '../bindings';
 import '../shared/swimlane-pill.css';
 
@@ -12,14 +13,14 @@ function GhostPill({ goal, swimlanes }: { goal: WeeklyGoal; swimlanes: Swimlane[
     const sw = swimlanes.find((s) => s.id === ref.swimlane_id);
     if (sw) {
       return (
-        <span className="swimlane-pill" style={{ '--swimlane-color': sw.color } as React.CSSProperties}>
+        <span className="swimlane-pill" style={{ '--swimlane-color': sw.color } as CSSProperties}>
           {sw.name}
         </span>
       );
     }
   }
   return (
-    <span className="swimlane-pill" style={{ '--swimlane-color': '#b4b2a9' } as React.CSSProperties}>
+    <span className="swimlane-pill" style={{ '--swimlane-color': '#b4b2a9' } as CSSProperties}>
       Distraction
     </span>
   );

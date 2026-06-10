@@ -375,3 +375,16 @@ pub struct WeeklySessionData {
     /// completed.
     pub upcoming_quarterly_goals: Vec<QuarterlyGoal>,
 }
+
+/// Payload submitted when the user finishes the weekly planning session.
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+#[serde(tag = "type")]
+pub enum WeeklyPlanRequest {
+    Plan {
+        focus: SwimlanesFocus,
+        goals: Vec<WeeklyGoal>,
+    },
+    NoPlan {
+        reason: String,
+    },
+}

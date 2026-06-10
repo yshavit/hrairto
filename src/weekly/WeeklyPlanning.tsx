@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { WeeklyGoal, WeeklySessionData } from '../bindings';
+import type { WeeklyGoal, WeeklyPlanRequest, WeeklySessionData } from '../bindings';
 import './WeeklyPlanning.css';
 import WeeklyHeader from './WeeklyHeader';
 import ReflectSection from './ReflectSection';
@@ -7,9 +7,10 @@ import PlanSection from './PlanSection';
 
 interface Props {
   data: WeeklySessionData;
+  onSave: (req: WeeklyPlanRequest) => void;
 }
 
-export default function WeeklyPlanning({ data }: Props) {
+export default function WeeklyPlanning({ data, onSave }: Props) {
   const [phase, setPhase] = useState<'reflecting' | 'planning'>('reflecting');
   const [missedGoals, setMissedGoals] = useState<WeeklyGoal[]>([]);
 
@@ -26,7 +27,7 @@ export default function WeeklyPlanning({ data }: Props) {
           }}
           onEdit={() => setPhase('reflecting')}
         />
-        <PlanSection data={data} phase={phase} missedGoals={missedGoals} />
+        <PlanSection data={data} phase={phase} missedGoals={missedGoals} onSave={onSave} />
       </div>
     </div>
   );

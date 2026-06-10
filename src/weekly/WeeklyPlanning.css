@@ -217,6 +217,101 @@
   border-color: #666;
 }
 
+/* === Set Plan / No Plan buttons =========================================== */
+
+.save-plan-btn {
+  width: 100%;
+  padding: 12px;
+  background: #1e1e1e;
+  color: #e0e0e0;
+  border: 0.5px solid #444;
+  border-radius: var(--border-radius-lg);
+  font-size: 13px;
+  cursor: pointer;
+  font-family: inherit;
+  transition:
+    background 0.1s,
+    border-color 0.1s;
+}
+
+.save-plan-btn:hover {
+  background: #252525;
+  border-color: #666;
+}
+
+.save-plan-btn--no-goals {
+  color: #b05050;
+  border-color: color-mix(in srgb, #7a3030 40%, transparent);
+}
+
+.save-plan-btn--no-goals:hover {
+  background: color-mix(in srgb, #7a3030 8%, #1e1e1e);
+  border-color: #7a3030;
+}
+
+/* === No-plan confirmation panel =========================================== */
+
+.no-plan-confirm {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  border: 0.5px solid color-mix(in srgb, #7a3030 40%, transparent);
+  border-radius: var(--border-radius-lg);
+  background: color-mix(in srgb, #7a3030 6%, var(--color-background-primary));
+}
+
+.no-plan-confirm__reason {
+  width: 100%;
+  box-sizing: border-box;
+  resize: none;
+  background: transparent;
+  border: 0.5px solid #444;
+  border-radius: var(--border-radius-md);
+  color: var(--color-text-primary);
+  font-size: 13px;
+  font-family: inherit;
+  padding: 8px;
+}
+
+.no-plan-confirm__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.no-plan-confirm__cancel {
+  background: transparent;
+  border: 0.5px solid #444;
+  border-radius: var(--border-radius-sm);
+  color: #888;
+  font-size: 12px;
+  font-family: inherit;
+  padding: 4px 12px;
+  cursor: pointer;
+}
+
+.no-plan-confirm__cancel:hover {
+  border-color: #666;
+  color: #ccc;
+}
+
+.no-plan-confirm__submit {
+  background: color-mix(in srgb, #7a3030 20%, #1e1e1e);
+  border: 0.5px solid #7a3030;
+  border-radius: var(--border-radius-sm);
+  color: #c07070;
+  font-size: 12px;
+  font-family: inherit;
+  padding: 4px 12px;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+
+.no-plan-confirm__submit:hover {
+  background: color-mix(in srgb, #7a3030 30%, #1e1e1e);
+}
+
 /* === Reflection notes =================================================== */
 
 .reflection-notes {

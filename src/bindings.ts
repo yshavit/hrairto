@@ -270,6 +270,10 @@ start_at: Epoch;
 end_at: Epoch; focus: SwimlanesFocus }
 export type WeeklyPlanId = string
 /**
+ * Payload submitted when the user finishes the weekly planning session.
+ */
+export type WeeklyPlanRequest = { type: "Plan"; focus: SwimlanesFocus; goals: WeeklyGoal[] } | { type: "NoPlan"; reason: string }
+/**
  * The reflection artifact for a completed week.
  */
 export type WeeklyReflection = { id: WeeklyReflectionId; 

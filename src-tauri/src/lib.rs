@@ -45,6 +45,7 @@ fn specta_builder() -> Builder<tauri::Wry> {
         // them explicitly; each transitively exports every nested model type too.
         .typ::<models::GoalTreeData>()
         .typ::<models::WeeklySessionData>()
+        .typ::<models::WeeklyPlanRequest>()
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]

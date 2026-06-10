@@ -14,6 +14,8 @@ Body (if needed): explain the _what and why_ at a level that's useful in `git lo
 Don't list every file or struct changed — name concepts, not inventories. If the
 body needs to enumerate things, use bullet points rather than prose enumeration.
 
+If you are working off a spec with various steps, the commit message should never include the step number. That spec's numbering is ephemeral.
+
 GitHub issue references (add at the end of the commit message body):
 
 - Commit relates to an issue but doesn't resolve it: `In service of #<id>`

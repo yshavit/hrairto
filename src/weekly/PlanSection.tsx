@@ -1,5 +1,15 @@
-import { useState } from 'react';
-import type { DistractionLabelId, Swimlane, SwimlaneId, SwimlaneWeight, WaypointId, WeeklyGoal, WeeklyGoalId, WeeklySessionData } from '../bindings';
+import { type CSSProperties, useState } from 'react';
+import type {
+  DistractionLabelId,
+  Swimlane,
+  SwimlaneId,
+  SwimlaneWeight,
+  WaypointId,
+  WeeklyGoal,
+  WeeklyGoalId,
+  WeeklyPlanRequest,
+  WeeklySessionData,
+} from '../bindings';
 import FocusSplitBar from '../shared/FocusSplitBar';
 import '../shared/swimlane-pill.css';
 import MissedGoalGhosts from './MissedGoalGhosts';
@@ -32,6 +42,7 @@ interface Props {
   data: WeeklySessionData;
   phase: 'reflecting' | 'planning';
   missedGoals: WeeklyGoal[];
+  onSave: (req: WeeklyPlanRequest) => void;
 }
 
 function ListIcon() {
@@ -44,12 +55,14 @@ function ListIcon() {
   );
 }
 
-export default function PlanSection({ data, phase, missedGoals }: Props) {
+export default function PlanSection({ data, phase, missedGoals, onSave }: Props) {
   const [focusWeights, setFocusWeights] = useState<SwimlaneWeight[]>(() => data.prev_plan?.focus.weights ?? defaultWeights(data.swimlanes));
   const [plannedGoals, setPlannedGoals] = useState<WeeklyGoal[]>(() => data.planned_goals);
+  const [showNoGoalConfirm, setShowNoGoalConfirm] = useState(false);
+  const [noPlanReason, setNoPlanReason] = useState('');
 
   const isActive = phase === 'planning';
-  const total = focusWeights.reduce((sum, w) => sum + Math.round(w.weight * 100), 0);
+  const hasGoals = plannedGoals.length > 0;
 
   const targetParts: string[] = [];
   for (const e of data.current_weights.entries) {
@@ -146,7 +159,6 @@ export default function PlanSection({ data, phase, missedGoals }: Props) {
             {/* ── Intended focus ── */}
             <p className="weekly-step-label">Intended focus</p>
             <FocusSplitBar swimlanes={data.swimlanes} weights={focusWeights} isEditable onChange={setFocusWeights} />
-            {total !== 100 && <p className="weekly-validation-error">Total is {total}% — adjust to reach 100%</p>}
             {targetParts.length > 0 && <p className="plan-section__target">Quarterly target: {targetParts.join(' · ')}</p>}
 
             <hr className="plan-section__divider" />
@@ -163,7 +175,7 @@ export default function PlanSection({ data, phase, missedGoals }: Props) {
               return (
                 <div key={sw.id} className="swimlane-context-group">
                   <div className="swimlane-context-group__header">
-                    <span className="swimlane-pill" style={{ '--swimlane-color': sw.color } as React.CSSProperties}>
+                    <span className="swimlane-pill" style={{ '--swimlane-color': sw.color } as CSSProperties}>
                       {sw.name}
                     </span>
                     {ctx && <span className="swimlane-context-group__quarter">{ctx.quarter.label}</span>}
@@ -198,7 +210,7 @@ export default function PlanSection({ data, phase, missedGoals }: Props) {
               return (
                 <div key={sw.id} className="plan-goal-section">
                   <div className="plan-goal-section__header">
-                    <span className="swimlane-pill" style={{ '--swimlane-color': sw.color } as React.CSSProperties}>
+                    <span className="swimlane-pill" style={{ '--swimlane-color': sw.color } as CSSProperties}>
                       {sw.name}
                     </span>
                     <span className="plan-goal-section__targeting">targeting ~{targetingPct(focusWeights, sw.id)}%</span>
@@ -234,6 +246,43 @@ export default function PlanSection({ data, phase, missedGoals }: Props) {
                 onUpdateLabels={handleUpdateLabels}
               />
             </div>
+
+            {hasGoals ? (
+              <button className="save-plan-btn" onClick={() => onSave({ type: 'Plan', focus: { weights: focusWeights }, goals: plannedGoals })}>
+                Set Plan
+              </button>
+            ) : showNoGoalConfirm ? (
+              <div
+                className="no-plan-confirm"
+                ref={(el) => {
+                  if (el)
+                    requestAnimationFrame(() => {
+                      const p = el.closest('.weekly-planning__body') as HTMLElement | null;
+                      p?.scrollTo({ top: p.scrollHeight, behavior: 'smooth' });
+                    });
+                }}
+              >
+                <textarea
+                  className="no-plan-confirm__reason"
+                  rows={2}
+                  placeholder="Why no plan? (optional)"
+                  value={noPlanReason}
+                  onChange={(e) => setNoPlanReason(e.target.value)}
+                />
+                <div className="no-plan-confirm__actions">
+                  <button className="no-plan-confirm__cancel" onClick={() => setShowNoGoalConfirm(false)}>
+                    Cancel
+                  </button>
+                  <button className="no-plan-confirm__submit" onClick={() => onSave({ type: 'NoPlan', reason: noPlanReason })}>
+                    Confirm: no plan for next week
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <button className="save-plan-btn save-plan-btn--no-goals" onClick={() => setShowNoGoalConfirm(true)}>
+                No plan for next week.
+              </button>
+            )}
           </div>
         </div>
       </div>

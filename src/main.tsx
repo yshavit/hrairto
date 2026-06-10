@@ -18,7 +18,12 @@ window.addEventListener('error', (e) => {
 });
 
 const label = getCurrentWindow().label;
-const Root = label === 'goals' ? YearlyGoals : label === 'weekly' ? () => <WeeklyPlanning data={weeklySessionData} /> : TrayPopup;
+const Root =
+  label === 'goals'
+    ? YearlyGoals
+    : label === 'weekly'
+      ? () => <WeeklyPlanning data={weeklySessionData} onSave={(req) => console.log('plan saved', req)} />
+      : TrayPopup;
 
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>

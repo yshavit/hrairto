@@ -1,3 +1,4 @@
+import { type CSSProperties } from 'react';
 import type { QuarterlyGoal } from '../bindings';
 import WaypointList from '../shared/WaypointList';
 
@@ -9,7 +10,7 @@ interface Props {
 
 export default function QuarterlyGoalCard({ goal, locale, color }: Props) {
   return (
-    <div className="quarterly-goal-card" style={{ '--swimlane-color': color } as React.CSSProperties}>
+    <div className="quarterly-goal-card" style={{ '--swimlane-color': color } as CSSProperties}>
       <p className="quarterly-goal-card__text">{goal.text}</p>
       <WaypointList waypoints={goal.waypoints} isActiveQuarter locale={locale} />
     </div>
