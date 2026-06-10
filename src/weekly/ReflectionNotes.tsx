@@ -77,7 +77,7 @@ export default function ReflectionNotes({ missedCount, allHit, prevPlan, reflect
         onChange={(e) => onChange(e.target.value)}
         rows={4}
       />
-      {invalid && <p className="reflection-notes__error">Reflection notes are required before proceeding.</p>}
+      {invalid && <p className="reflection-notes__error">Reflection notes are required before continuing.</p>}
     </div>
   );
 }
