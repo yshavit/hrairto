@@ -16,7 +16,7 @@ export default function WeeklyPlanning({ data, onSave }: Props) {
 
   return (
     <div className="weekly-planning">
-      <WeeklyHeader plan={data.plan} quarterContext={data.quarter_context} locale={data.calendar.locale} timezone={data.calendar.timezone} />
+      <WeeklyHeader plan={data.plan} currentQuarter={data.current_quarter} locale={data.calendar.locale} timezone={data.calendar.timezone} />
       <div className="weekly-planning__body">
         <ReflectSection
           data={data}

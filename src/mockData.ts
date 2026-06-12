@@ -367,6 +367,7 @@ const currentQuarterGoals = quarterly_goals.filter((qg) => qg.due_quarter === 2 
 
 export const weeklySessionData: WeeklySessionData = {
   calendar,
+  current_quarter: quarters_to_display[0], // Q2 2026
   plan: weeklyPlan,
   prev_plan: prevWeeklyPlan,
   reflection: weeklyReflection,

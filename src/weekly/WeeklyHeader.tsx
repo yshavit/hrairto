@@ -1,8 +1,8 @@
-import type { MainQuestPlanningContext, WeeklyPlan } from '../bindings';
+import type { QuarterDisplay, WeeklyPlan } from '../bindings';
 
 interface Props {
   plan: WeeklyPlan;
-  quarterContext: MainQuestPlanningContext[];
+  currentQuarter: QuarterDisplay;
   locale: string;
   timezone: string;
 }
@@ -18,18 +18,13 @@ function totalWeeks(quarterStart: number, quarterEnd: number): number {
   return Math.round((quarterEnd - quarterStart) / MS_PER_WEEK);
 }
 
-export default function WeeklyHeader({ plan, quarterContext, locale, timezone }: Props) {
-  const quarter = quarterContext[0]?.quarter;
-
+export default function WeeklyHeader({ plan, currentQuarter, locale, timezone }: Props) {
   const titleDate = new Intl.DateTimeFormat(locale, { month: 'long', day: 'numeric', timeZone: timezone }).format(new Date(plan.start_at));
 
-  let subtitle = '';
-  if (quarter) {
-    const prefix = quarter.label.split(' · ')[0];
-    const n = weekInQuarter(plan.start_at, quarter.start_at);
-    const total = totalWeeks(quarter.start_at, quarter.end_at);
-    subtitle = `${prefix} · week ${n} of ${total}`;
-  }
+  const prefix = currentQuarter.label.split(' · ')[0];
+  const n = weekInQuarter(plan.start_at, currentQuarter.start_at);
+  const total = totalWeeks(currentQuarter.start_at, currentQuarter.end_at);
+  const subtitle = `${prefix} · week ${n} of ${total}`;
 
   const dayFmt = new Intl.DateTimeFormat(locale, { weekday: 'long', month: 'short', day: 'numeric', timeZone: timezone });
   const endOptions: { value: string; label: string }[] = Array.from({ length: 7 }, (_, i) => {
@@ -47,7 +42,7 @@ export default function WeeklyHeader({ plan, quarterContext, locale, timezone }:
     <header className="weekly-header">
       <div className="weekly-header__left">
         <h1 className="weekly-header__title">Week of {titleDate}</h1>
-        {subtitle && <span className="weekly-header__subtitle">{subtitle}</span>}
+        <span className="weekly-header__subtitle">{subtitle}</span>
       </div>
       <div className="weekly-header__right">
         <span className="weekly-header__ends-label">ends</span>

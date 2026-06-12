@@ -127,8 +127,7 @@ export default function PlanSection({ data, phase, missedGoals, onSave }: Props)
     return groups;
   }
 
-  // The active quarter QuarterDisplay — same for all entries in quarter_context.
-  const activeQuarter = data.quarter_context[0]?.quarter;
+  const activeQuarter = data.current_quarter;
 
   // ── render ──────────────────────────────────────────────────────────────
 
@@ -160,18 +159,16 @@ export default function PlanSection({ data, phase, missedGoals, onSave }: Props)
             {/* ── Quarter context (per concern, from current_quarter_goals) ── */}
             <p className="weekly-step-label">Current quarter's goals</p>
             {data.concerns.map((concern) => {
-              const currentGoals = activeQuarter
-                ? data.current_quarter_goals
-                    .filter((qg) => quarterlyGoalConcernId(qg, data.main_quests) === concern.id)
-                    .map((qg) => ({ goal: qg, quarter: activeQuarter }))
-                : [];
+              const currentGoals = data.current_quarter_goals
+                .filter((qg) => quarterlyGoalConcernId(qg, data.main_quests) === concern.id)
+                .map((qg) => ({ goal: qg, quarter: activeQuarter }));
               return (
                 <div key={concern.id} className="concern-context-group">
                   <div className="concern-context-group__header">
                     <span className="concern-pill" style={{ '--concern-color': concern.color } as CSSProperties}>
                       {concern.name}
                     </span>
-                    {activeQuarter && <span className="concern-context-group__quarter">{activeQuarter.label}</span>}
+                    <span className="concern-context-group__quarter">{activeQuarter.label}</span>
                   </div>
                   {currentGoals.length === 0 ? (
                     <p className="concern-context-group__empty">No quarterly goal set</p>

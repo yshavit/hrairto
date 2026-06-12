@@ -365,6 +365,9 @@ pub struct MainQuestPlanningContext {
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 pub struct WeeklySessionData {
     pub calendar: Calendar,
+    /// The fiscal quarter the plan week falls in. Always present — the backend
+    /// derives it from `plan.start_at` at invocation time.
+    pub current_quarter: QuarterDisplay,
     /// The plan for the coming week (focus weights + new goals).
     pub plan: WeeklyPlan,
     /// The plan being reflected on (previous week). `None` on the first ever

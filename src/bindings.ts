@@ -314,6 +314,11 @@ export type WeeklyReflectionId = string
  */
 export type WeeklySessionData = { calendar: Calendar; 
 /**
+ * The fiscal quarter the plan week falls in. Always present — the backend
+ * derives it from `plan.start_at` at invocation time.
+ */
+current_quarter: QuarterDisplay; 
+/**
  * The plan for the coming week (focus weights + new goals).
  */
 plan: WeeklyPlan; 
