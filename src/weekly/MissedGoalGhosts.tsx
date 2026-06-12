@@ -1,32 +1,32 @@
 import { type CSSProperties } from 'react';
-import type { Swimlane, WeeklyGoal } from '../bindings';
-import '../shared/swimlane-pill.css';
+import type { Concern, WeeklyGoal } from '../bindings';
+import '../shared/concern-pill.css';
 
 interface Props {
   goals: WeeklyGoal[];
-  swimlanes: Swimlane[];
+  concerns: Concern[];
 }
 
-function GhostPill({ goal, swimlanes }: { goal: WeeklyGoal; swimlanes: Swimlane[] }) {
+function GhostPill({ goal, concerns }: { goal: WeeklyGoal; concerns: Concern[] }) {
   const ref = goal.goal_ref;
   if (ref.type === 'Planned') {
-    const sw = swimlanes.find((s) => s.id === ref.swimlane_id);
-    if (sw) {
+    const concern = concerns.find((c) => c.id === ref.concern_id);
+    if (concern) {
       return (
-        <span className="swimlane-pill" style={{ '--swimlane-color': sw.color } as CSSProperties}>
-          {sw.name}
+        <span className="concern-pill" style={{ '--concern-color': concern.color } as CSSProperties}>
+          {concern.name}
         </span>
       );
     }
   }
   return (
-    <span className="swimlane-pill" style={{ '--swimlane-color': '#b4b2a9' } as CSSProperties}>
+    <span className="concern-pill" style={{ '--concern-color': '#b4b2a9' } as CSSProperties}>
       Distraction
     </span>
   );
 }
 
-export default function MissedGoalGhosts({ goals, swimlanes }: Props) {
+export default function MissedGoalGhosts({ goals, concerns }: Props) {
   if (goals.length === 0) return null;
   return (
     <div className="missed-goal-ghosts">
@@ -41,7 +41,7 @@ export default function MissedGoalGhosts({ goals, swimlanes }: Props) {
       </p>
       {goals.map((g) => (
         <div key={g.id} className="missed-goal-ghost">
-          <GhostPill goal={g} swimlanes={swimlanes} />
+          <GhostPill goal={g} concerns={concerns} />
           {g.text}
         </div>
       ))}

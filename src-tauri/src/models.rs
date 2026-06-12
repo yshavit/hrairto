@@ -379,6 +379,8 @@ pub struct WeeklySessionData {
     /// Goals already entered for the coming week's plan.
     pub planned_goals: Vec<WeeklyGoal>,
     pub concerns: Vec<Concern>,
+    /// Active main quests, for color/label resolution in focus-bar and goal lists.
+    pub main_quests: Vec<MainQuest>,
     pub distraction_labels: Vec<DistractionLabel>,
     /// Active quarter context per main quest, for the planning section.
     pub quarter_context: Vec<MainQuestPlanningContext>,

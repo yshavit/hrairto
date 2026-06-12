@@ -203,7 +203,6 @@ const quarterly_goals: QuarterlyGoal[] = [
     waypoints: [wp('62', 'Port core service'), wp('63', 'Shadow traffic testing'), wp('64', 'Cut over')],
   },
   // ── Side quest: Take on one mentee (Personal growth, Q2 2026, 1★) ─────────
-  // Done this quarter.
   {
     id: QG_MENTEE_ID,
     parent: { type: 'SideQuest', concern_id: PERSONAL_GROWTH_ID },
@@ -211,7 +210,7 @@ const quarterly_goals: QuarterlyGoal[] = [
     due_year: 2026,
     text: 'Take on one mentee',
     created_at: utc(2026, 4, 1),
-    waypoints: [wp('65', 'Onboard + first 1-on-1s', utc(2026, 4, 30)), null, null],
+    waypoints: [wp('65', 'Onboard + first 1-on-1s'), null, null],
   },
   // ── Side quest: Learn Rust (Personal growth, Q1 2027, 2★) ────────────────
   {
@@ -264,9 +263,7 @@ export const mockData: GoalTreeData = {
 };
 
 // ── Weekly session mock data ──────────────────────────────────────────────────
-// NOTE: this section will be properly redesigned in Stage 4 alongside the
-// weekly screen. For now it typechecks against the new model but the narrative
-// is carried over from the swimlane era.
+// NOTE: redesigned in Stage 4 to use the Concern/MainQuest model.
 
 const PREV_WEEKLY_PLAN_ID: WeeklyPlanId = '00000000-0000-0000-0000-000000000100';
 const WEEKLY_PLAN_ID: WeeklyPlanId = '00000000-0000-0000-0000-000000000102';
@@ -372,6 +369,7 @@ export const weeklySessionData: WeeklySessionData = {
   past_goals: pastGoals,
   planned_goals: [],
   concerns,
+  main_quests,
   distraction_labels: distractionLabels,
   quarter_context: quarterContext,
   current_weights,

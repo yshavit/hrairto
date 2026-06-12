@@ -253,14 +253,15 @@ A redesign, not a port — see "Capacity — surfaced, not modelled" above for r
 
 ### Stage 4 — Weekly screen (`src/weekly/`, spec `0002`)
 
-- [ ] **Biggest semantic change.** The focus bar allocates across **main quests +
+- [x] **Biggest semantic change.** The focus bar allocates across **main quests +
       side-quests + distractions**, not Concerns. `FocusSplitBar` / `TimeSplitBars` /
       `PlanSection` change accordingly.
-- [ ] **Decide:** do goal-entry sections group by Concern (visual, like today) or by
-      Main Quest (matching allocation)? Don't carry the swimlane grouping forward by inertia.
-- [ ] Quarter context (`*PlanningContext`) becomes per-main-quest.
-- [ ] Reconcile `0002-weekly-planning.md` to the new model.
-- [ ] Verify: `pnpm test:ts-unit` + `pnpm test:e2e` for weekly.
+- [x] **Decide:** do goal-entry sections group by Concern (visual, like today) or by
+      Main Quest (matching allocation)? Decision: group by Concern (visual consistency;
+      concern = label/colour, consistent with the goal-tree view).
+- [x] Quarter context (`*PlanningContext`) becomes per-main-quest.
+- [x] Reconcile `0002-weekly-planning.md` to the new model.
+- [x] Verify: `pnpm test:ts-unit` + `pnpm test:e2e` for weekly.
 
 ### Stage 5 — Reconcile `0000` + graduate
 

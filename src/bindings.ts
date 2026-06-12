@@ -335,7 +335,11 @@ past_goals: WeeklyGoal[];
 /**
  * Goals already entered for the coming week's plan.
  */
-planned_goals: WeeklyGoal[]; concerns: Concern[]; distraction_labels: DistractionLabel[]; 
+planned_goals: WeeklyGoal[]; concerns: Concern[]; 
+/**
+ * Active main quests, for color/label resolution in focus-bar and goal lists.
+ */
+main_quests: MainQuest[]; distraction_labels: DistractionLabel[]; 
 /**
  * Active quarter context per main quest, for the planning section.
  */

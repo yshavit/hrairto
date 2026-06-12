@@ -1,9 +1,10 @@
 import { type CSSProperties, useState } from 'react';
 import type {
+  Concern,
+  ConcernId,
   DistractionLabelId,
-  Swimlane,
-  SwimlaneId,
-  SwimlaneWeight,
+  MainQuestId,
+  WeightEntry,
   WaypointId,
   WeeklyGoal,
   WeeklyGoalId,
@@ -11,29 +12,15 @@ import type {
   WeeklySessionData,
 } from '../bindings';
 import FocusSplitBar from '../shared/FocusSplitBar';
-import '../shared/swimlane-pill.css';
+import '../shared/concern-pill.css';
 import MissedGoalGhosts from './MissedGoalGhosts';
 import PlanGoalsList, { WaypointGroup } from './PlanGoalsList';
 import QuarterlyGoalCard from './QuarterlyGoalCard';
 
 // ── helpers ────────────────────────────────────────────────────────────────
 
-function defaultWeights(swimlanes: Swimlane[]): SwimlaneWeight[] {
-  const n = swimlanes.length + 1; // +1 for Distractions
-  const evenPct = Math.floor(100 / n / 5) * 5;
-  const remainder = 100 - evenPct * n;
-  return [
-    ...swimlanes.map((sw, i) => ({
-      target: { type: 'Swimlane' as const, id: sw.id },
-      weight: (evenPct + (i === 0 ? remainder : 0)) / 100,
-    })),
-    { target: { type: 'Distractions' as const }, weight: evenPct / 100 },
-  ];
-}
-
-function targetingPct(weights: SwimlaneWeight[], swimlaneId: SwimlaneId | null): number {
-  const entry = weights.find((w) => (swimlaneId === null ? w.target.type === 'Distractions' : w.target.type === 'Swimlane' && w.target.id === swimlaneId));
-  return Math.round((entry?.weight ?? 0) * 100);
+function goalConcernId(goal: WeeklyGoal): ConcernId | null {
+  return goal.goal_ref.type === 'Planned' ? goal.goal_ref.concern_id : null;
 }
 
 // ── PlanSection ────────────────────────────────────────────────────────────
@@ -56,21 +43,13 @@ function ListIcon() {
 }
 
 export default function PlanSection({ data, phase, missedGoals, onSave }: Props) {
-  const [focusWeights, setFocusWeights] = useState<SwimlaneWeight[]>(() => data.prev_plan?.focus.weights ?? defaultWeights(data.swimlanes));
+  const [focusWeights, setFocusWeights] = useState<WeightEntry[]>(() => data.prev_plan?.focus.weights ?? data.current_weights.entries);
   const [plannedGoals, setPlannedGoals] = useState<WeeklyGoal[]>(() => data.planned_goals);
   const [showNoGoalConfirm, setShowNoGoalConfirm] = useState(false);
   const [noPlanReason, setNoPlanReason] = useState('');
 
   const isActive = phase === 'planning';
   const hasGoals = plannedGoals.length > 0;
-
-  const targetParts: string[] = [];
-  for (const e of data.current_weights.entries) {
-    const target = e.target;
-    if (target.type !== 'Swimlane') continue;
-    const sw = data.swimlanes.find((s) => s.id === target.id);
-    targetParts.push(`${Math.round(e.weight * 100)}% ${sw?.name.toLowerCase() ?? ''}`);
-  }
 
   // ── goal state handlers ────────────────────────────────────────────────
 
@@ -90,7 +69,7 @@ export default function PlanSection({ data, phase, missedGoals, onSave }: Props)
     );
   }
 
-  function handleAddSwimlane(swimlaneId: SwimlaneId, text: string, waypointId: WaypointId | null) {
+  function handleAddConcern(concernId: ConcernId, text: string, waypointId: WaypointId | null) {
     setPlannedGoals((prev) => [
       ...prev,
       {
@@ -99,7 +78,7 @@ export default function PlanSection({ data, phase, missedGoals, onSave }: Props)
         created_at: Date.now(),
         text,
         outcome: null,
-        goal_ref: { type: 'Planned', swimlane_id: swimlaneId, waypoint_id: waypointId },
+        goal_ref: { type: 'Planned', concern_id: concernId, waypoint_id: waypointId },
       },
     ]);
   }
@@ -118,11 +97,15 @@ export default function PlanSection({ data, phase, missedGoals, onSave }: Props)
     ]);
   }
 
-  function waypointGroupsFor(swimlaneId: SwimlaneId): WaypointGroup[] {
+  function waypointGroupsFor(concernId: ConcernId): WaypointGroup[] {
     const groups: WaypointGroup[] = [];
     for (const qg of data.upcoming_quarterly_goals) {
-      if (qg.swimlane_id !== swimlaneId) continue;
-      const incomplete = qg.waypoints.filter((wp) => wp.completed_at === null);
+      const qgConcernId: ConcernId | undefined =
+        qg.parent.type === 'MainQuest'
+          ? data.main_quests.find((m) => m.id === (qg.parent as { type: 'MainQuest'; id: MainQuestId }).id)?.concern_id
+          : (qg.parent as { type: 'SideQuest'; concern_id: ConcernId }).concern_id;
+      if (qgConcernId !== concernId) continue;
+      const incomplete = qg.waypoints.filter((wp): wp is NonNullable<typeof wp> => wp !== null && wp.completed_at === null);
       if (incomplete.length === 0) continue;
       const label = `Q${qg.due_quarter} ${qg.due_year}`;
       const existing = groups.find((g) => g.label === label);
@@ -134,6 +117,10 @@ export default function PlanSection({ data, phase, missedGoals, onSave }: Props)
     }
     return groups;
   }
+
+  // The active quarter QuarterDisplay — same for all entries in quarter_context.
+  // Used to look up side-quest goals by due_quarter/due_year and pass to QuarterlyGoalCard.
+  const activeQuarter = data.quarter_context[0]?.quarter;
 
   // ── render ──────────────────────────────────────────────────────────────
 
@@ -158,34 +145,48 @@ export default function PlanSection({ data, phase, missedGoals, onSave }: Props)
           <div className="weekly-section__body">
             {/* ── Intended focus ── */}
             <p className="weekly-step-label">Intended focus</p>
-            <FocusSplitBar swimlanes={data.swimlanes} weights={focusWeights} isEditable onChange={setFocusWeights} />
-            {targetParts.length > 0 && <p className="plan-section__target">Quarterly target: {targetParts.join(' · ')}</p>}
+            <FocusSplitBar mainQuests={data.main_quests} concerns={data.concerns} weights={focusWeights} isEditable onChange={setFocusWeights} />
 
             <hr className="plan-section__divider" />
 
-            {/* ── Quarter context (all swimlanes, all current-quarter goals) ── */}
+            {/* ── Quarter context (per concern) ── */}
             <p className="weekly-step-label">Current quarter's goals</p>
-            {data.swimlanes.map((sw) => {
-              const ctx = data.quarter_context.find((c) => c.swimlane_id === sw.id);
-              const currentGoals = ctx
-                ? data.upcoming_quarterly_goals.filter(
-                    (qg) => qg.swimlane_id === sw.id && qg.due_quarter === ctx.quarter.quarter && qg.due_year === ctx.quarter.year,
-                  )
-                : [];
+            {data.concerns.map((concern) => {
+              const concernMainQuests = data.main_quests.filter((m) => m.concern_id === concern.id);
+              const ctxList = concernMainQuests
+                .map((m) => data.quarter_context.find((c) => c.main_quest_id === m.id))
+                .filter((c): c is NonNullable<typeof c> => c !== undefined);
+              const mainQuestGoals = ctxList.flatMap((ctx) =>
+                ctx.quarterly_goal ? [{ goal: ctx.quarterly_goal, quarter: ctx.quarter }] : [],
+              );
+              // Side-quest quarterly goals for this concern in the active quarter.
+              const sideQuestGoals =
+                activeQuarter
+                  ? data.upcoming_quarterly_goals
+                      .filter(
+                        (qg) =>
+                          qg.parent.type === 'SideQuest' &&
+                          (qg.parent as { type: 'SideQuest'; concern_id: ConcernId }).concern_id === concern.id &&
+                          qg.due_quarter === activeQuarter.quarter &&
+                          qg.due_year === activeQuarter.year,
+                      )
+                      .map((qg) => ({ goal: qg, quarter: activeQuarter }))
+                  : [];
+              const currentGoals = [...mainQuestGoals, ...sideQuestGoals];
               return (
-                <div key={sw.id} className="swimlane-context-group">
-                  <div className="swimlane-context-group__header">
-                    <span className="swimlane-pill" style={{ '--swimlane-color': sw.color } as CSSProperties}>
-                      {sw.name}
+                <div key={concern.id} className="concern-context-group">
+                  <div className="concern-context-group__header">
+                    <span className="concern-pill" style={{ '--concern-color': concern.color } as CSSProperties}>
+                      {concern.name}
                     </span>
-                    {ctx && <span className="swimlane-context-group__quarter">{ctx.quarter.label}</span>}
+                    {ctxList[0] && <span className="concern-context-group__quarter">{ctxList[0].quarter.label}</span>}
                   </div>
                   {currentGoals.length === 0 ? (
-                    <p className="swimlane-context-group__empty">No quarterly goal set</p>
+                    <p className="concern-context-group__empty">No quarterly goal set</p>
                   ) : (
-                    <div className="swimlane-context-group__cards">
-                      {currentGoals.map((qg) => (
-                        <QuarterlyGoalCard key={qg.id} goal={qg} locale={data.calendar.locale} color={sw.color} />
+                    <div className="concern-context-group__cards">
+                      {currentGoals.map(({ goal, quarter }) => (
+                        <QuarterlyGoalCard key={goal.id} goal={goal} quarter={quarter} locale={data.calendar.locale} color={concern.color} />
                       ))}
                     </div>
                   )}
@@ -193,34 +194,33 @@ export default function PlanSection({ data, phase, missedGoals, onSave }: Props)
               );
             })}
 
-            {/* ── Missed goal ghosts (all lanes together) ── */}
+            {/* ── Missed goal ghosts (all concerns together) ── */}
             {missedGoals.length > 0 && (
               <>
                 <hr className="plan-section__divider" />
-                <MissedGoalGhosts goals={missedGoals} swimlanes={data.swimlanes} />
+                <MissedGoalGhosts goals={missedGoals} concerns={data.concerns} />
               </>
             )}
 
             <hr className="plan-section__divider" />
 
-            {/* ── Goal lists (per swimlane + distractions) ── */}
+            {/* ── Goal lists (per concern + distractions) ── */}
             <p className="weekly-step-label">Goals for this week</p>
-            {data.swimlanes.map((sw) => {
-              const swGoals = plannedGoals.filter((g) => g.goal_ref.type === 'Planned' && g.goal_ref.swimlane_id === sw.id);
+            {data.concerns.map((concern: Concern) => {
+              const concernGoals = plannedGoals.filter((g) => goalConcernId(g) === concern.id);
               return (
-                <div key={sw.id} className="plan-goal-section">
+                <div key={concern.id} className="plan-goal-section">
                   <div className="plan-goal-section__header">
-                    <span className="swimlane-pill" style={{ '--swimlane-color': sw.color } as CSSProperties}>
-                      {sw.name}
+                    <span className="concern-pill" style={{ '--concern-color': concern.color } as CSSProperties}>
+                      {concern.name}
                     </span>
-                    <span className="plan-goal-section__targeting">targeting ~{targetingPct(focusWeights, sw.id)}%</span>
                   </div>
                   <PlanGoalsList
-                    goals={swGoals}
-                    waypointGroups={waypointGroupsFor(sw.id)}
+                    goals={concernGoals}
+                    waypointGroups={waypointGroupsFor(concern.id)}
                     distractionLabels={data.distraction_labels}
                     isDistraction={false}
-                    onAdd={(text, waypointId) => handleAddSwimlane(sw.id, text, waypointId)}
+                    onAdd={(text, waypointId) => handleAddConcern(concern.id, text, waypointId)}
                     onDelete={handleDelete}
                     onUpdateWaypoint={handleUpdateWaypoint}
                     onUpdateLabels={handleUpdateLabels}
@@ -233,7 +233,6 @@ export default function PlanSection({ data, phase, missedGoals, onSave }: Props)
             <div className="plan-goal-section">
               <div className="plan-goal-section__header">
                 <span className="plan-goal-section__distractions-label">Distractions</span>
-                <span className="plan-goal-section__targeting">targeting ~{targetingPct(focusWeights, null)}%</span>
               </div>
               <PlanGoalsList
                 goals={distGoals}

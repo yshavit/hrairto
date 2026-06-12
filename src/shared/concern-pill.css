@@ -1,4 +1,4 @@
-.swimlane-pill {
+.concern-pill {
   flex-shrink: 0;
   padding: 1px 7px;
   border-radius: 3px;
@@ -7,6 +7,6 @@
   text-transform: uppercase;
   letter-spacing: 0.05em;
   white-space: nowrap;
-  background: color-mix(in srgb, var(--swimlane-color) 18%, transparent);
-  color: var(--swimlane-color);
+  background: color-mix(in srgb, var(--concern-color) 18%, transparent);
+  color: var(--concern-color);
 }

@@ -1,8 +1,8 @@
-import type { SwimlanePlanningContext, WeeklyPlan } from '../bindings';
+import type { MainQuestPlanningContext, WeeklyPlan } from '../bindings';
 
 interface Props {
   plan: WeeklyPlan;
-  quarterContext: SwimlanePlanningContext[];
+  quarterContext: MainQuestPlanningContext[];
   locale: string;
   timezone: string;
 }

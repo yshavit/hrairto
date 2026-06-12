@@ -83,7 +83,7 @@ export default function ReflectSection({ data, phase, onDone, onEdit }: Props) {
               goals={data.past_goals}
               outcomes={outcomes}
               onToggle={toggle}
-              swimlanes={data.swimlanes}
+              concerns={data.concerns}
               quarterContext={data.quarter_context}
               distractionLabels={data.distraction_labels}
             />
@@ -93,14 +93,16 @@ export default function ReflectSection({ data, phase, onDone, onEdit }: Props) {
             <TimeSplitBars
               prevPlan={data.prev_plan ?? null}
               reflection={data.reflection ?? null}
-              swimlanes={data.swimlanes}
+              mainQuests={data.main_quests}
+              concerns={data.concerns}
               pastGoals={data.past_goals}
               distractionLabels={data.distraction_labels}
             />
 
             <p className="weekly-step-label">Quarterly waypoint health</p>
             <WaypointHealthList
-              swimlanes={data.swimlanes}
+              mainQuests={data.main_quests}
+              concerns={data.concerns}
               quarterContext={data.quarter_context}
               locale={data.calendar.locale}
               invalid={healthInvalid}
