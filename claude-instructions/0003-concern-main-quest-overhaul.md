@@ -241,15 +241,15 @@ frontend `tsc` to go red; that red is the worklist for Stages 2–4.
 
 A redesign, not a port — see "Capacity — surfaced, not modelled" above for rationale.
 
-- [ ] Flip the layout to **time × load**: one column per quarter; forward-motion
+- [x] Flip the layout to **time × load**: one column per quarter; forward-motion
       Activities stack vertically; block height = waypoint count (1–3); colour = Concern
       (on the cards, not as bands). Read relatively — no capacity line, no verdict. (Retires
       the nested-scroll critique by construction — no per-swimlane internal scroll.)
-- [ ] **Distractions do not render on the timeline.** The header allocation donut
+- [x] **Distractions do not render on the timeline.** The header allocation donut
       (`WeightDisplay`) is their only home; it now shows **per-main-quest + side-quests +
       distractions** as the predicted split (its purpose is prediction → reflection).
-- [ ] Reconcile `0001-yearly-goals.md` to the redesigned screen.
-- [ ] Verify: `pnpm test:ts-unit` + `pnpm test:e2e` for goals.
+- [x] Reconcile `0001-yearly-goals.md` to the redesigned screen.
+- [x] Verify: `pnpm test:ts-unit` + `pnpm test:e2e` for goals.
 
 ### Stage 4 — Weekly screen (`src/weekly/`, spec `0002`)
 

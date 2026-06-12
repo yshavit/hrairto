@@ -3,7 +3,7 @@ import type { GoalTreeData } from '../bindings';
 import { isCurrentQuarter } from '../utils/calendar';
 import './GoalTree.css';
 import GoalTreeHeader from './GoalTreeHeader';
-import SwimlanesContainer, { type ScrollAPI } from './SwimlanesContainer';
+import GoalTimeline, { type ScrollAPI } from './GoalTimeline';
 
 interface Props {
   data: GoalTreeData;
@@ -19,19 +19,13 @@ export default function GoalTreeView({ data }: Props) {
       <GoalTreeHeader
         currentQuarterLabel={currentQuarterLabel}
         entries={data.current_weights.entries}
-        swimlanes={data.swimlanes}
+        mainQuests={data.main_quests}
+        concerns={data.concerns}
         onPrev={() => scrollApi.current?.prev()}
         onNext={() => scrollApi.current?.next()}
         onToday={() => scrollApi.current?.today()}
       />
-      <SwimlanesContainer
-        ref={scrollApi}
-        swimlanes={data.swimlanes}
-        annualGoals={data.annual_goals}
-        quarterlyGoals={data.quarterly_goals}
-        quarters={data.quarters_to_display}
-        locale={data.calendar.locale}
-      />
+      <GoalTimeline ref={scrollApi} data={data} />
     </div>
   );
 }

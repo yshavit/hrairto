@@ -1,10 +1,11 @@
-import type { Swimlane, SwimlaneWeight } from '../bindings';
+import type { Concern, MainQuest, WeightEntry } from '../bindings';
 import WeightDisplay from './WeightDisplay';
 
 interface Props {
   currentQuarterLabel: string;
-  entries: SwimlaneWeight[];
-  swimlanes: Swimlane[];
+  entries: WeightEntry[];
+  mainQuests: MainQuest[];
+  concerns: Concern[];
   onPrev(): void;
   onNext(): void;
   onToday(): void;
@@ -21,7 +22,7 @@ function CalendarIcon() {
   );
 }
 
-export default function GoalTreeHeader({ currentQuarterLabel, entries, swimlanes, onPrev, onNext, onToday }: Props) {
+export default function GoalTreeHeader({ currentQuarterLabel, entries, mainQuests, concerns, onPrev, onNext, onToday }: Props) {
   return (
     <header className="goal-tree-header">
       <h1 className="goal-tree-header__title">Goals</h1>
@@ -41,7 +42,7 @@ export default function GoalTreeHeader({ currentQuarterLabel, entries, swimlanes
           <CalendarIcon />
           {currentQuarterLabel} active
         </div>
-        <WeightDisplay entries={entries} swimlanes={swimlanes} />
+        <WeightDisplay entries={entries} mainQuests={mainQuests} concerns={concerns} />
       </div>
     </header>
   );
