@@ -387,6 +387,10 @@ pub struct WeeklySessionData {
     /// Current long-term weight period, shown as the quarterly target reminder
     /// below the focus weight sliders.
     pub current_weights: WeightPeriod,
+    /// All quarterly goals for the current planning quarter, for the context
+    /// display in the plan section. Includes completed goals (shown dimmed);
+    /// covers both main-quest and side-quest goals.
+    pub current_quarter_goals: Vec<QuarterlyGoal>,
     /// Quarterly goals available for waypoint selection when entering this
     /// week's goals. Includes the current quarter and any future quarters;
     /// the backend excludes goals whose every waypoint is already completed.

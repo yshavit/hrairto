@@ -203,6 +203,7 @@ const quarterly_goals: QuarterlyGoal[] = [
     waypoints: [wp('62', 'Port core service'), wp('63', 'Shadow traffic testing'), wp('64', 'Cut over')],
   },
   // ── Side quest: Take on one mentee (Personal growth, Q2 2026, 1★) ─────────
+  // Done this quarter.
   {
     id: QG_MENTEE_ID,
     parent: { type: 'SideQuest', concern_id: PERSONAL_GROWTH_ID },
@@ -210,7 +211,7 @@ const quarterly_goals: QuarterlyGoal[] = [
     due_year: 2026,
     text: 'Take on one mentee',
     created_at: utc(2026, 4, 1),
-    waypoints: [wp('65', 'Onboard + first 1-on-1s'), null, null],
+    waypoints: [wp('65', 'Onboard + first 1-on-1s', utc(2026, 4, 30)), null, null],
   },
   // ── Side quest: Learn Rust (Personal growth, Q1 2027, 2★) ────────────────
   {
@@ -361,6 +362,9 @@ const upcomingQuarterlyGoals = quarterly_goals.filter((qg) =>
   qg.waypoints.some((wp) => wp !== null && wp.completed_at === null),
 );
 
+// All Q2 2026 goals — includes completed ones for context display.
+const currentQuarterGoals = quarterly_goals.filter((qg) => qg.due_quarter === 2 && qg.due_year === 2026);
+
 export const weeklySessionData: WeeklySessionData = {
   calendar,
   plan: weeklyPlan,
@@ -373,5 +377,6 @@ export const weeklySessionData: WeeklySessionData = {
   distraction_labels: distractionLabels,
   quarter_context: quarterContext,
   current_weights,
+  current_quarter_goals: currentQuarterGoals,
   upcoming_quarterly_goals: upcomingQuarterlyGoals,
 };

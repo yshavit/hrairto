@@ -23,6 +23,15 @@ function goalConcernId(goal: WeeklyGoal): ConcernId | null {
   return goal.goal_ref.type === 'Planned' ? goal.goal_ref.concern_id : null;
 }
 
+function quarterlyGoalConcernId(goal: { parent: { type: 'MainQuest'; id: MainQuestId } | { type: 'SideQuest'; concern_id: ConcernId } }, mainQuests: { id: MainQuestId; concern_id: ConcernId }[]): ConcernId | undefined {
+  if (goal.parent.type === 'SideQuest') return goal.parent.concern_id;
+  return mainQuests.find((m) => m.id === (goal.parent as { type: 'MainQuest'; id: MainQuestId }).id)?.concern_id;
+}
+
+function isGoalComplete(goal: { waypoints: (null | { completed_at: number | null })[]}): boolean {
+  return goal.waypoints.every((wp) => wp === null || wp.completed_at !== null);
+}
+
 // ── PlanSection ────────────────────────────────────────────────────────────
 
 interface Props {
@@ -119,7 +128,6 @@ export default function PlanSection({ data, phase, missedGoals, onSave }: Props)
   }
 
   // The active quarter QuarterDisplay — same for all entries in quarter_context.
-  // Used to look up side-quest goals by due_quarter/due_year and pass to QuarterlyGoalCard.
   const activeQuarter = data.quarter_context[0]?.quarter;
 
   // ── render ──────────────────────────────────────────────────────────────
@@ -149,44 +157,28 @@ export default function PlanSection({ data, phase, missedGoals, onSave }: Props)
 
             <hr className="plan-section__divider" />
 
-            {/* ── Quarter context (per concern) ── */}
+            {/* ── Quarter context (per concern, from current_quarter_goals) ── */}
             <p className="weekly-step-label">Current quarter's goals</p>
             {data.concerns.map((concern) => {
-              const concernMainQuests = data.main_quests.filter((m) => m.concern_id === concern.id);
-              const ctxList = concernMainQuests
-                .map((m) => data.quarter_context.find((c) => c.main_quest_id === m.id))
-                .filter((c): c is NonNullable<typeof c> => c !== undefined);
-              const mainQuestGoals = ctxList.flatMap((ctx) =>
-                ctx.quarterly_goal ? [{ goal: ctx.quarterly_goal, quarter: ctx.quarter }] : [],
-              );
-              // Side-quest quarterly goals for this concern in the active quarter.
-              const sideQuestGoals =
-                activeQuarter
-                  ? data.upcoming_quarterly_goals
-                      .filter(
-                        (qg) =>
-                          qg.parent.type === 'SideQuest' &&
-                          (qg.parent as { type: 'SideQuest'; concern_id: ConcernId }).concern_id === concern.id &&
-                          qg.due_quarter === activeQuarter.quarter &&
-                          qg.due_year === activeQuarter.year,
-                      )
-                      .map((qg) => ({ goal: qg, quarter: activeQuarter }))
-                  : [];
-              const currentGoals = [...mainQuestGoals, ...sideQuestGoals];
+              const currentGoals = activeQuarter
+                ? data.current_quarter_goals
+                    .filter((qg) => quarterlyGoalConcernId(qg, data.main_quests) === concern.id)
+                    .map((qg) => ({ goal: qg, quarter: activeQuarter }))
+                : [];
               return (
                 <div key={concern.id} className="concern-context-group">
                   <div className="concern-context-group__header">
                     <span className="concern-pill" style={{ '--concern-color': concern.color } as CSSProperties}>
                       {concern.name}
                     </span>
-                    {ctxList[0] && <span className="concern-context-group__quarter">{ctxList[0].quarter.label}</span>}
+                    {activeQuarter && <span className="concern-context-group__quarter">{activeQuarter.label}</span>}
                   </div>
                   {currentGoals.length === 0 ? (
                     <p className="concern-context-group__empty">No quarterly goal set</p>
                   ) : (
                     <div className="concern-context-group__cards">
                       {currentGoals.map(({ goal, quarter }) => (
-                        <QuarterlyGoalCard key={goal.id} goal={goal} quarter={quarter} locale={data.calendar.locale} color={concern.color} />
+                        <QuarterlyGoalCard key={goal.id} goal={goal} quarter={quarter} locale={data.calendar.locale} color={concern.color} isComplete={isGoalComplete(goal)} />
                       ))}
                     </div>
                   )}

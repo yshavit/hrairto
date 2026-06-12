@@ -666,6 +666,10 @@
   box-shadow: inset 3px 0 0 0 var(--concern-color, #555);
 }
 
+.quarterly-goal-card--complete {
+  opacity: 0.45;
+}
+
 .quarterly-goal-card__text {
   margin: 0;
   font-size: 13px;
