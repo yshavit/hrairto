@@ -180,28 +180,28 @@ a year on, "we forecast 20% distraction, reality was 40%" is one concrete answer
 
 ## Naming map (old → new)
 
-| Old                                                            | New                                                                                                          | Notes                                                                                                                                              |
-| -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `Swimlane`                                                     | `Concern`                                                                                                    | strip to `{ id, name, color }`; no weight association                                                                                              |
-| `SwimlaneId`                                                   | `ConcernId`                                                                                                  |                                                                                                                                                    |
-| `AnnualGoal`                                                   | `MainQuest`                                                                                                  | `swimlane_id` → `concern_id`; deadline stays mandatory                                                                                             |
-| `AnnualGoalId`                                                 | `MainQuestId`                                                                                                |                                                                                                                                                    |
-| `AnnualGoalRef` (`MainQuest` \| `SideQuest`)                   | `ParentGoal` (`MainQuest(MainQuestId)` \| `SideQuest(concern_id)`)                                           | a quarterly goal's parent is a Main Quest or the side-quest pool                                                                                   |
-| `WeightTarget` (`Swimlane(id)` \| `Distractions`)              | `Activity` (`MainQuest(id)` \| `SideQuests` \| `Distractions`)                                               | renamed so the trichotomy is named where it matters (see Axis 1)                                                                                   |
-| `SwimlaneWeight` / `SwimlaneWeightPeriod` / `SwimlanesFocus`   | `WeightEntry` / `WeightPeriod` / `Focus`                                                                     | drop the now-wrong `Swimlane` prefix; `WeightEntry`'s field `target` → `activity`; also `SwimlaneWeightPeriodId` → `WeightPeriodId`                |
-| `QuarterlyGoal.swimlane_id`                                    | (derive from parent — see below)                                                                             |                                                                                                                                                    |
-| `QuarterlyGoal.due_quarter` / `due_year` (required)            | **optional** (`None` = backlog side quest)                                                                   | **new** — the backlog decision (see Side-quest backlog)                                                                                            |
-| `QuarterlyGoal.waypoints: Vec<Waypoint>`                       | `[Option<Waypoint>; 3]` — index = month-of-quarter                                                           | **new shape**; if specta can't export the fixed array, fall back to `Vec<Option<Waypoint>>` validated to len ≤ 3 (see Stage 1). Validate ≥1 `Some` |
-| `Waypoint { target_month, target_year, quarterly_goal_id, … }` | drop `target_month` / `target_year` (month = slot index + quarter) and the now-redundant `quarterly_goal_id` | shrinks to ~`{ id, text, completed_at }`                                                                                                           |
-| `WeeklyGoalRef::Planned { swimlane_id, .. }`                   | `Planned { concern_id, .. }`                                                                                 | minimal change; weekly-screen grouping is an open call (Stage 4)                                                                                   |
-| `SwimlanePlanningContext`                                      | `MainQuestPlanningContext` (likely)                                                                          | shape depends on Stage 4                                                                                                                           |
-| `GoalTreeData.swimlanes` / `.annual_goals`                     | `.concerns` / `.main_quests`                                                                                 |                                                                                                                                                    |
+| Old                                                            | New                                                                                                          | Notes                                                                                                                                       |
+| -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Swimlane`                                                     | `Concern`                                                                                                    | strip to `{ id, name, color }`; no weight association                                                                                       |
+| `SwimlaneId`                                                   | `ConcernId`                                                                                                  |                                                                                                                                             |
+| `AnnualGoal`                                                   | `MainQuest`                                                                                                  | `swimlane_id` → `concern_id`; deadline stays mandatory                                                                                      |
+| `AnnualGoalId`                                                 | `MainQuestId`                                                                                                |                                                                                                                                             |
+| `AnnualGoalRef` (`MainQuest` \| `SideQuest`)                   | `ParentGoal` (`MainQuest(MainQuestId)` \| `SideQuest { concern_id: ConcernId }`)                             | a quarterly goal's parent is a Main Quest or the side-quest pool; `SideQuest` uses struct syntax because the field is a _different_ id type |
+| `WeightTarget` (`Swimlane(id)` \| `Distractions`)              | `Activity` (`MainQuest(id)` \| `SideQuests` \| `Distractions`)                                               | renamed so the trichotomy is named where it matters (see Axis 1)                                                                            |
+| `SwimlaneWeight` / `SwimlaneWeightPeriod` / `SwimlanesFocus`   | `WeightEntry` / `WeightPeriod` / `Focus`                                                                     | drop the now-wrong `Swimlane` prefix; `WeightEntry`'s field `target` → `activity`; also `SwimlaneWeightPeriodId` → `WeightPeriodId`         |
+| `QuarterlyGoal.swimlane_id`                                    | (derive from parent — see below)                                                                             |                                                                                                                                             |
+| `QuarterlyGoal.due_quarter` / `due_year` (required)            | **optional** (`None` = backlog side quest)                                                                   | **new** — the backlog decision (see Side-quest backlog)                                                                                     |
+| `QuarterlyGoal.waypoints: Vec<Waypoint>`                       | `[Option<Waypoint>; 3]` — index = month-of-quarter                                                           | **new shape** (spiked: specta rc.22 exports as `[(Waypoint \| null), (Waypoint \| null), (Waypoint \| null)]` ✓). Validate ≥1 `Some`        |
+| `Waypoint { target_month, target_year, quarterly_goal_id, … }` | drop `target_month` / `target_year` (month = slot index + quarter) and the now-redundant `quarterly_goal_id` | shrinks to ~`{ id, text, completed_at }`                                                                                                    |
+| `WeeklyGoalRef::Planned { swimlane_id, .. }`                   | `Planned { concern_id, .. }`                                                                                 | minimal change; weekly-screen grouping is an open call (Stage 4)                                                                            |
+| `SwimlanePlanningContext`                                      | `MainQuestPlanningContext` (likely)                                                                          | shape depends on Stage 4                                                                                                                    |
+| `GoalTreeData.swimlanes` / `.annual_goals`                     | `.concerns` / `.main_quests`                                                                                 |                                                                                                                                             |
 
-**Concern placement on `QuarterlyGoal`:** prefer putting `concern_id` _only_ where
-it's authoritative — on the `SideQuest` arm of `ParentGoal` — and deriving a
-`MainQuest`-parented goal's Concern from its Main Quest. That avoids a redundant field and the
-"must match the parent" invariant. (Alternative: keep a flat `concern_id` on every
-quarterly goal with that invariant. Decide in Stage 1.)
+**Concern placement on `QuarterlyGoal` (decided):** `concern_id` lives _only_ on the
+`SideQuest { concern_id }` arm of `ParentGoal`. A `MainQuest`-parented goal's Concern
+is derived from its Main Quest. This avoids a redundant field and the "must match the
+parent" invariant. Frontend resolution: one extra map lookup for the `MainQuest` case;
+direct for `SideQuest`.
 
 ---
 
@@ -218,17 +218,14 @@ frontend `tsc` to go red; that red is the worklist for Stages 2–4.
       `Activity` (and its weight field `target`→`activity`); rename the weight/focus
       structs; `WeeklyGoalRef::Planned` field; rename payload
       fields on `GoalTreeData` / `WeeklySessionData`.
-- [ ] Decide `concern_id` placement on `QuarterlyGoal` (`SideQuest` arm vs flat field
+- [x] Decide `concern_id` placement on `QuarterlyGoal` (`SideQuest` arm vs flat field
       — see the naming-map note).
 - [ ] **Backlog support** (see "Side-quest backlog"): make `due_quarter`/`due_year`
-      optional (`None` = backlog), switch `QuarterlyGoal.waypoints` to `[Option<Waypoint>;
-3]` (index = month-of-quarter), and drop `Waypoint.target_month`/`target_year`
-      (derived) and `quarterly_goal_id`. Keep side quests unified with main quest chunks (no
-      split). Validate ≥1 `Some`. **Not skippable: Stage 2's example uses backlog items.**
-- [ ] **Spike (do before committing to the array):** confirm specta exports
-      `[Option<Waypoint>; 3]` to a usable TS type. **If not, fall back to
-      `Vec<Option<Waypoint>>` validated to len ≤ 3** — same index-as-month semantics, not a
-      plain `Vec<Waypoint>` (which would lose the positional month).
+      optional (`None` = backlog), switch `QuarterlyGoal.waypoints` to `[Option<Waypoint>; 3]`
+      (index = month-of-quarter; specta exports as a TS tuple ✓), and drop
+      `Waypoint.target_month`/`target_year` (derived) and `quarterly_goal_id`. Keep side quests
+      unified with main quest chunks (no split). Validate ≥1 `Some`.
+      **Not skippable: Stage 2's example uses backlog items.**
 - [ ] `src-tauri/src/calendar.rs` and any logic referencing the renamed types.
 - [ ] Regenerate `src/bindings.ts` via `pnpm test:rust` (the export test rewrites it;
       do **not** hand-edit) and commit the result — CI fails on drift.
