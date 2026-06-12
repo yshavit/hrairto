@@ -1,20 +1,18 @@
 import type {
-  AnnualGoal,
-  AnnualGoalId,
   Calendar,
   CalendarId,
+  Concern,
+  ConcernId,
   DistractionLabel,
   DistractionLabelId,
   Epoch,
   GoalTreeData,
+  MainQuest,
+  MainQuestId,
+  MainQuestPlanningContext,
   QuarterDisplay,
   QuarterlyGoal,
   QuarterlyGoalId,
-  Swimlane,
-  SwimlaneId,
-  SwimlaneWeightPeriod,
-  SwimlaneWeightPeriodId,
-  SwimlanePlanningContext,
   Waypoint,
   WaypointId,
   WeeklyGoal,
@@ -30,23 +28,37 @@ function utc(year: number, month: number, day: number): Epoch {
   return Date.UTC(year, month - 1, day);
 }
 
+const W = (suffix: string): WaypointId => `00000000-0000-0000-0000-0000000000${suffix}`;
+
+function wp(suffix: string, text: string, completedAt: Epoch | null = null): Waypoint {
+  return { id: W(suffix), text, completed_at: completedAt };
+}
+
+// ── IDs ───────────────────────────────────────────────────────────────────────
+
 const CALENDAR_ID: CalendarId = '00000000-0000-0000-0000-000000000001';
-const TEAM_ID: SwimlaneId = '00000000-0000-0000-0000-000000000010';
-const PERSONAL_ID: SwimlaneId = '00000000-0000-0000-0000-000000000011';
-const WEIGHT_PERIOD_ID: SwimlaneWeightPeriodId = '00000000-0000-0000-0000-000000000020';
-const TEAM_ANNUAL_ID: AnnualGoalId = '00000000-0000-0000-0000-000000000030';
-const TEAM_ANNUAL_2_ID: AnnualGoalId = '00000000-0000-0000-0000-000000000032';
-const PERSONAL_ANNUAL_ID: AnnualGoalId = '00000000-0000-0000-0000-000000000031';
-const QG_TEAM_Q1_ID: QuarterlyGoalId = '00000000-0000-0000-0000-000000000040';
-const QG_PERSONAL_Q1_ID: QuarterlyGoalId = '00000000-0000-0000-0000-000000000041';
-const QG_TEAM_Q2_ID: QuarterlyGoalId = '00000000-0000-0000-0000-000000000042';
 
-const QG_TEAM_Q3_ID: QuarterlyGoalId = '00000000-0000-0000-0000-000000000044';
-const QG_TEAM2_Q2_ID: QuarterlyGoalId = '00000000-0000-0000-0000-000000000045';
-const QG_TEAM_SQ1_ID: QuarterlyGoalId = '00000000-0000-0000-0000-000000000046';
-const QG_TEAM_SQ2_ID: QuarterlyGoalId = '00000000-0000-0000-0000-000000000047';
+const TEAM_ID: ConcernId = '00000000-0000-0000-0000-000000000010';
+const PERSONAL_GROWTH_ID: ConcernId = '00000000-0000-0000-0000-000000000011';
 
-const W: (suffix: string) => WaypointId = (s) => `00000000-0000-0000-0000-0000000000${s}`;
+const WEIGHT_PERIOD_ID = '00000000-0000-0000-0000-000000000020';
+
+const FIZZBUZZ_ID: MainQuestId = '00000000-0000-0000-0000-000000000030';
+const MONOLITH_ID: MainQuestId = '00000000-0000-0000-0000-000000000031';
+
+const QG_FIZZBUZZ_Q2_ID: QuarterlyGoalId = '00000000-0000-0000-0000-000000000040';
+const QG_FIZZBUZZ_Q3_ID: QuarterlyGoalId = '00000000-0000-0000-0000-000000000041';
+const QG_FIZZBUZZ_Q4_ID: QuarterlyGoalId = '00000000-0000-0000-0000-000000000042';
+const QG_MONOLITH_Q4_26_ID: QuarterlyGoalId = '00000000-0000-0000-0000-000000000043';
+const QG_MONOLITH_Q1_27_ID: QuarterlyGoalId = '00000000-0000-0000-0000-000000000044';
+const QG_API_V2_ID: QuarterlyGoalId = '00000000-0000-0000-0000-000000000045';
+const QG_RUST_PORT_ID: QuarterlyGoalId = '00000000-0000-0000-0000-000000000046';
+const QG_MENTEE_ID: QuarterlyGoalId = '00000000-0000-0000-0000-000000000047';
+const QG_LEARN_RUST_ID: QuarterlyGoalId = '00000000-0000-0000-0000-000000000048';
+const QG_GRAPHQL_ID: QuarterlyGoalId = '00000000-0000-0000-0000-000000000049';
+const QG_CLI_ID: QuarterlyGoalId = '00000000-0000-0000-0000-000000000050';
+
+// ── Calendar ──────────────────────────────────────────────────────────────────
 
 const calendar: Calendar = {
   id: CALENDAR_ID,
@@ -56,263 +68,205 @@ const calendar: Calendar = {
   locale: 'en-US',
 };
 
-const swimlanes: Swimlane[] = [
+// ── Concerns ──────────────────────────────────────────────────────────────────
+// Two concerns: Team and Personal growth. Both are just labels/colours — no
+// budget, no weight. Personal growth appears only in side quests.
+
+const concerns: Concern[] = [
   { id: TEAM_ID, name: 'Team', color: '#378ADD' },
-  { id: PERSONAL_ID, name: 'Personal', color: '#1D9E75' },
+  { id: PERSONAL_GROWTH_ID, name: 'Personal growth', color: '#1D9E75' },
 ];
 
-const current_weights: SwimlaneWeightPeriod = {
+// ── Long-term focus weights ───────────────────────────────────────────────────
+// Q2 2026: only FizzBuzz is active; the monolith doesn't start until Q4.
+// Side-quests is a single pooled weight covering both concerns' side quests.
+
+const current_weights = {
   id: WEIGHT_PERIOD_ID,
   start_at: utc(2026, 4, 1),
   note: null,
   entries: [
-    { target: { type: 'Swimlane', id: TEAM_ID }, weight: 0.6 },
-    { target: { type: 'Swimlane', id: PERSONAL_ID }, weight: 0.25 },
-    { target: { type: 'Distractions' }, weight: 0.15 },
+    { activity: { type: 'MainQuest' as const, id: FIZZBUZZ_ID }, weight: 0.55 },
+    { activity: { type: 'SideQuests' as const }, weight: 0.30 },
+    { activity: { type: 'Distractions' as const }, weight: 0.15 },
   ],
 };
 
-const annual_goals: AnnualGoal[] = [
+// ── Main quests ───────────────────────────────────────────────────────────────
+
+const main_quests: MainQuest[] = [
   {
-    id: TEAM_ANNUAL_ID,
-    swimlane_id: TEAM_ID,
+    id: FIZZBUZZ_ID,
+    concern_id: TEAM_ID,
     due_quarter: 4,
     due_year: 2026,
-    text: 'Ship the v1 product',
-    created_at: utc(2025, 12, 15),
+    text: 'Ship FizzBuzz v1',
+    created_at: utc(2026, 3, 15),
   },
   {
-    id: TEAM_ANNUAL_2_ID,
-    swimlane_id: TEAM_ID,
-    due_quarter: 3,
-    due_year: 2026,
-    text: 'Build the team playbook',
-    created_at: utc(2025, 12, 15),
-  },
-  {
-    id: PERSONAL_ANNUAL_ID,
-    swimlane_id: PERSONAL_ID,
+    id: MONOLITH_ID,
+    concern_id: TEAM_ID,
     due_quarter: 4,
-    due_year: 2026,
-    text: 'Run a half marathon',
-    created_at: utc(2025, 12, 15),
+    due_year: 2027,
+    text: 'Break apart the monolith',
+    created_at: utc(2026, 3, 15),
   },
 ];
 
-function completedWaypoints(
-  quarterly_goal_id: QuarterlyGoalId,
-  year: number,
-  months: [number, number, number],
-  idSuffixes: [string, string, string],
-): Waypoint[] {
-  return months.map((month, i) => ({
-    id: W(idSuffixes[i]),
-    quarterly_goal_id,
-    target_month: month,
-    target_year: year,
-    text: `Month ${month} milestone`,
-    completed_at: utc(year, month, 25),
-  }));
-}
-
-function mixedWaypoints(quarterly_goal_id: QuarterlyGoalId, year: number, months: [number, number, number], idSuffixes: [string, string, string]): Waypoint[] {
-  return [
-    {
-      id: W(idSuffixes[0]),
-      quarterly_goal_id,
-      target_month: months[0],
-      target_year: year,
-      text: `Month ${months[0]} milestone`,
-      completed_at: utc(year, months[0], 24),
-    },
-    {
-      id: W(idSuffixes[1]),
-      quarterly_goal_id,
-      target_month: months[1],
-      target_year: year,
-      text: `Month ${months[1]} milestone`,
-      completed_at: null,
-    },
-    {
-      id: W(idSuffixes[2]),
-      quarterly_goal_id,
-      target_month: months[2],
-      target_year: year,
-      text: `Month ${months[2]} milestone`,
-      completed_at: null,
-    },
-  ];
-}
+// ── Quarterly goals ───────────────────────────────────────────────────────────
+// Waypoints indexed by month-of-quarter (slot 0 = first month).
+// Count of Some slots = "stars" (size). Backlogged goals have no due_quarter/year.
 
 const quarterly_goals: QuarterlyGoal[] = [
-  // ── Team / goal 1 ─────────────────────────────────────────────────
+  // ── FizzBuzz: Q2 2026 (current quarter, 3★) ──────────────────────────────
+  // Apr done, May done, Jun in progress.
   {
-    id: QG_TEAM_Q1_ID,
-    swimlane_id: TEAM_ID,
-    annual_goal: { type: 'MainQuest', id: TEAM_ANNUAL_ID },
-    due_quarter: 1,
-    due_year: 2026,
-    text: 'Finish backend API',
-    created_at: utc(2026, 1, 3),
-    waypoints: completedWaypoints(QG_TEAM_Q1_ID, 2026, [1, 2, 3], ['50', '51', '52']),
-  },
-  {
-    id: QG_TEAM_Q2_ID,
-    swimlane_id: TEAM_ID,
-    annual_goal: { type: 'MainQuest', id: TEAM_ANNUAL_ID },
+    id: QG_FIZZBUZZ_Q2_ID,
+    parent: { type: 'MainQuest', id: FIZZBUZZ_ID },
     due_quarter: 2,
     due_year: 2026,
     text: 'Launch closed beta',
     created_at: utc(2026, 4, 2),
-    waypoints: mixedWaypoints(QG_TEAM_Q2_ID, 2026, [4, 5, 6], ['60', '61', '62']),
+    waypoints: [
+      wp('50', 'Design system architecture', utc(2026, 4, 25)),
+      wp('51', 'Ship alpha to internal users', utc(2026, 5, 24)),
+      wp('52', 'Closed beta sign-up flow'),
+    ],
   },
+  // ── FizzBuzz: Q3 2026 (2★) ───────────────────────────────────────────────
   {
-    id: QG_TEAM_Q3_ID,
-    swimlane_id: TEAM_ID,
-    annual_goal: { type: 'MainQuest', id: TEAM_ANNUAL_ID },
+    id: QG_FIZZBUZZ_Q3_ID,
+    parent: { type: 'MainQuest', id: FIZZBUZZ_ID },
     due_quarter: 3,
     due_year: 2026,
-    text: 'Public launch',
-    created_at: utc(2026, 6, 1),
-    waypoints: [
-      {
-        id: W('70'),
-        quarterly_goal_id: QG_TEAM_Q3_ID,
-        target_month: 7,
-        target_year: 2026,
-        text: 'Launch blog post + landing page',
-        completed_at: null,
-      },
-    ],
+    text: 'Private beta + onboarding',
+    created_at: utc(2026, 4, 2),
+    waypoints: [wp('53', 'Private beta launch'), wp('54', 'Onboard 10 beta users'), null],
   },
-  // ── Team / goal 2 (shorter deadline: Q3 2026) ─────────────────────
+  // ── FizzBuzz: Q4 2026 (1★) ───────────────────────────────────────────────
   {
-    id: QG_TEAM2_Q2_ID,
-    swimlane_id: TEAM_ID,
-    annual_goal: { type: 'MainQuest', id: TEAM_ANNUAL_2_ID },
-    due_quarter: 2,
+    id: QG_FIZZBUZZ_Q4_ID,
+    parent: { type: 'MainQuest', id: FIZZBUZZ_ID },
+    due_quarter: 4,
     due_year: 2026,
-    text: 'Define hiring criteria',
+    text: 'Public v1 launch',
+    created_at: utc(2026, 4, 2),
+    waypoints: [wp('55', 'Public launch'), null, null],
+  },
+  // ── Monolith: Q4 2026 (2★) ───────────────────────────────────────────────
+  // Overlaps with FizzBuzz wrapping up — the intentional crunch the mock demonstrates.
+  {
+    id: QG_MONOLITH_Q4_26_ID,
+    parent: { type: 'MainQuest', id: MONOLITH_ID },
+    due_quarter: 4,
+    due_year: 2026,
+    text: 'Map service boundaries',
+    created_at: utc(2026, 4, 2),
+    waypoints: [wp('56', 'Identify seam candidates'), wp('57', 'Extract first service skeleton'), null],
+  },
+  // ── Monolith: Q1 2027 (3★) ───────────────────────────────────────────────
+  {
+    id: QG_MONOLITH_Q1_27_ID,
+    parent: { type: 'MainQuest', id: MONOLITH_ID },
+    due_quarter: 1,
+    due_year: 2027,
+    text: 'First two services independent',
     created_at: utc(2026, 4, 2),
     waypoints: [
-      {
-        id: W('80'),
-        quarterly_goal_id: QG_TEAM2_Q2_ID,
-        target_month: 4,
-        target_year: 2026,
-        text: 'Draft job descriptions',
-        completed_at: utc(2026, 4, 20),
-      },
-      {
-        id: W('81'),
-        quarterly_goal_id: QG_TEAM2_Q2_ID,
-        target_month: 5,
-        target_year: 2026,
-        text: 'Align with exec on comp bands',
-        completed_at: null,
-      },
+      wp('58', 'First service fully independent'),
+      wp('59', 'Second service extracted'),
+      wp('5a', 'Comms protocol settled'),
     ],
   },
-  // ── Team / side quests (both in Q2 → two strips) ──────────────────
+  // ── Side quest: API v2 (Team, Q2 2026, 2★) ───────────────────────────────
   {
-    id: QG_TEAM_SQ1_ID,
-    swimlane_id: TEAM_ID,
-    annual_goal: { type: 'SideQuest' },
+    id: QG_API_V2_ID,
+    parent: { type: 'SideQuest', concern_id: TEAM_ID },
     due_quarter: 2,
     due_year: 2026,
-    text: 'Set up deployment pipeline',
+    text: 'API v2',
     created_at: utc(2026, 4, 1),
     waypoints: [
-      {
-        id: W('90'),
-        quarterly_goal_id: QG_TEAM_SQ1_ID,
-        target_month: 5,
-        target_year: 2026,
-        text: 'CI/CD for staging env',
-        completed_at: null,
-      },
+      wp('60', 'Design API contracts', utc(2026, 4, 28)),
+      wp('61', 'Implement + integration tests'),
+      null,
     ],
   },
+  // ── Side quest: Prototype: port service to Rust (Team, Q3 2026, 3★) ───────
   {
-    id: QG_TEAM_SQ2_ID,
-    swimlane_id: TEAM_ID,
-    annual_goal: { type: 'SideQuest' },
+    id: QG_RUST_PORT_ID,
+    parent: { type: 'SideQuest', concern_id: TEAM_ID },
+    due_quarter: 3,
+    due_year: 2026,
+    text: 'Prototype: port service to Rust',
+    created_at: utc(2026, 4, 1),
+    waypoints: [wp('62', 'Port core service'), wp('63', 'Shadow traffic testing'), wp('64', 'Cut over')],
+  },
+  // ── Side quest: Take on one mentee (Personal growth, Q2 2026, 1★) ─────────
+  // Done this quarter.
+  {
+    id: QG_MENTEE_ID,
+    parent: { type: 'SideQuest', concern_id: PERSONAL_GROWTH_ID },
     due_quarter: 2,
     due_year: 2026,
-    text: 'Migrate to monorepo',
+    text: 'Take on one mentee',
     created_at: utc(2026, 4, 1),
-    waypoints: [
-      {
-        id: W('91'),
-        quarterly_goal_id: QG_TEAM_SQ2_ID,
-        target_month: 4,
-        target_year: 2026,
-        text: 'Move repos + update CI',
-        completed_at: null,
-      },
-    ],
+    waypoints: [wp('65', 'Onboard + first 1-on-1s', utc(2026, 4, 30)), null, null],
   },
-  // ── Personal / goal 1 ─────────────────────────────────────────────
+  // ── Side quest: Learn Rust (Personal growth, Q1 2027, 2★) ────────────────
   {
-    id: QG_PERSONAL_Q1_ID,
-    swimlane_id: PERSONAL_ID,
-    annual_goal: { type: 'MainQuest', id: PERSONAL_ANNUAL_ID },
+    id: QG_LEARN_RUST_ID,
+    parent: { type: 'SideQuest', concern_id: PERSONAL_GROWTH_ID },
     due_quarter: 1,
-    due_year: 2026,
-    text: 'Build base mileage',
-    created_at: utc(2026, 1, 3),
-    waypoints: completedWaypoints(QG_PERSONAL_Q1_ID, 2026, [1, 2, 3], ['53', '54', '55']),
+    due_year: 2027,
+    text: 'Learn Rust',
+    created_at: utc(2026, 4, 1),
+    waypoints: [wp('66', 'Complete rustlings + toy project'), wp('67', 'Contribute one PR to internal tooling'), null],
+  },
+  // ── Backlog: Evaluate a GraphQL gateway (Team, 2★) ───────────────────────
+  {
+    id: QG_GRAPHQL_ID,
+    parent: { type: 'SideQuest', concern_id: TEAM_ID },
+    due_quarter: null,
+    due_year: null,
+    text: 'Evaluate a GraphQL gateway',
+    created_at: utc(2026, 4, 1),
+    waypoints: [wp('68', 'Evaluate 3 gateway options'), wp('69', 'PoC with Auth service'), null],
+  },
+  // ── Backlog: Internal CLI tooling (Team, 1★) ─────────────────────────────
+  {
+    id: QG_CLI_ID,
+    parent: { type: 'SideQuest', concern_id: TEAM_ID },
+    due_quarter: null,
+    due_year: null,
+    text: 'Internal CLI tooling',
+    created_at: utc(2026, 4, 1),
+    waypoints: [wp('6a', 'Ship first-cut dev tools'), null, null],
   },
 ];
 
+// ── Quarters to display ───────────────────────────────────────────────────────
+
 const quarters_to_display: QuarterDisplay[] = [
-  {
-    quarter: 1,
-    year: 2026,
-    label: 'Q1 · Jan–Mar',
-    start_at: utc(2026, 1, 1),
-    end_at: utc(2026, 4, 1),
-  },
-  {
-    quarter: 2,
-    year: 2026,
-    label: 'Q2 · Apr–Jun',
-    start_at: utc(2026, 4, 1),
-    end_at: utc(2026, 7, 1),
-  },
-  {
-    quarter: 3,
-    year: 2026,
-    label: 'Q3 · Jul–Sep',
-    start_at: utc(2026, 7, 1),
-    end_at: utc(2026, 10, 1),
-  },
-  {
-    quarter: 4,
-    year: 2026,
-    label: 'Q4 · Oct–Dec',
-    start_at: utc(2026, 10, 1),
-    end_at: utc(2027, 1, 1),
-  },
-  {
-    quarter: 1,
-    year: 2027,
-    label: 'Q1 · Jan–Mar',
-    start_at: utc(2027, 1, 1),
-    end_at: utc(2027, 4, 1),
-  },
+  { quarter: 2, year: 2026, label: 'Q2 · Apr–Jun', start_at: utc(2026, 4, 1), end_at: utc(2026, 7, 1) },
+  { quarter: 3, year: 2026, label: 'Q3 · Jul–Sep', start_at: utc(2026, 7, 1), end_at: utc(2026, 10, 1) },
+  { quarter: 4, year: 2026, label: 'Q4 · Oct–Dec', start_at: utc(2026, 10, 1), end_at: utc(2027, 1, 1) },
+  { quarter: 1, year: 2027, label: 'Q1 · Jan–Mar', start_at: utc(2027, 1, 1), end_at: utc(2027, 4, 1) },
 ];
 
 export const mockData: GoalTreeData = {
   calendar,
-  swimlanes,
+  concerns,
   current_weights,
-  annual_goals,
+  main_quests,
   quarterly_goals,
   quarters_to_display,
 };
 
 // ── Weekly session mock data ──────────────────────────────────────────────────
+// NOTE: this section will be properly redesigned in Stage 4 alongside the
+// weekly screen. For now it typechecks against the new model but the narrative
+// is carried over from the swimlane era.
 
 const PREV_WEEKLY_PLAN_ID: WeeklyPlanId = '00000000-0000-0000-0000-000000000100';
 const WEEKLY_PLAN_ID: WeeklyPlanId = '00000000-0000-0000-0000-000000000102';
@@ -326,16 +280,16 @@ const distractionLabels: DistractionLabel[] = [
   { id: LABEL_BUG, text: 'bug', created_at: utc(2026, 1, 1) },
 ];
 
-// Past week: May 19–23. Planned 65% team / 25% personal / 10% distractions.
+// Past week: May 19–23.
 const prevWeeklyPlan: WeeklyPlan = {
   id: PREV_WEEKLY_PLAN_ID,
   start_at: utc(2026, 5, 19),
   end_at: utc(2026, 5, 24),
   focus: {
     weights: [
-      { target: { type: 'Swimlane', id: TEAM_ID }, weight: 0.65 },
-      { target: { type: 'Swimlane', id: PERSONAL_ID }, weight: 0.25 },
-      { target: { type: 'Distractions' }, weight: 0.1 },
+      { activity: { type: 'MainQuest', id: FIZZBUZZ_ID }, weight: 0.60 },
+      { activity: { type: 'SideQuests' }, weight: 0.25 },
+      { activity: { type: 'Distractions' }, weight: 0.15 },
     ],
   },
 };
@@ -347,29 +301,29 @@ const weeklyPlan: WeeklyPlan = {
   end_at: utc(2026, 5, 31),
   focus: {
     weights: [
-      { target: { type: 'Swimlane', id: TEAM_ID }, weight: 0.65 },
-      { target: { type: 'Swimlane', id: PERSONAL_ID }, weight: 0.25 },
-      { target: { type: 'Distractions' }, weight: 0.1 },
+      { activity: { type: 'MainQuest', id: FIZZBUZZ_ID }, weight: 0.55 },
+      { activity: { type: 'SideQuests' }, weight: 0.30 },
+      { activity: { type: 'Distractions' }, weight: 0.15 },
     ],
   },
 };
 
-// Actual split was ~50% team / ~20% personal / ~30% distractions.
+// Actual split: oncall incident ate most of Thursday.
 const weeklyReflection: WeeklyReflection = {
   id: WEEKLY_REFLECTION_ID,
   plan_id: PREV_WEEKLY_PLAN_ID,
-  notes: 'Took more distraction hits than expected — the oncall incident ate most of Thursday. Need to protect deep work time.',
+  notes:
+    'Took more distraction hits than expected — the oncall incident ate most of Thursday. Need to protect deep work time.',
   completed_at: utc(2026, 5, 26),
   actual_split: {
     weights: [
-      { target: { type: 'Swimlane', id: TEAM_ID }, weight: 0.5 },
-      { target: { type: 'Swimlane', id: PERSONAL_ID }, weight: 0.2 },
-      { target: { type: 'Distractions' }, weight: 0.3 },
+      { activity: { type: 'MainQuest', id: FIZZBUZZ_ID }, weight: 0.45 },
+      { activity: { type: 'SideQuests' }, weight: 0.25 },
+      { activity: { type: 'Distractions' }, weight: 0.30 },
     ],
   },
 };
 
-// Goals 1 was marked Hit during the week; 2–4 are unmarked going into reflection.
 const pastGoals: WeeklyGoal[] = [
   {
     id: WG('10'),
@@ -377,7 +331,7 @@ const pastGoals: WeeklyGoal[] = [
     created_at: utc(2026, 5, 18),
     text: 'Review API performance',
     outcome: { type: 'Hit', at: utc(2026, 5, 21) },
-    goal_ref: { type: 'Planned', swimlane_id: TEAM_ID, waypoint_id: W('61') },
+    goal_ref: { type: 'Planned', concern_id: TEAM_ID, waypoint_id: W('61') },
   },
   {
     id: WG('11'),
@@ -385,18 +339,10 @@ const pastGoals: WeeklyGoal[] = [
     created_at: utc(2026, 5, 18),
     text: 'Draft closed beta invite flow',
     outcome: null,
-    goal_ref: { type: 'Planned', swimlane_id: TEAM_ID, waypoint_id: null },
+    goal_ref: { type: 'Planned', concern_id: TEAM_ID, waypoint_id: null },
   },
   {
     id: WG('12'),
-    plan_id: PREV_WEEKLY_PLAN_ID,
-    created_at: utc(2026, 5, 18),
-    text: 'Long run (10 km)',
-    outcome: null,
-    goal_ref: { type: 'Planned', swimlane_id: PERSONAL_ID, waypoint_id: null },
-  },
-  {
-    id: WG('13'),
     plan_id: PREV_WEEKLY_PLAN_ID,
     created_at: utc(2026, 5, 18),
     text: 'Oncall incident postmortem',
@@ -405,23 +351,18 @@ const pastGoals: WeeklyGoal[] = [
   },
 ];
 
-// Q2 2026 context: Team has an active quarterly goal; Personal has none this quarter.
-const quarterContext: SwimlanePlanningContext[] = [
+// Q2 2026: FizzBuzz has an active quarterly goal; the monolith hasn't started.
+const quarterContext: MainQuestPlanningContext[] = [
   {
-    swimlane_id: TEAM_ID,
-    quarter: quarters_to_display[1], // Q2 2026
-    quarterly_goal: quarterly_goals[1], // QG_TEAM_Q2_ID "Launch closed beta"
-  },
-  {
-    swimlane_id: PERSONAL_ID,
-    quarter: quarters_to_display[1],
-    quarterly_goal: null,
+    main_quest_id: FIZZBUZZ_ID,
+    quarter: quarters_to_display[0], // Q2 2026
+    quarterly_goal: quarterly_goals[0], // QG_FIZZBUZZ_Q2_ID "Launch closed beta"
   },
 ];
 
-// Quarterly goals with at least one incomplete waypoint, for the waypoint
-// picker when entering this week's goals.
-const upcomingQuarterlyGoals = quarterly_goals.filter((qg) => qg.waypoints.some((wp) => wp.completed_at === null));
+const upcomingQuarterlyGoals = quarterly_goals.filter((qg) =>
+  qg.waypoints.some((wp) => wp !== null && wp.completed_at === null),
+);
 
 export const weeklySessionData: WeeklySessionData = {
   calendar,
@@ -430,7 +371,7 @@ export const weeklySessionData: WeeklySessionData = {
   reflection: weeklyReflection,
   past_goals: pastGoals,
   planned_goals: [],
-  swimlanes,
+  concerns,
   distraction_labels: distractionLabels,
   quarter_context: quarterContext,
   current_weights,

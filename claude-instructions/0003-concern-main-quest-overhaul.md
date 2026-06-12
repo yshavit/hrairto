@@ -233,9 +233,9 @@ frontend `tsc` to go red; that red is the worklist for Stages 2–4.
 
 ### Stage 2 — Mock data
 
-- [ ] Rewrite `src/mockData.ts` to the corrected example (see below). This is the first
+- [x] Rewrite `src/mockData.ts` to the corrected example (see below). This is the first
       time the model is exercised honestly — the focus split becomes a real decision.
-- [ ] Verify: `mockData.ts` type-checks against the new bindings.
+- [x] Verify: `mockData.ts` type-checks against the new bindings.
 
 ### Stage 3 — Goal tree screen **redesign** (`src/goals/`, spec `0001`)
 
