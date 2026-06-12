@@ -385,8 +385,6 @@ pub struct WeeklySessionData {
     /// Active main quests, for color/label resolution in focus-bar and goal lists.
     pub main_quests: Vec<MainQuest>,
     pub distraction_labels: Vec<DistractionLabel>,
-    /// Active quarter context per main quest, for the planning section.
-    pub quarter_context: Vec<MainQuestPlanningContext>,
     /// Current long-term weight period, shown as the quarterly target reminder
     /// below the focus weight sliders.
     pub current_weights: WeightPeriod,

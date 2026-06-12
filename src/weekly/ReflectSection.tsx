@@ -84,7 +84,7 @@ export default function ReflectSection({ data, phase, onDone, onEdit }: Props) {
               outcomes={outcomes}
               onToggle={toggle}
               concerns={data.concerns}
-              quarterContext={data.quarter_context}
+              upcomingQuarterlyGoals={data.upcoming_quarterly_goals}
               distractionLabels={data.distraction_labels}
             />
             {goalsInvalid && <p className="weekly-validation-error">Mark every goal as hit or missed before continuing.</p>}
@@ -103,7 +103,8 @@ export default function ReflectSection({ data, phase, onDone, onEdit }: Props) {
             <WaypointHealthList
               mainQuests={data.main_quests}
               concerns={data.concerns}
-              quarterContext={data.quarter_context}
+              currentQuarterGoals={data.current_quarter_goals}
+              currentQuarter={data.current_quarter}
               locale={data.calendar.locale}
               invalid={healthInvalid}
               onAllSelected={setAllHealthSelected}

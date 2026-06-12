@@ -160,16 +160,6 @@ due_quarter: number;
 due_year: number; text: string; created_at: Epoch }
 export type MainQuestId = string
 /**
- * Read-only quarter context for one main quest, shown during the planning phase
- * so the user can set weekly goals relative to their quarterly commitments.
- * Shape will be refined in Stage 4.
- */
-export type MainQuestPlanningContext = { main_quest_id: MainQuestId; quarter: QuarterDisplay; 
-/**
- * `None` if the main quest has no quarterly goal for the active quarter.
- */
-quarterly_goal: QuarterlyGoal | null }
-/**
  * A quarterly goal's parent — either a specific main quest or the side-quest
  * pool (with its own concern).
  */
@@ -345,10 +335,6 @@ planned_goals: WeeklyGoal[]; concerns: Concern[];
  * Active main quests, for color/label resolution in focus-bar and goal lists.
  */
 main_quests: MainQuest[]; distraction_labels: DistractionLabel[]; 
-/**
- * Active quarter context per main quest, for the planning section.
- */
-quarter_context: MainQuestPlanningContext[]; 
 /**
  * Current long-term weight period, shown as the quarterly target reminder
  * below the focus weight sliders.

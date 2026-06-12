@@ -9,7 +9,6 @@ import type {
   GoalTreeData,
   MainQuest,
   MainQuestId,
-  MainQuestPlanningContext,
   QuarterDisplay,
   QuarterlyGoal,
   QuarterlyGoalId,
@@ -349,15 +348,6 @@ const pastGoals: WeeklyGoal[] = [
   },
 ];
 
-// Q2 2026: FizzBuzz has an active quarterly goal; the monolith hasn't started.
-const quarterContext: MainQuestPlanningContext[] = [
-  {
-    main_quest_id: FIZZBUZZ_ID,
-    quarter: quarters_to_display[0], // Q2 2026
-    quarterly_goal: quarterly_goals[0], // QG_FIZZBUZZ_Q2_ID "Launch closed beta"
-  },
-];
-
 const upcomingQuarterlyGoals = quarterly_goals.filter((qg) =>
   qg.waypoints.some((wp) => wp !== null && wp.completed_at === null),
 );
@@ -376,7 +366,6 @@ export const weeklySessionData: WeeklySessionData = {
   concerns,
   main_quests,
   distraction_labels: distractionLabels,
-  quarter_context: quarterContext,
   current_weights,
   current_quarter_goals: currentQuarterGoals,
   upcoming_quarterly_goals: upcomingQuarterlyGoals,

@@ -9,11 +9,11 @@ import ReflectionNotes, { buildReflectionPrompt } from './ReflectionNotes';
 import WaypointHealthList from './WaypointHealthList';
 import WeeklyPlanning from './WeeklyPlanning';
 
-// Variant with no quarterly goals → WaypointHealthList renders nothing,
+// Variant with no current-quarter goals → WaypointHealthList renders nothing,
 // so health validation doesn't interfere with tests targeting other conditions.
 const noWaypointData = {
   ...weeklySessionData,
-  quarter_context: weeklySessionData.quarter_context.map((ctx) => ({ ...ctx, quarterly_goal: null })),
+  current_quarter_goals: [],
 };
 
 // Drive WeeklyPlanning through the reflection phase so tests can start in planning.
@@ -22,7 +22,7 @@ function completeReflection(container: HTMLElement) {
     fireEvent.click(row.querySelector('.past-goal-row__toggle')!);
   });
   fireEvent.change(container.querySelector('.reflection-notes__textarea')!, { target: { value: 'Test notes' } });
-  fireEvent.click(screen.getByRole('button', { name: 'on track' }));
+  screen.getAllByRole('button', { name: 'on track' }).forEach((btn) => fireEvent.click(btn));
   fireEvent.click(screen.getByRole('button', { name: /Done reflecting/i }));
 }
 
@@ -35,7 +35,7 @@ describe('PastGoalsList', () => {
     outcomes,
     onToggle: vi.fn(),
     concerns: weeklySessionData.concerns,
-    quarterContext: weeklySessionData.quarter_context,
+    upcomingQuarterlyGoals: weeklySessionData.upcoming_quarterly_goals,
     distractionLabels: weeklySessionData.distraction_labels,
   };
 
@@ -124,15 +124,16 @@ describe('WaypointHealthList', () => {
   const healthProps = {
     mainQuests: weeklySessionData.main_quests,
     concerns: weeklySessionData.concerns,
-    quarterContext: weeklySessionData.quarter_context,
+    currentQuarterGoals: weeklySessionData.current_quarter_goals,
+    currentQuarter: weeklySessionData.current_quarter,
     locale: weeklySessionData.calendar.locale,
   };
 
-  it('cards have --unselected class initially, removed after selecting confidence', () => {
+  it('cards have --unselected class initially, removed after selecting confidence on all cards', () => {
     const { container } = render(<WaypointHealthList {...healthProps} />);
     expect(container.querySelector('.waypoint-health-card--unselected')).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: 'on track' }));
+    screen.getAllByRole('button', { name: 'on track' }).forEach((btn) => fireEvent.click(btn));
 
     expect(container.querySelector('.waypoint-health-card--unselected')).not.toBeInTheDocument();
   });
@@ -217,7 +218,7 @@ describe('ReflectSection', () => {
       fireEvent.click(row.querySelector('.past-goal-row__toggle')!);
     });
     fireEvent.change(container.querySelector('.reflection-notes__textarea')!, { target: { value: 'Notes' } });
-    fireEvent.click(screen.getByRole('button', { name: 'on track' }));
+    screen.getAllByRole('button', { name: 'on track' }).forEach((btn) => fireEvent.click(btn));
     fireEvent.click(screen.getByRole('button', { name: /Done reflecting/i }));
 
     // All remaining goals were marked hit, no misses

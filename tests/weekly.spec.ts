@@ -17,8 +17,11 @@ async function completeReflection(page: Parameters<typeof test>[1]['page']) {
   // Fill reflection notes
   await page.locator('.reflection-notes__textarea').fill('Weekly reflection notes');
 
-  // Select waypoint health confidence
-  await page.locator('.waypoint-health-card__btn', { hasText: 'on track' }).click();
+  // Select waypoint health confidence for all cards
+  const onTrackBtns = page.locator('.waypoint-health-card__btn', { hasText: 'on track' });
+  for (let i = 0; i < (await onTrackBtns.count()); i++) {
+    await onTrackBtns.nth(i).click();
+  }
 
   // Complete reflection
   await page.locator('button', { hasText: /Done reflecting/ }).click();

@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
-import type { Concern, MainQuest, MainQuestPlanningContext, Waypoint } from '../bindings';
+import type { Concern, MainQuest, QuarterDisplay, QuarterlyGoal, Waypoint } from '../bindings';
 
 interface Props {
   mainQuests: MainQuest[];
   concerns: Concern[];
-  quarterContext: MainQuestPlanningContext[];
+  currentQuarterGoals: QuarterlyGoal[];
+  currentQuarter: QuarterDisplay;
   locale: string;
   invalid?: boolean;
   onAllSelected?: (allSelected: boolean) => void;
@@ -18,11 +19,9 @@ const CONFIDENCE_OPTIONS: { value: Confidence; label: string; bg: string; color:
   { value: 'behind', label: 'behind', bg: '#7a1818', color: '#f08080' },
 ];
 
-function findActiveWaypointSlot(ctx: MainQuestPlanningContext): { waypoint: Waypoint; slot: number } | null {
-  const waypoints = ctx.quarterly_goal?.waypoints;
-  if (!waypoints) return null;
-  for (let slot = 0; slot < waypoints.length; slot++) {
-    const wp = waypoints[slot];
+function findActiveWaypointSlot(goal: QuarterlyGoal): { waypoint: Waypoint; slot: number } | null {
+  for (let slot = 0; slot < goal.waypoints.length; slot++) {
+    const wp = goal.waypoints[slot];
     if (wp !== null && wp.completed_at === null) return { waypoint: wp, slot };
   }
   return null;
@@ -41,9 +40,9 @@ function quarterPrefix(label: string): string {
 }
 
 interface CardProps {
-  mainQuestText: string;
+  label: string;
   concernColor: string;
-  ctx: MainQuestPlanningContext;
+  currentQuarter: QuarterDisplay;
   waypoint: Waypoint;
   slot: number;
   locale: string;
@@ -51,15 +50,15 @@ interface CardProps {
   onSelect: (value: Confidence) => void;
 }
 
-function WaypointHealthCard({ mainQuestText, concernColor, ctx, waypoint, slot, locale, confidence, onSelect }: CardProps) {
-  const month = slotMonthName(slot, ctx.quarter.start_at, locale);
-  const subtitle = `${quarterPrefix(ctx.quarter.label)} ${month} waypoint`;
+function WaypointHealthCard({ label, concernColor, currentQuarter, waypoint, slot, locale, confidence, onSelect }: CardProps) {
+  const month = slotMonthName(slot, currentQuarter.start_at, locale);
+  const subtitle = `${quarterPrefix(currentQuarter.label)} ${month} waypoint`;
 
   return (
     <div className={`waypoint-health-card${confidence === null ? ' waypoint-health-card--unselected' : ''}`}>
       <div className="waypoint-health-card__content">
         <div className="waypoint-health-card__label" style={{ color: concernColor }}>
-          {mainQuestText}
+          {label}
         </div>
         <p className="waypoint-health-card__waypoint-text">{waypoint.text}</p>
         <p className="waypoint-health-card__subtitle">{subtitle}</p>
@@ -83,15 +82,21 @@ function WaypointHealthCard({ mainQuestText, concernColor, ctx, waypoint, slot, 
   );
 }
 
-export default function WaypointHealthList({ mainQuests, concerns, quarterContext, locale, invalid, onAllSelected }: Props) {
+export default function WaypointHealthList({ mainQuests, concerns, currentQuarterGoals, currentQuarter, locale, invalid, onAllSelected }: Props) {
   const [confidences, setConfidences] = useState<Map<string, Confidence>>(() => new Map());
 
-  const cards = quarterContext
-    .map((ctx) => {
-      const mq = mainQuests.find((m) => m.id === ctx.main_quest_id);
-      const concern = concerns.find((c) => c.id === mq?.concern_id);
-      const active = findActiveWaypointSlot(ctx);
-      return mq && concern && active ? { ctx, mainQuestText: mq.text, concernColor: concern.color, ...active } : null;
+  const cards = currentQuarterGoals
+    .map((goal) => {
+      const active = findActiveWaypointSlot(goal);
+      if (!active) return null;
+      let concernColor: string;
+      if (goal.parent.type === 'MainQuest') {
+        const mq = mainQuests.find((m) => m.id === goal.parent.id);
+        concernColor = concerns.find((c) => c.id === mq?.concern_id)?.color ?? '#666';
+      } else {
+        concernColor = concerns.find((c) => c.id === goal.parent.concern_id)?.color ?? '#666';
+      }
+      return { goal, label: goal.text, concernColor, ...active };
     })
     .filter((x): x is NonNullable<typeof x> => x !== null);
 
@@ -102,27 +107,27 @@ export default function WaypointHealthList({ mainQuests, concerns, quarterContex
 
   if (cards.length === 0) return null;
 
-  const anyUnselected = cards.some((c) => !confidences.has(c.ctx.main_quest_id));
+  const anyUnselected = cards.some((c) => !confidences.has(c.goal.id));
 
-  function handleSelect(mainQuestId: string, val: Confidence) {
-    const next = new Map(confidences).set(mainQuestId, val);
+  function handleSelect(goalId: string, val: Confidence) {
+    const next = new Map(confidences).set(goalId, val);
     setConfidences(next);
-    onAllSelected?.(cards.every((c) => next.has(c.ctx.main_quest_id)));
+    onAllSelected?.(cards.every((c) => next.has(c.goal.id)));
   }
 
   return (
     <div className="waypoint-health-list">
-      {cards.map(({ ctx, mainQuestText, concernColor, waypoint, slot }) => (
+      {cards.map(({ goal, label, concernColor, waypoint, slot }) => (
         <WaypointHealthCard
-          key={ctx.main_quest_id}
-          mainQuestText={mainQuestText}
+          key={goal.id}
+          label={label}
           concernColor={concernColor}
-          ctx={ctx}
+          currentQuarter={currentQuarter}
           waypoint={waypoint}
           slot={slot}
           locale={locale}
-          confidence={confidences.get(ctx.main_quest_id) ?? null}
-          onSelect={(val) => handleSelect(ctx.main_quest_id, val)}
+          confidence={confidences.get(goal.id) ?? null}
+          onSelect={(val) => handleSelect(goal.id, val)}
         />
       ))}
       {invalid && anyUnselected && <p className="weekly-validation-error">Rate your confidence for each waypoint before continuing.</p>}
