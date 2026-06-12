@@ -43,36 +43,25 @@ async quit() : Promise<void> {
 /** user-defined types **/
 
 /**
- * Annual goal — due at the end of a specific fiscal quarter.
- */
-export type AnnualGoal = { id: AnnualGoalId; swimlane_id: SwimlaneId; 
-/**
- * 1-based fiscal quarter: 1–4.
- */
-due_quarter: number; 
-/**
- * Fiscal year — the calendar year in which the fiscal year *starts*.
- * E.g. if [`Calendar::quarter_start_month`] is 2, Q4 of fiscal year 2025
- * ends in Jan 2026, but `due_year` is still 2025.
- */
-due_year: number; text: string; created_at: Epoch }
-export type AnnualGoalId = string
-/**
- * Whether a quarterly goal serves an annual goal or is a standalone side quest.
+ * The unit a [`WeightEntry`] points at — the three kinds of time-spend that
+ * the weekly focus bar allocates across.
  * 
- * A side quest is intentional work that doesn't map to any annual goal —
- * not a distraction, just independently valuable. Using an enum here (rather
- * than `Option<AnnualGoalId>`) makes the intent explicit at the type level.
+ * `MainQuest` is one entry per active main quest; `SideQuests` and
+ * `Distractions` are each a single pooled entry.
  */
-export type AnnualGoalRef = 
+export type Activity = 
 /**
- * Serves a specific annual goal.
+ * A specific active main quest.
  */
-{ type: "MainQuest"; id: AnnualGoalId } | 
+{ type: "MainQuest"; id: MainQuestId } | 
 /**
- * Standalone work — intentional but not tied to any annual goal.
+ * The pooled side-quest budget — all side quests share one weight.
  */
-{ type: "SideQuest" }
+{ type: "SideQuests" } | 
+/**
+ * The distraction budget — unplanned, non-advancing work as a whole.
+ */
+{ type: "Distractions" }
 /**
  * Defines the fiscal calendar for the user or org.
  * All quarter/month derivations are done relative to this config.
@@ -99,6 +88,16 @@ timezone: string;
 locale: string }
 export type CalendarId = string
 /**
+ * A grouping / colour label for forward-motion work (Main Quests and side quests).
+ * Carries no weight, deadline, or cascade — purely organisational.
+ */
+export type Concern = { id: ConcernId; name: string; 
+/**
+ * Hex color, e.g. "#378ADD".
+ */
+color: string }
+export type ConcernId = string
+/**
  * A global distraction label. Editing the text propagates everywhere the
  * label is referenced.
  */
@@ -118,6 +117,14 @@ export type DistractionLabelId = string
  */
 export type Epoch = number
 /**
+ * How focus is distributed across activities (main quests, side quests,
+ * distractions) for a given week or period.
+ * 
+ * All weights should sum to 1.0. Use [`Focus::new`] to construct
+ * from raw weights — it normalizes the total automatically.
+ */
+export type Focus = { weights: WeightEntry[] }
+/**
  * Whether a weekly goal was achieved.
  * 
  * `at` is when the user marked the goal — this can happen at any point
@@ -128,13 +135,53 @@ export type GoalOutcome = { type: "Hit"; at: Epoch } | { type: "Miss"; at: Epoch
  * Full data payload for the goal tree view.
  * This is the shape of what the eventual Tauri command will return.
  */
-export type GoalTreeData = { calendar: Calendar; swimlanes: Swimlane[]; current_weights: SwimlaneWeightPeriod; annual_goals: AnnualGoal[]; quarterly_goals: QuarterlyGoal[]; 
+export type GoalTreeData = { calendar: Calendar; concerns: Concern[]; current_weights: WeightPeriod; main_quests: MainQuest[]; quarterly_goals: QuarterlyGoal[]; 
 /**
  * Quarters to show in the scrolling strip, in chronological order.
  * Computed by the backend at invocation time (see `calendar::quarters_to_display`).
  * Typically one past quarter, the current quarter, and two or more future quarters.
  */
 quarters_to_display: QuarterDisplay[] }
+/**
+ * A long-horizon goal on the roadmap. Carries a mandatory deadline and a
+ * [`Concern`] for grouping / colour. Each active main quest gets its own
+ * allocation weight in the weekly focus bar.
+ */
+export type MainQuest = { id: MainQuestId; concern_id: ConcernId; 
+/**
+ * 1-based fiscal quarter: 1–4.
+ */
+due_quarter: number; 
+/**
+ * Fiscal year — the calendar year in which the fiscal year *starts*.
+ * E.g. if [`Calendar::quarter_start_month`] is 2, Q4 of fiscal year 2025
+ * ends in Jan 2026, but `due_year` is still 2025.
+ */
+due_year: number; text: string; created_at: Epoch }
+export type MainQuestId = string
+/**
+ * Read-only quarter context for one main quest, shown during the planning phase
+ * so the user can set weekly goals relative to their quarterly commitments.
+ * Shape will be refined in Stage 4.
+ */
+export type MainQuestPlanningContext = { main_quest_id: MainQuestId; quarter: QuarterDisplay; 
+/**
+ * `None` if the main quest has no quarterly goal for the active quarter.
+ */
+quarterly_goal: QuarterlyGoal | null }
+/**
+ * A quarterly goal's parent — either a specific main quest or the side-quest
+ * pool (with its own concern).
+ */
+export type ParentGoal = 
+/**
+ * Serves a specific main quest; concern is derived from the main quest.
+ */
+{ type: "MainQuest"; id: MainQuestId } | 
+/**
+ * Standalone side-quest work; the concern labels it directly.
+ */
+{ type: "SideQuest"; concern_id: ConcernId }
 /**
  * Precomputed display info for one fiscal quarter.
  * 
@@ -164,66 +211,40 @@ start_at: Epoch;
  */
 end_at: Epoch }
 /**
- * Quarterly goal — due at the end of a specific fiscal quarter.
+ * Quarterly goal — a chunk of work due at the end of a specific fiscal quarter,
+ * or sitting in the backlog when unscheduled.
+ * 
+ * Waypoints are indexed by month-of-quarter: slot 0 = first month, slot 2 =
+ * third. The count of `Some` slots is the goal's size (1–3 "stars"). At least
+ * one slot must be `Some`.
  */
-export type QuarterlyGoal = { id: QuarterlyGoalId; swimlane_id: SwimlaneId; annual_goal: AnnualGoalRef; 
+export type QuarterlyGoal = { id: QuarterlyGoalId; parent: ParentGoal; 
 /**
- * 1-based fiscal quarter: 1–4.
+ * 1-based fiscal quarter: 1–4. `None` = this goal is in the backlog.
  */
-due_quarter: number; 
+due_quarter: number | null; 
 /**
  * Fiscal year — the calendar year in which the fiscal year starts
- * (see [`AnnualGoal::due_year`]).
+ * (see [`MainQuest::due_year`]). `None` = this goal is in the backlog.
  */
-due_year: number; text: string; created_at: Epoch; waypoints: Waypoint[] }
+due_year: number | null; text: string; created_at: Epoch; 
+/**
+ * Monthly milestones indexed by month-of-quarter (0 = first month of the
+ * quarter). Month and year are derived from the index plus `due_quarter` /
+ * `due_year` — never stored on the waypoint itself. A backlogged goal's
+ * `Some` slots render as stars (no derived date).
+ */
+waypoints: [(Waypoint | null), (Waypoint | null), (Waypoint | null)] }
 export type QuarterlyGoalId = string
-export type Swimlane = { id: SwimlaneId; name: string; 
 /**
- * Hex color, e.g. "#378ADD".
- */
-color: string }
-export type SwimlaneId = string
-/**
- * Read-only quarter context for one swimlane, shown during the planning phase
- * so the user can set weekly goals relative to their quarterly commitments.
- */
-export type SwimlanePlanningContext = { swimlane_id: SwimlaneId; quarter: QuarterDisplay; 
-/**
- * `None` if the swimlane has no quarterly goal for the active quarter.
- */
-quarterly_goal: QuarterlyGoal | null }
-export type SwimlaneWeight = { target: WeightTarget; 
-/**
- * 0.0–1.0.
- */
-weight: number }
-export type SwimlaneWeightPeriod = { id: SwimlaneWeightPeriodId; 
-/**
- * When these weights take effect.
- */
-start_at: Epoch; note: string | null; entries: SwimlaneWeight[] }
-export type SwimlaneWeightPeriodId = string
-/**
- * How focus is distributed across swimlanes and distractions.
+ * A monthly milestone within a quarterly goal.
  * 
- * All weights should sum to 1.0. Use [`SwimlanesFocus::new`] to construct
- * from raw weights — it normalizes the total automatically.
+ * The target month is derived from the slot index in
+ * [`QuarterlyGoal::waypoints`] plus the parent goal's quarter — it is never
+ * stored here. A completed waypoint renders by `completed_at`; an incomplete
+ * one renders by slot + quarter (or as a star when the goal is backlogged).
  */
-export type SwimlanesFocus = { weights: SwimlaneWeight[] }
-/**
- * Waypoint — a monthly milestone within a quarterly goal.
- */
-export type Waypoint = { id: WaypointId; quarterly_goal_id: QuarterlyGoalId; 
-/**
- * Calendar month (not fiscal), 1-based: 1 = January … 12 = December.
- * Calendar rather than fiscal because months are already unambiguous
- * without fiscal adjustment.
- */
-target_month: number; 
-/**
- * Calendar year.
- */
-target_year: number; text: string; 
+export type Waypoint = { id: WaypointId; text: string; 
 /**
  * `None` until the waypoint is completed.
  */
@@ -249,9 +270,9 @@ export type WeeklyGoalId = string
  */
 export type WeeklyGoalRef = 
 /**
- * Planned work belonging to a swimlane, optionally tied to a waypoint.
+ * Planned work belonging to a concern, optionally tied to a waypoint.
  */
-{ type: "Planned"; swimlane_id: SwimlaneId; waypoint_id: WaypointId | null } | 
+{ type: "Planned"; concern_id: ConcernId; waypoint_id: WaypointId | null } | 
 /**
  * Unplanned work; may carry one or more distraction labels.
  */
@@ -267,12 +288,12 @@ start_at: Epoch;
 /**
  * First millisecond of the following week (exclusive end).
  */
-end_at: Epoch; focus: SwimlanesFocus }
+end_at: Epoch; focus: Focus }
 export type WeeklyPlanId = string
 /**
  * Payload submitted when the user finishes the weekly planning session.
  */
-export type WeeklyPlanRequest = { type: "Plan"; focus: SwimlanesFocus; goals: WeeklyGoal[] } | { type: "NoPlan"; reason: string }
+export type WeeklyPlanRequest = { type: "Plan"; focus: Focus; goals: WeeklyGoal[] } | { type: "NoPlan"; reason: string }
 /**
  * The reflection artifact for a completed week.
  */
@@ -285,7 +306,7 @@ plan_id: WeeklyPlanId; notes: string; completed_at: Epoch;
  * User-adjusted actual time split for the past week. Starts as a
  * backend estimate; the user can edit it during the reflection session.
  */
-actual_split: SwimlanesFocus }
+actual_split: Focus }
 export type WeeklyReflectionId = string
 /**
  * Full payload for the weekly planning/reflection session UI.
@@ -314,39 +335,42 @@ past_goals: WeeklyGoal[];
 /**
  * Goals already entered for the coming week's plan.
  */
-planned_goals: WeeklyGoal[]; swimlanes: Swimlane[]; distraction_labels: DistractionLabel[]; 
+planned_goals: WeeklyGoal[]; concerns: Concern[]; distraction_labels: DistractionLabel[]; 
 /**
- * Active quarter context per swimlane, for the planning section.
+ * Active quarter context per main quest, for the planning section.
  */
-quarter_context: SwimlanePlanningContext[]; 
+quarter_context: MainQuestPlanningContext[]; 
 /**
  * Current long-term weight period, shown as the quarterly target reminder
  * below the focus weight sliders.
  */
-current_weights: SwimlaneWeightPeriod; 
+current_weights: WeightPeriod; 
 /**
- * Quarterly goals (all swimlanes) available for waypoint selection when
- * entering this week's goals. Includes the current quarter and any future
- * quarters; the backend excludes goals whose every waypoint is already
- * completed.
+ * Quarterly goals available for waypoint selection when entering this
+ * week's goals. Includes the current quarter and any future quarters;
+ * the backend excludes goals whose every waypoint is already completed.
  */
 upcoming_quarterly_goals: QuarterlyGoal[] }
 /**
- * What a [`SwimlaneWeight`] allocates weight toward.
+ * One entry in a [`WeightPeriod`]: how much of the week's focus budget goes to
+ * a specific [`Activity`].
+ */
+export type WeightEntry = { activity: Activity; 
+/**
+ * 0.0–1.0.
+ */
+weight: number }
+/**
+ * A dated set of long-term focus weights that takes effect at `start_at`.
  * 
- * Including `Distractions` as a first-class target lets the user budget
- * intentionally for unplanned work rather than having it silently erode
- * the swimlane allocations.
+ * All entry weights within a period should sum to 1.0.
  */
-export type WeightTarget = 
+export type WeightPeriod = { id: WeightPeriodId; 
 /**
- * A specific swimlane.
+ * When these weights take effect.
  */
-{ type: "Swimlane"; id: SwimlaneId } | 
-/**
- * The distraction budget — unplanned work as a whole.
- */
-{ type: "Distractions" }
+start_at: Epoch; note: string | null; entries: WeightEntry[] }
+export type WeightPeriodId = string
 
 /** tauri-specta globals **/
 

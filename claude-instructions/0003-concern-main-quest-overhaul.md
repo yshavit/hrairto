@@ -213,23 +213,23 @@ frontend `tsc` to go red; that red is the worklist for Stages 2–4.
 
 ### Stage 1 — Rust model + generated bindings
 
-- [ ] `src-tauri/src/models.rs`: apply the naming map. Rename id newtypes; `Swimlane`→
+- [x] `src-tauri/src/models.rs`: apply the naming map. Rename id newtypes; `Swimlane`→
       `Concern`; `AnnualGoal`→`MainQuest`; introduce `ParentGoal`; rename `WeightTarget`→
       `Activity` (and its weight field `target`→`activity`); rename the weight/focus
       structs; `WeeklyGoalRef::Planned` field; rename payload
       fields on `GoalTreeData` / `WeeklySessionData`.
 - [x] Decide `concern_id` placement on `QuarterlyGoal` (`SideQuest` arm vs flat field
       — see the naming-map note).
-- [ ] **Backlog support** (see "Side-quest backlog"): make `due_quarter`/`due_year`
+- [x] **Backlog support** (see "Side-quest backlog"): make `due_quarter`/`due_year`
       optional (`None` = backlog), switch `QuarterlyGoal.waypoints` to `[Option<Waypoint>; 3]`
       (index = month-of-quarter; specta exports as a TS tuple ✓), and drop
       `Waypoint.target_month`/`target_year` (derived) and `quarterly_goal_id`. Keep side quests
       unified with main quest chunks (no split). Validate ≥1 `Some`.
       **Not skippable: Stage 2's example uses backlog items.**
-- [ ] `src-tauri/src/calendar.rs` and any logic referencing the renamed types.
-- [ ] Regenerate `src/bindings.ts` via `pnpm test:rust` (the export test rewrites it;
+- [x] `src-tauri/src/calendar.rs` and any logic referencing the renamed types.
+- [x] Regenerate `src/bindings.ts` via `pnpm test:rust` (the export test rewrites it;
       do **not** hand-edit) and commit the result — CI fails on drift.
-- [ ] Verify: `pnpm test:rust` and `cargo fmt --check` green; `pnpm tsc` red (expected).
+- [x] Verify: `pnpm test:rust` and `cargo fmt --check` green; `pnpm tsc` red (expected).
 
 ### Stage 2 — Mock data
 
