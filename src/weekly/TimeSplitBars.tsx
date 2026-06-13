@@ -81,7 +81,15 @@ export default function TimeSplitBars({ prevPlan, reflection, mainQuests, concer
       {actualWeights.length > 0 && (
         <div className="time-split-bar-row">
           <span className="time-split-bar-row__label">Actual</span>
-          <FocusSplitBar mainQuests={mainQuests} concerns={concerns} weights={actualWeights} isEditable approximate onChange={setActualWeights} tooltips={actualTooltips} />
+          <FocusSplitBar
+            mainQuests={mainQuests}
+            concerns={concerns}
+            weights={actualWeights}
+            isEditable
+            approximate
+            onChange={setActualWeights}
+            tooltips={actualTooltips}
+          />
         </div>
       )}
       <div className="time-split-bars__footer">

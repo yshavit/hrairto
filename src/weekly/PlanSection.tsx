@@ -23,12 +23,15 @@ function goalConcernId(goal: WeeklyGoal): ConcernId | null {
   return goal.goal_ref.type === 'Planned' ? goal.goal_ref.concern_id : null;
 }
 
-function quarterlyGoalConcernId(goal: { parent: { type: 'MainQuest'; id: MainQuestId } | { type: 'SideQuest'; concern_id: ConcernId } }, mainQuests: { id: MainQuestId; concern_id: ConcernId }[]): ConcernId | undefined {
+function quarterlyGoalConcernId(
+  goal: { parent: { type: 'MainQuest'; id: MainQuestId } | { type: 'SideQuest'; concern_id: ConcernId } },
+  mainQuests: { id: MainQuestId; concern_id: ConcernId }[],
+): ConcernId | undefined {
   if (goal.parent.type === 'SideQuest') return goal.parent.concern_id;
   return mainQuests.find((m) => m.id === (goal.parent as { type: 'MainQuest'; id: MainQuestId }).id)?.concern_id;
 }
 
-function isGoalComplete(goal: { waypoints: (null | { completed_at: number | null })[]}): boolean {
+function isGoalComplete(goal: { waypoints: (null | { completed_at: number | null })[] }): boolean {
   return goal.waypoints.every((wp) => wp === null || wp.completed_at !== null);
 }
 
@@ -175,7 +178,14 @@ export default function PlanSection({ data, phase, missedGoals, onSave }: Props)
                   ) : (
                     <div className="concern-context-group__cards">
                       {currentGoals.map(({ goal, quarter }) => (
-                        <QuarterlyGoalCard key={goal.id} goal={goal} quarter={quarter} locale={data.calendar.locale} color={concern.color} isComplete={isGoalComplete(goal)} />
+                        <QuarterlyGoalCard
+                          key={goal.id}
+                          goal={goal}
+                          quarter={quarter}
+                          locale={data.calendar.locale}
+                          color={concern.color}
+                          isComplete={isGoalComplete(goal)}
+                        />
                       ))}
                     </div>
                   )}

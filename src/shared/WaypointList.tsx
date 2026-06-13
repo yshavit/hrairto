@@ -16,9 +16,7 @@ function slotToMonth(quarter: QuarterDisplay, slot: number): { month: number; ye
 }
 
 export default function WaypointList({ waypoints, quarter, isActiveQuarter, locale }: Props) {
-  const present = waypoints
-    .map((wp, slot) => (wp !== null ? { wp, slot } : null))
-    .filter((x): x is { wp: Waypoint; slot: number } => x !== null);
+  const present = waypoints.map((wp, slot) => (wp !== null ? { wp, slot } : null)).filter((x): x is { wp: Waypoint; slot: number } => x !== null);
 
   const firstIncompleteIdx = isActiveQuarter ? present.findIndex(({ wp }) => wp.completed_at === null) : -1;
 

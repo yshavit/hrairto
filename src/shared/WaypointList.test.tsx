@@ -15,17 +15,11 @@ function wp(id: string, completedAt: number | null = null): Waypoint {
   return { id, text: `${id} milestone`, completed_at: completedAt };
 }
 
-const waypoints: [Waypoint | null, Waypoint | null, Waypoint | null] = [
-  wp('w-1', Date.UTC(2026, 3, 25)),
-  wp('w-2'),
-  wp('w-3'),
-];
+const waypoints: [Waypoint | null, Waypoint | null, Waypoint | null] = [wp('w-1', Date.UTC(2026, 3, 25)), wp('w-2'), wp('w-3')];
 
 describe('WaypointList', () => {
   it('active quarter: completed / current / future states', () => {
-    const { container } = render(
-      <WaypointList waypoints={waypoints} quarter={quarter} isActiveQuarter={true} locale="en-US" />,
-    );
+    const { container } = render(<WaypointList waypoints={waypoints} quarter={quarter} isActiveQuarter={true} locale="en-US" />);
     const items = container.querySelectorAll('.waypoint-item');
     expect(items[0]).toHaveAttribute('data-state', 'completed');
     expect(items[1]).toHaveAttribute('data-state', 'current');
@@ -33,9 +27,7 @@ describe('WaypointList', () => {
   });
 
   it('inactive quarter: no waypoint is current', () => {
-    const { container } = render(
-      <WaypointList waypoints={waypoints} quarter={quarter} isActiveQuarter={false} locale="en-US" />,
-    );
+    const { container } = render(<WaypointList waypoints={waypoints} quarter={quarter} isActiveQuarter={false} locale="en-US" />);
     const items = container.querySelectorAll('.waypoint-item');
     expect(items[0]).toHaveAttribute('data-state', 'completed');
     expect(items[1]).toHaveAttribute('data-state', 'future');
@@ -43,9 +35,7 @@ describe('WaypointList', () => {
   });
 
   it('renders month labels derived from quarter + slot', () => {
-    const { container } = render(
-      <WaypointList waypoints={waypoints} quarter={quarter} isActiveQuarter={true} locale="en-US" />,
-    );
+    const { container } = render(<WaypointList waypoints={waypoints} quarter={quarter} isActiveQuarter={true} locale="en-US" />);
     const months = container.querySelectorAll('.waypoint-month');
     expect(months[0].textContent).toBe('Apr');
     expect(months[1].textContent).toBe('May');
@@ -54,9 +44,7 @@ describe('WaypointList', () => {
 
   it('null slots are not rendered', () => {
     const sparse: [Waypoint | null, Waypoint | null, Waypoint | null] = [wp('w-1'), null, null];
-    const { container } = render(
-      <WaypointList waypoints={sparse} quarter={quarter} isActiveQuarter={false} locale="en-US" />,
-    );
+    const { container } = render(<WaypointList waypoints={sparse} quarter={quarter} isActiveQuarter={false} locale="en-US" />);
     expect(container.querySelectorAll('.waypoint-item')).toHaveLength(1);
   });
 });

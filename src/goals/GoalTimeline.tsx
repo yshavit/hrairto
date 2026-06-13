@@ -153,11 +153,8 @@ const GoalTimeline = forwardRef<ScrollAPI, Props>(function GoalTimeline({ data }
   const concernById = new Map(data.concerns.map((c) => [c.id, c]));
 
   function goalConcernColor(goal: QuarterlyGoal): string {
-    const concernId =
-      goal.parent.type === 'MainQuest'
-        ? mainQuestById.get(goal.parent.id)?.concern_id
-        : goal.parent.concern_id;
-    return concernId ? concernById.get(concernId)?.color ?? '#666' : '#666';
+    const concernId = goal.parent.type === 'MainQuest' ? mainQuestById.get(goal.parent.id)?.concern_id : goal.parent.concern_id;
+    return concernId ? (concernById.get(concernId)?.color ?? '#666') : '#666';
   }
 
   // Quarter status map
@@ -174,9 +171,7 @@ const GoalTimeline = forwardRef<ScrollAPI, Props>(function GoalTimeline({ data }
   const mqOrder = new Map(data.main_quests.map((mq, i) => [mq.id, i]));
 
   function goalsForQuarter(q: QuarterDisplay): QuarterlyGoal[] {
-    const goals = data.quarterly_goals.filter(
-      (g) => g.due_quarter === q.quarter && g.due_year === q.year,
-    );
+    const goals = data.quarterly_goals.filter((g) => g.due_quarter === q.quarter && g.due_year === q.year);
     return [...goals].sort((a, b) => {
       const aMain = a.parent.type === 'MainQuest';
       const bMain = b.parent.type === 'MainQuest';
@@ -199,14 +194,7 @@ const GoalTimeline = forwardRef<ScrollAPI, Props>(function GoalTimeline({ data }
             <div key={key} className="quarter-column" data-status={status}>
               <div className="quarter-column__header">{q.label}</div>
               {goals.map((goal) => (
-                <ActivityCard
-                  key={goal.id}
-                  goal={goal}
-                  quarter={q}
-                  concernColor={goalConcernColor(goal)}
-                  status={status}
-                  locale={data.calendar.locale}
-                />
+                <ActivityCard key={goal.id} goal={goal} quarter={q} concernColor={goalConcernColor(goal)} status={status} locale={data.calendar.locale} />
               ))}
               {goals.length === 0 && <div className="quarter-column__empty">—</div>}
             </div>

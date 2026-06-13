@@ -18,9 +18,7 @@ test('› button cannot scroll into the peek quarter', async ({ page }) => {
   // Click more times than there are real quarters.
   for (let i = 0; i < 8; i++) await nextBtn.click();
 
-  const scrollLeft = await page.evaluate(
-    () => (document.querySelector('.goal-timeline') as HTMLDivElement).scrollLeft,
-  );
+  const scrollLeft = await page.evaluate(() => (document.querySelector('.goal-timeline') as HTMLDivElement).scrollLeft);
   expect(scrollLeft).toBeLessThanOrEqual(hardMax + 1); // +1 for rounding
 });
 
@@ -32,9 +30,7 @@ test('scroller moves after drag', async ({ page }) => {
   const cx = box.x + box.width / 2;
   const cy = box.y + box.height / 2;
 
-  const scrollBefore = await page.evaluate(
-    () => (document.querySelector('.goal-timeline') as HTMLDivElement).scrollLeft,
-  );
+  const scrollBefore = await page.evaluate(() => (document.querySelector('.goal-timeline') as HTMLDivElement).scrollLeft);
 
   await page.mouse.move(cx, cy);
   await page.mouse.down();

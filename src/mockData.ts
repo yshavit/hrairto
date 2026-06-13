@@ -86,7 +86,7 @@ const current_weights = {
   note: null,
   entries: [
     { activity: { type: 'MainQuest' as const, id: FIZZBUZZ_ID }, weight: 0.55 },
-    { activity: { type: 'SideQuests' as const }, weight: 0.30 },
+    { activity: { type: 'SideQuests' as const }, weight: 0.3 },
     { activity: { type: 'Distractions' as const }, weight: 0.15 },
   ],
 };
@@ -171,11 +171,7 @@ const quarterly_goals: QuarterlyGoal[] = [
     due_year: 2027,
     text: 'First two services independent',
     created_at: utc(2026, 4, 2),
-    waypoints: [
-      wp('58', 'First service fully independent'),
-      wp('59', 'Second service extracted'),
-      wp('5a', 'Comms protocol settled'),
-    ],
+    waypoints: [wp('58', 'First service fully independent'), wp('59', 'Second service extracted'), wp('5a', 'Comms protocol settled')],
   },
   // ── Side quest: API v2 (Team, Q2 2026, 2★) ───────────────────────────────
   {
@@ -185,11 +181,7 @@ const quarterly_goals: QuarterlyGoal[] = [
     due_year: 2026,
     text: 'API v2',
     created_at: utc(2026, 4, 1),
-    waypoints: [
-      wp('60', 'Design API contracts', utc(2026, 4, 28)),
-      wp('61', 'Implement + integration tests'),
-      null,
-    ],
+    waypoints: [wp('60', 'Design API contracts', utc(2026, 4, 28)), wp('61', 'Implement + integration tests'), null],
   },
   // ── Side quest: Prototype: port service to Rust (Team, Q3 2026, 3★) ───────
   {
@@ -284,7 +276,7 @@ const prevWeeklyPlan: WeeklyPlan = {
   end_at: utc(2026, 5, 24),
   focus: {
     weights: [
-      { activity: { type: 'MainQuest', id: FIZZBUZZ_ID }, weight: 0.60 },
+      { activity: { type: 'MainQuest', id: FIZZBUZZ_ID }, weight: 0.6 },
       { activity: { type: 'SideQuests' }, weight: 0.25 },
       { activity: { type: 'Distractions' }, weight: 0.15 },
     ],
@@ -299,7 +291,7 @@ const weeklyPlan: WeeklyPlan = {
   focus: {
     weights: [
       { activity: { type: 'MainQuest', id: FIZZBUZZ_ID }, weight: 0.55 },
-      { activity: { type: 'SideQuests' }, weight: 0.30 },
+      { activity: { type: 'SideQuests' }, weight: 0.3 },
       { activity: { type: 'Distractions' }, weight: 0.15 },
     ],
   },
@@ -309,14 +301,13 @@ const weeklyPlan: WeeklyPlan = {
 const weeklyReflection: WeeklyReflection = {
   id: WEEKLY_REFLECTION_ID,
   plan_id: PREV_WEEKLY_PLAN_ID,
-  notes:
-    'Took more distraction hits than expected — the oncall incident ate most of Thursday. Need to protect deep work time.',
+  notes: 'Took more distraction hits than expected — the oncall incident ate most of Thursday. Need to protect deep work time.',
   completed_at: utc(2026, 5, 26),
   actual_split: {
     weights: [
       { activity: { type: 'MainQuest', id: FIZZBUZZ_ID }, weight: 0.45 },
       { activity: { type: 'SideQuests' }, weight: 0.25 },
-      { activity: { type: 'Distractions' }, weight: 0.30 },
+      { activity: { type: 'Distractions' }, weight: 0.3 },
     ],
   },
 };
@@ -348,9 +339,7 @@ const pastGoals: WeeklyGoal[] = [
   },
 ];
 
-const upcomingQuarterlyGoals = quarterly_goals.filter((qg) =>
-  qg.waypoints.some((wp) => wp !== null && wp.completed_at === null),
-);
+const upcomingQuarterlyGoals = quarterly_goals.filter((qg) => qg.waypoints.some((wp) => wp !== null && wp.completed_at === null));
 
 // All Q2 2026 goals — includes completed ones for context display.
 const currentQuarterGoals = quarterly_goals.filter((qg) => qg.due_quarter === 2 && qg.due_year === 2026);

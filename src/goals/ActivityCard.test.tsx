@@ -29,37 +29,27 @@ const mainQuestGoal: QuarterlyGoal = {
 
 describe('ActivityCard', () => {
   it('past: sets data-status', () => {
-    const { container } = render(
-      <ActivityCard goal={baseGoal} quarter={quarter} concernColor="#378ADD" status="past" locale="en-US" />,
-    );
+    const { container } = render(<ActivityCard goal={baseGoal} quarter={quarter} concernColor="#378ADD" status="past" locale="en-US" />);
     expect(container.firstChild).toHaveAttribute('data-status', 'past');
   });
 
   it('active: sets data-status', () => {
-    const { container } = render(
-      <ActivityCard goal={baseGoal} quarter={quarter} concernColor="#378ADD" status="active" locale="en-US" />,
-    );
+    const { container } = render(<ActivityCard goal={baseGoal} quarter={quarter} concernColor="#378ADD" status="active" locale="en-US" />);
     expect(container.firstChild).toHaveAttribute('data-status', 'active');
   });
 
   it('future: renders goal text', () => {
-    render(
-      <ActivityCard goal={baseGoal} quarter={quarter} concernColor="#378ADD" status="future" locale="en-US" />,
-    );
+    render(<ActivityCard goal={baseGoal} quarter={quarter} concernColor="#378ADD" status="future" locale="en-US" />);
     expect(screen.getByText('Launch closed beta')).toBeInTheDocument();
   });
 
   it('SideQuest parent: shows side quest badge', () => {
-    render(
-      <ActivityCard goal={baseGoal} quarter={quarter} concernColor="#378ADD" status="future" locale="en-US" />,
-    );
+    render(<ActivityCard goal={baseGoal} quarter={quarter} concernColor="#378ADD" status="future" locale="en-US" />);
     expect(screen.getByText('side quest')).toBeInTheDocument();
   });
 
   it('MainQuest parent: no side quest badge', () => {
-    render(
-      <ActivityCard goal={mainQuestGoal} quarter={quarter} concernColor="#378ADD" status="future" locale="en-US" />,
-    );
+    render(<ActivityCard goal={mainQuestGoal} quarter={quarter} concernColor="#378ADD" status="future" locale="en-US" />);
     expect(screen.queryByText('side quest')).not.toBeInTheDocument();
   });
 });

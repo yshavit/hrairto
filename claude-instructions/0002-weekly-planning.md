@@ -9,17 +9,17 @@ See `0000-hrairto-overview.md` for project context.
 
 ## Key files
 
-| What            | Where                                   |
-| --------------- | --------------------------------------- |
-| Entry point     | `src/weekly/WeeklyPlanning.tsx`         |
-| All components  | `src/weekly/`                           |
+| What            | Where                                                         |
+| --------------- | ------------------------------------------------------------- |
+| Entry point     | `src/weekly/WeeklyPlanning.tsx`                               |
+| All components  | `src/weekly/`                                                 |
 | Shared          | `src/shared/FocusSplitBar.tsx`, `src/shared/concern-pill.css` |
-| Styles          | `src/weekly/WeeklyPlanning.css`         |
-| Data model      | `src-tauri/src/models.rs`               |
-| Mock data       | `src/mockData.ts` (`weeklySessionData`) |
-| Test entrypoint | `ui-test-entrypoints/weekly.html`       |
-| RTL unit tests  | `src/weekly/WeeklyPlanning.test.tsx`    |
-| Playwright e2e  | `tests/weekly.spec.ts`                  |
+| Styles          | `src/weekly/WeeklyPlanning.css`                               |
+| Data model      | `src-tauri/src/models.rs`                                     |
+| Mock data       | `src/mockData.ts` (`weeklySessionData`)                       |
+| Test entrypoint | `ui-test-entrypoints/weekly.html`                             |
+| RTL unit tests  | `src/weekly/WeeklyPlanning.test.tsx`                          |
+| Playwright e2e  | `tests/weekly.spec.ts`                                        |
 
 ---
 

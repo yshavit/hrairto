@@ -91,6 +91,7 @@ Concern color appears on the card's left border, not as swimlane bands.
 Distractions are not rendered in the timeline (no spatial representation).
 
 `GoalTimeline` computes concern colors by resolving `ParentGoal`:
+
 - `MainQuest { id }` → look up `MainQuest.concern_id` → look up `Concern.color`
 - `SideQuest { concern_id }` → look up `Concern.color` directly
 
