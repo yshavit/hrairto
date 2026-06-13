@@ -1,9 +1,9 @@
-//! Data model for Hrairto.
+//! Persisted data model for Hrairto.
 //!
-//! These structs are the single source of truth for the shape of all
-//! planning and tracking data. They derive [`specta::Type`] so that TypeScript
-//! definitions are generated from them (see the `tauri-specta` setup in
-//! `lib.rs`); the frontend never hand-writes types that duplicate these.
+//! These structs are the entities written to and read from storage. They derive
+//! [`specta::Type`] so that TypeScript definitions are generated from them (see
+//! the `tauri-specta` setup in `lib.rs`); the frontend never hand-writes types
+//! that duplicate these.
 //!
 //! Conventions (see `claude-instructions/0000-hrairto-overview.md`):
 //! - All point-in-time values are [`Epoch`] (milliseconds UTC).
@@ -212,42 +212,6 @@ pub struct WeightPeriod {
     pub entries: Vec<WeightEntry>,
 }
 
-/// Precomputed display info for one fiscal quarter.
-///
-/// The backend computes these at command-invocation time so the frontend never needs
-/// to do fiscal-calendar math. `start_at` and `end_at` form a half-open interval
-/// `[start_at, end_at)` in epoch milliseconds UTC.
-#[derive(Debug, Clone, Serialize, Deserialize, Type)]
-pub struct QuarterDisplay {
-    /// 1-based: 1–4.
-    pub quarter: u8,
-    /// Fiscal year — calendar year in which the fiscal year starts.
-    pub year: u32,
-    /// Display label, e.g. "Q2 · Apr–Jun".
-    pub label: String,
-    /// First millisecond of this quarter (inclusive).
-    pub start_at: Epoch,
-    /// First millisecond of the following quarter (exclusive end).
-    pub end_at: Epoch,
-}
-
-/// Full data payload for the goal tree view.
-/// This is the shape of what the eventual Tauri command will return.
-#[derive(Debug, Clone, Serialize, Deserialize, Type)]
-pub struct GoalTreeData {
-    pub calendar: Calendar,
-    pub concerns: Vec<Concern>,
-    pub current_weights: WeightPeriod,
-    pub main_quests: Vec<MainQuest>,
-    pub quarterly_goals: Vec<QuarterlyGoal>,
-    /// Quarters to show in the scrolling strip, in chronological order.
-    /// Computed by the backend at invocation time (see `calendar::quarters_to_display`).
-    /// Typically one past quarter, the current quarter, and two or more future quarters.
-    pub quarters_to_display: Vec<QuarterDisplay>,
-}
-
-// ── Weekly planning / reflection ─────────────────────────────────────────────
-
 /// How focus is distributed across activities (main quests, side quests,
 /// distractions) for a given week or period.
 ///
@@ -312,6 +276,19 @@ pub struct WeeklyReflection {
     pub actual_split: Focus,
 }
 
+/// What kind of work a [`WeeklyGoal`] represents.
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+#[serde(tag = "type")]
+pub enum WeeklyGoalRef {
+    /// Planned work belonging to a concern, optionally tied to a waypoint.
+    Planned {
+        concern_id: ConcernId,
+        waypoint_id: Option<WaypointId>,
+    },
+    /// Unplanned work; may carry one or more distraction labels.
+    Distraction { label_ids: Vec<DistractionLabelId> },
+}
+
 /// A single weekly goal, used for both past goals (reflected on) and future
 /// goals (being planned). `outcome` is `None` until the user marks it.
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
@@ -327,19 +304,6 @@ pub struct WeeklyGoal {
     pub goal_ref: WeeklyGoalRef,
 }
 
-/// What kind of work a [`WeeklyGoal`] represents.
-#[derive(Debug, Clone, Serialize, Deserialize, Type)]
-#[serde(tag = "type")]
-pub enum WeeklyGoalRef {
-    /// Planned work belonging to a concern, optionally tied to a waypoint.
-    Planned {
-        concern_id: ConcernId,
-        waypoint_id: Option<WaypointId>,
-    },
-    /// Unplanned work; may carry one or more distraction labels.
-    Distraction { label_ids: Vec<DistractionLabelId> },
-}
-
 /// A global distraction label. Editing the text propagates everywhere the
 /// label is referenced.
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
@@ -347,55 +311,6 @@ pub struct DistractionLabel {
     pub id: DistractionLabelId,
     pub text: String,
     pub created_at: Epoch,
-}
-
-/// Read-only quarter context for one main quest, shown during the planning phase
-/// so the user can set weekly goals relative to their quarterly commitments.
-/// Shape will be refined in Stage 4.
-#[derive(Debug, Clone, Serialize, Deserialize, Type)]
-pub struct MainQuestPlanningContext {
-    pub main_quest_id: MainQuestId,
-    pub quarter: QuarterDisplay,
-    /// `None` if the main quest has no quarterly goal for the active quarter.
-    pub quarterly_goal: Option<QuarterlyGoal>,
-}
-
-/// Full payload for the weekly planning/reflection session UI.
-/// The backend computes all derived fields; the frontend just renders.
-#[derive(Debug, Clone, Serialize, Deserialize, Type)]
-pub struct WeeklySessionData {
-    pub calendar: Calendar,
-    /// The fiscal quarter the plan week falls in. Always present — the backend
-    /// derives it from `plan.start_at` at invocation time.
-    pub current_quarter: QuarterDisplay,
-    /// The plan for the coming week (focus weights + new goals).
-    pub plan: WeeklyPlan,
-    /// The plan being reflected on (previous week). `None` on the first ever
-    /// session. Its `focus` is used for the "planned" bar in the time-split
-    /// visualization alongside `reflection.actual_split`.
-    pub prev_plan: Option<WeeklyPlan>,
-    /// Reflection on the previous week. `None` if there is no prior plan to
-    /// reflect on (e.g. first ever weekly session).
-    pub reflection: Option<WeeklyReflection>,
-    /// Goals from the previous week's plan, to be marked during reflection.
-    pub past_goals: Vec<WeeklyGoal>,
-    /// Goals already entered for the coming week's plan.
-    pub planned_goals: Vec<WeeklyGoal>,
-    pub concerns: Vec<Concern>,
-    /// Active main quests, for color/label resolution in focus-bar and goal lists.
-    pub main_quests: Vec<MainQuest>,
-    pub distraction_labels: Vec<DistractionLabel>,
-    /// Current long-term weight period, shown as the quarterly target reminder
-    /// below the focus weight sliders.
-    pub current_weights: WeightPeriod,
-    /// All quarterly goals for the current planning quarter, for the context
-    /// display in the plan section. Includes completed goals (shown dimmed);
-    /// covers both main-quest and side-quest goals.
-    pub current_quarter_goals: Vec<QuarterlyGoal>,
-    /// Quarterly goals available for waypoint selection when entering this
-    /// week's goals. Includes the current quarter and any future quarters;
-    /// the backend excludes goals whose every waypoint is already completed.
-    pub upcoming_quarterly_goals: Vec<QuarterlyGoal>,
 }
 
 /// Payload submitted when the user finishes the weekly planning session.
