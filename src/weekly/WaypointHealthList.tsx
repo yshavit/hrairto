@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
-import type { Swimlane, SwimlanePlanningContext, Waypoint } from '../bindings';
+import type { Concern, MainQuest, QuarterDisplay, QuarterlyGoal, Waypoint } from '../bindings';
 
 interface Props {
-  swimlanes: Swimlane[];
-  quarterContext: SwimlanePlanningContext[];
+  mainQuests: MainQuest[];
+  concerns: Concern[];
+  currentQuarterGoals: QuarterlyGoal[];
+  currentQuarter: QuarterDisplay;
   locale: string;
   invalid?: boolean;
   onAllSelected?: (allSelected: boolean) => void;
@@ -17,35 +19,46 @@ const CONFIDENCE_OPTIONS: { value: Confidence; label: string; bg: string; color:
   { value: 'behind', label: 'behind', bg: '#7a1818', color: '#f08080' },
 ];
 
-function findActiveWaypoint(ctx: SwimlanePlanningContext): Waypoint | null {
-  return ctx.quarterly_goal?.waypoints.find((w) => w.completed_at === null) ?? null;
+function findActiveWaypointSlot(goal: QuarterlyGoal): { waypoint: Waypoint; slot: number } | null {
+  for (let slot = 0; slot < goal.waypoints.length; slot++) {
+    const wp = goal.waypoints[slot];
+    if (wp !== null && wp.completed_at === null) return { waypoint: wp, slot };
+  }
+  return null;
+}
+
+function slotMonthName(slot: number, quarterStartAt: number, locale: string): string {
+  const d = new Date(quarterStartAt);
+  const totalMonth = d.getUTCMonth() + slot;
+  const month = (totalMonth % 12) + 1;
+  const year = d.getUTCFullYear() + Math.floor(totalMonth / 12);
+  return new Intl.DateTimeFormat(locale, { month: 'long' }).format(new Date(year, month - 1, 1));
 }
 
 function quarterPrefix(label: string): string {
   return label.split(' · ')[0];
 }
 
-function monthName(month: number, locale: string): string {
-  return new Intl.DateTimeFormat(locale, { month: 'long' }).format(new Date(2000, month - 1, 1));
-}
-
 interface CardProps {
-  swimlane: Swimlane;
-  ctx: SwimlanePlanningContext;
+  label: string;
+  concernColor: string;
+  currentQuarter: QuarterDisplay;
   waypoint: Waypoint;
+  slot: number;
   locale: string;
   confidence: Confidence | null;
   onSelect: (value: Confidence) => void;
 }
 
-function WaypointHealthCard({ swimlane, ctx, waypoint, locale, confidence, onSelect }: CardProps) {
-  const subtitle = `${quarterPrefix(ctx.quarter.label)} ${monthName(waypoint.target_month, locale)} waypoint`;
+function WaypointHealthCard({ label, concernColor, currentQuarter, waypoint, slot, locale, confidence, onSelect }: CardProps) {
+  const month = slotMonthName(slot, currentQuarter.start_at, locale);
+  const subtitle = `${quarterPrefix(currentQuarter.label)} ${month} waypoint`;
 
   return (
     <div className={`waypoint-health-card${confidence === null ? ' waypoint-health-card--unselected' : ''}`}>
       <div className="waypoint-health-card__content">
-        <div className="waypoint-health-card__swimlane-label" style={{ color: swimlane.color }}>
-          {swimlane.name}
+        <div className="waypoint-health-card__label" style={{ color: concernColor }}>
+          {label}
         </div>
         <p className="waypoint-health-card__waypoint-text">{waypoint.text}</p>
         <p className="waypoint-health-card__subtitle">{subtitle}</p>
@@ -69,19 +82,25 @@ function WaypointHealthCard({ swimlane, ctx, waypoint, locale, confidence, onSel
   );
 }
 
-export default function WaypointHealthList({ swimlanes, quarterContext, locale, invalid, onAllSelected }: Props) {
+export default function WaypointHealthList({ mainQuests, concerns, currentQuarterGoals, currentQuarter, locale, invalid, onAllSelected }: Props) {
   const [confidences, setConfidences] = useState<Map<string, Confidence>>(() => new Map());
 
-  const cards = quarterContext
-    .map((ctx) => {
-      const swimlane = swimlanes.find((s) => s.id === ctx.swimlane_id);
-      const waypoint = findActiveWaypoint(ctx);
-      return swimlane && waypoint ? { ctx, swimlane, waypoint } : null;
+  const cards = currentQuarterGoals
+    .map((goal) => {
+      const active = findActiveWaypointSlot(goal);
+      if (!active) return null;
+      let concernColor: string;
+      const parent = goal.parent;
+      if (parent.type === 'MainQuest') {
+        const mq = mainQuests.find((m) => m.id === parent.id);
+        concernColor = concerns.find((c) => c.id === mq?.concern_id)?.color ?? '#666';
+      } else {
+        concernColor = concerns.find((c) => c.id === parent.concern_id)?.color ?? '#666';
+      }
+      return { goal, label: goal.text, concernColor, ...active };
     })
     .filter((x): x is NonNullable<typeof x> => x !== null);
 
-  // When there are no health cards, the check is trivially satisfied.
-  // This must be before the early return so the hook always runs.
   const nCards = cards.length;
   useEffect(() => {
     if (nCards === 0) onAllSelected?.(true);
@@ -89,25 +108,27 @@ export default function WaypointHealthList({ swimlanes, quarterContext, locale, 
 
   if (cards.length === 0) return null;
 
-  const anyUnselected = cards.some((c) => !confidences.has(c.swimlane.id));
+  const anyUnselected = cards.some((c) => !confidences.has(c.goal.id));
 
-  function handleSelect(swimlaneId: string, val: Confidence) {
-    const next = new Map(confidences).set(swimlaneId, val);
+  function handleSelect(goalId: string, val: Confidence) {
+    const next = new Map(confidences).set(goalId, val);
     setConfidences(next);
-    onAllSelected?.(cards.every((c) => next.has(c.swimlane.id)));
+    onAllSelected?.(cards.every((c) => next.has(c.goal.id)));
   }
 
   return (
     <div className="waypoint-health-list">
-      {cards.map(({ ctx, swimlane, waypoint }) => (
+      {cards.map(({ goal, label, concernColor, waypoint, slot }) => (
         <WaypointHealthCard
-          key={swimlane.id}
-          swimlane={swimlane}
-          ctx={ctx}
+          key={goal.id}
+          label={label}
+          concernColor={concernColor}
+          currentQuarter={currentQuarter}
           waypoint={waypoint}
+          slot={slot}
           locale={locale}
-          confidence={confidences.get(swimlane.id) ?? null}
-          onSelect={(val) => handleSelect(swimlane.id, val)}
+          confidence={confidences.get(goal.id) ?? null}
+          onSelect={(val) => handleSelect(goal.id, val)}
         />
       ))}
       {invalid && anyUnselected && <p className="weekly-validation-error">Rate your confidence for each waypoint before continuing.</p>}

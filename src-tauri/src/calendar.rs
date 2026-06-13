@@ -8,10 +8,11 @@
 use chrono::{Datelike, NaiveDate, TimeZone, Utc};
 use chrono_tz::Tz;
 
-use crate::models::{Calendar, Epoch, QuarterDisplay};
+use crate::models::stored::{Calendar, Epoch};
+use crate::models::views::QuarterDisplay;
 
 fn parse_tz(calendar: &Calendar) -> Result<Tz, String> {
-    crate::models::parse_timezone(&calendar.timezone)
+    crate::models::stored::parse_timezone(&calendar.timezone)
 }
 
 // UTC timestamp (ms) for local midnight on the 1st of a calendar month.
@@ -129,7 +130,7 @@ pub fn quarters_to_display(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::models::{Calendar, CalendarId};
+    use crate::models::stored::{Calendar, CalendarId};
     use chrono::{TimeZone, Utc};
     use uuid::Uuid;
 

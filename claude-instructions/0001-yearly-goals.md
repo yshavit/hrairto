@@ -2,7 +2,7 @@
 
 ## Overview
 
-A read-only view showing the full goal hierarchy across all swimlanes. This is the
+A read-only view showing the full goal hierarchy across quarters. This is the
 "north star" reference view — open it to orient yourself, not to do work.
 
 **Status: fully implemented** (Phase 1, with hardcoded mock data).
@@ -20,7 +20,6 @@ A read-only view showing the full goal hierarchy across all swimlanes. This is t
 | Calendar display helpers | `src/utils/calendar.ts`                          |
 | React entry point        | `src/goals/YearlyGoals.tsx`                      |
 | All goal-tree components | `src/goals/`                                     |
-| Side-quest packing       | `src/goals/packSideQuests.ts`                    |
 | Styles                   | `src/goals/GoalTree.css`                         |
 
 ---
@@ -32,15 +31,25 @@ Source of truth: `src-tauri/src/models.rs`. Key design decisions not obvious fro
 - **`Epoch`**: all timestamps are `Epoch(i64)` — milliseconds UTC, not seconds.
   Milliseconds so JavaScript's `Date.now()` and `Intl.DateTimeFormat` work without
   ×1000 conversion.
-- **Typed IDs**: `SwimlaneId`, `AnnualGoalId`, `QuarterlyGoalId`, etc. are newtypes
+- **Typed IDs**: `ConcernId`, `MainQuestId`, `QuarterlyGoalId`, etc. are newtypes
   wrapping `Uuid`. They serialize as plain strings (`#[serde(transparent)]`), so
   TypeScript sees them as `string` but Rust prevents mixing them up.
-- **`AnnualGoalRef`**: `QuarterlyGoal.annual_goal` is an enum — `MainQuest(AnnualGoalId)`
-  or `SideQuest` — not a nullable ID. Makes side-quest intent explicit at the type level.
-  Wire format: `{ type: "MainQuest"; id: string } | { type: "SideQuest" }`.
-- **`WeightTarget`**: `SwimlaneWeightEntry.target` is an enum — `Swimlane(SwimlaneId)`
-  or `Distractions` — so the user can budget intentionally for unplanned work.
-  Wire format: `{ type: "Swimlane"; id: string } | { type: "Distractions" }`.
+- **Two orthogonal axes**:
+  - **Activity** (`Activity` enum): the allocation unit. `MainQuest(MainQuestId)` |
+    `SideQuests` | `Distractions`. Each active main quest has its own weight; side
+    quests share one pooled weight; distractions have one pooled weight.
+  - **Concern** (`Concern` struct): a grouping/colour label for forward-motion work.
+    Carries no weight, deadline, or cascade — purely organisational.
+- **`ParentGoal`**: `QuarterlyGoal.parent` is either `MainQuest { id: MainQuestId }` or
+  `SideQuest { concern_id: ConcernId }`. Both variants are struct-style to support
+  `#[serde(tag = "type")]` internally-tagged serialisation.
+  Wire format: `{ type: "MainQuest"; id: string } | { type: "SideQuest"; concern_id: string }`.
+- **Waypoints**: `QuarterlyGoal.waypoints` is `[Option<Waypoint>; 3]` — a fixed-length
+  tuple indexed by month-of-quarter (0 = first month). Month and year are derived from
+  the slot index plus the goal's `due_quarter` / `due_year`. TypeScript type:
+  `[(Waypoint | null), (Waypoint | null), (Waypoint | null)]`.
+- **Backlog**: goals with `due_quarter: None, due_year: None` are unscheduled. They do
+  not appear in any quarter column.
 - **`GoalTreeData`**: the full payload, including `quarters_to_display: Vec<QuarterDisplay>`
   computed by the backend at invocation time. The frontend never does fiscal-calendar math.
 
@@ -67,49 +76,52 @@ which renders `YearlyGoals`.
 
 ```
 YearlyGoals             — fetches data via api.ts, wraps in ErrorBoundary
-  GoalTreeView          — owns ScrollAPI ref bridging header nav ↔ SwimlanesContainer
+  GoalTreeView          — owns ScrollAPI ref bridging header nav ↔ GoalTimeline
     GoalTreeHeader      — title, nav buttons, current quarter label, donut chart
-      WeightDisplay     — SVG donut for swimlane weight split
-    SwimlanesContainer  — all scroll state + rubber-band; exposes ScrollAPI via forwardRef
-      SwimlaneRow       — one per swimlane; tinted background, swimlane name label
-        GoalSubRow      — one per annual goal; heading + deadline + QuarterScroller
-          QuarterScroller — horizontally scrolling strip
-            QuarterCard — one per quarter; past/active/future styling; isSideQuest badge
-              WaypointList — waypoints: month label, text, completion state
-        SideQuestSection — present only if swimlane has side quests
-          SideQuestStrip — one interval-packed strip of side quests
+      WeightDisplay     — SVG donut for activity weight split (MainQuest per concern, side quests, distractions)
+    GoalTimeline        — single horizontally-scrolling timeline; rubber-band; exposes ScrollAPI via forwardRef
+      [per quarter]     — one .quarter-column div per quarter in quarters_to_display
+        ActivityCard    — one per quarterly goal in that quarter; left border = concern color
+          WaypointList  — fixed-tuple waypoints; month label derived from slot + quarter
 ```
 
-`SwimlanesContainer` holds one flat `scrollerRefs` array covering every scroller
-(all goal strips and side-quest strips across all swimlanes). Scroll sync is done
-in `onScroll` callbacks — not `useEffect` listeners — with a boolean `isSyncing`
-guard against feedback loops.
+Layout is **time × load**: one column per quarter, forward-motion activities stack
+vertically. Block height grows naturally with waypoint count (1–3 slots rendered).
+Concern color appears on the card's left border, not as swimlane bands.
+Distractions are not rendered in the timeline (no spatial representation).
 
-`packSideQuests` (greedy interval scheduling: two side quests share a strip only if
-they are in different quarters) lives in `src/goals/packSideQuests.ts`.
+`GoalTimeline` computes concern colors by resolving `ParentGoal`:
+
+- `MainQuest { id }` → look up `MainQuest.concern_id` → look up `Concern.color`
+- `SideQuest { concern_id }` → look up `Concern.color` directly
 
 ---
 
 ## Scroll behavior
 
-Canonical source: `src/goals/SwimlanesContainer.tsx`. Non-obvious decisions:
+Canonical source: `src/goals/GoalTimeline.tsx`. Non-obvious decisions:
 
 - **Peek quarter**: `quarters_to_display` always ends with one extra quarter beyond
   the planning horizon — visible only via rubber-band drag, unreachable via nav buttons.
   The rubber-band wall and the Next button cap are both derived from the same
   `hardMax` value so they stay in sync.
-- **Rubber-band overshoot** is applied via CSS `translateX` on the inner scroller
-  wrapper, not via `scrollLeft`. This lets the browser manage the true scroll boundary
+- **Rubber-band overshoot** is applied via CSS `translateX` on `.goal-timeline__inner`,
+  not via `scrollLeft`. This lets the browser manage the true scroll boundary
   while the visual stretch is purely cosmetic.
+- **Single scroller**: unlike the old swimlane design, there is one scroll container for
+  the entire timeline. No per-row sync is needed.
 
 ---
 
 ## Testing
 
-- **RTL unit tests** (`pnpm test`): in `src/goals/` and `src/utils/`.
-- **Playwright e2e** (`pnpm test:e2e`): scroll sync, nav caps, rubber-band.
-  Viewport is set to match the Tauri window dimensions — wider viewports fit all
-  cards without scrolling, which breaks scroll-dependent tests.
+- **RTL unit tests** (`pnpm test`): `src/goals/ActivityCard.test.tsx`,
+  `src/shared/WaypointList.test.tsx`, `src/utils/`.
+- **Playwright e2e** (`pnpm test:e2e`): nav cap, rubber-band. Entry point:
+  `ui-test-entrypoints/goals.html`.
+  Viewport is 900×680. With 4 × 220px columns the timeline fits without scrolling,
+  so rubber-band triggers at `scrollLeft = 0` (hardMax = 0). Tests are written to
+  pass in this condition.
 - **Test entrypoint isolation**: `ui-test-entrypoints/goals.html` renders `YearlyGoals`
   directly via `src/goals-main.tsx`, bypassing the Tauri dependency in `main.tsx`.
   Add a parallel `<window>.html` + `<window>-main.tsx` pair for each new Tauri window

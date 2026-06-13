@@ -83,8 +83,8 @@ export default function ReflectSection({ data, phase, onDone, onEdit }: Props) {
               goals={data.past_goals}
               outcomes={outcomes}
               onToggle={toggle}
-              swimlanes={data.swimlanes}
-              quarterContext={data.quarter_context}
+              concerns={data.concerns}
+              upcomingQuarterlyGoals={data.upcoming_quarterly_goals}
               distractionLabels={data.distraction_labels}
             />
             {goalsInvalid && <p className="weekly-validation-error">Mark every goal as hit or missed before continuing.</p>}
@@ -93,15 +93,18 @@ export default function ReflectSection({ data, phase, onDone, onEdit }: Props) {
             <TimeSplitBars
               prevPlan={data.prev_plan ?? null}
               reflection={data.reflection ?? null}
-              swimlanes={data.swimlanes}
+              mainQuests={data.main_quests}
+              concerns={data.concerns}
               pastGoals={data.past_goals}
               distractionLabels={data.distraction_labels}
             />
 
             <p className="weekly-step-label">Quarterly waypoint health</p>
             <WaypointHealthList
-              swimlanes={data.swimlanes}
-              quarterContext={data.quarter_context}
+              mainQuests={data.main_quests}
+              concerns={data.concerns}
+              currentQuarterGoals={data.current_quarter_goals}
+              currentQuarter={data.current_quarter}
               locale={data.calendar.locale}
               invalid={healthInvalid}
               onAllSelected={setAllHealthSelected}

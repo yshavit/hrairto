@@ -1,12 +1,12 @@
 import { type CSSProperties } from 'react';
-import type { DistractionLabel, Swimlane, SwimlanePlanningContext, WeeklyGoal, WeeklyGoalId } from '../bindings';
+import type { Concern, DistractionLabel, QuarterlyGoal, WeeklyGoal, WeeklyGoalId } from '../bindings';
 
 interface Props {
   goals: WeeklyGoal[];
   outcomes: Map<WeeklyGoalId, LocalOutcome>;
   onToggle: (id: WeeklyGoalId) => void;
-  swimlanes: Swimlane[];
-  quarterContext: SwimlanePlanningContext[];
+  concerns: Concern[];
+  upcomingQuarterlyGoals: QuarterlyGoal[];
   distractionLabels: DistractionLabel[];
 }
 
@@ -31,21 +31,21 @@ interface GoalMeta {
   detail: string | null;
 }
 
-function goalMeta(goal: WeeklyGoal, swimlanes: Swimlane[], quarterContext: SwimlanePlanningContext[], distractionLabels: DistractionLabel[]): GoalMeta {
+function goalMeta(goal: WeeklyGoal, concerns: Concern[], upcomingQuarterlyGoals: QuarterlyGoal[], distractionLabels: DistractionLabel[]): GoalMeta {
   const ref = goal.goal_ref;
   if (ref.type === 'Planned') {
-    const sw = swimlanes.find((s) => s.id === ref.swimlane_id);
+    const concern = concerns.find((c) => c.id === ref.concern_id);
     let detail: string | null = null;
     if (ref.waypoint_id) {
-      for (const ctx of quarterContext) {
-        const wp = ctx.quarterly_goal?.waypoints.find((w) => w.id === ref.waypoint_id);
+      for (const qg of upcomingQuarterlyGoals) {
+        const wp = qg.waypoints.find((w) => w !== null && w.id === ref.waypoint_id);
         if (wp) {
           detail = wp.text;
           break;
         }
       }
     }
-    return { chipLabel: sw?.name ?? 'Unknown', chipColor: sw?.color ?? '#666', detail };
+    return { chipLabel: concern?.name ?? 'Unknown', chipColor: concern?.color ?? '#666', detail };
   }
   const labelNames =
     ref.label_ids
@@ -79,7 +79,7 @@ function OutcomeIcon({ outcome }: { outcome: LocalOutcome }) {
   );
 }
 
-export default function PastGoalsList({ goals, outcomes, onToggle, swimlanes, quarterContext, distractionLabels }: Props) {
+export default function PastGoalsList({ goals, outcomes, onToggle, concerns, upcomingQuarterlyGoals, distractionLabels }: Props) {
   const hitCount = [...outcomes.values()].filter((o) => o === 'hit').length;
   const missCount = [...outcomes.values()].filter((o) => o === 'miss').length;
 
@@ -103,7 +103,7 @@ export default function PastGoalsList({ goals, outcomes, onToggle, swimlanes, qu
       <ul className="past-goals-list__goals">
         {goals.map((goal) => {
           const outcome = outcomes.get(goal.id) ?? 'unmarked';
-          const meta = goalMeta(goal, swimlanes, quarterContext, distractionLabels);
+          const meta = goalMeta(goal, concerns, upcomingQuarterlyGoals, distractionLabels);
           return (
             <li key={goal.id} className={`past-goal-row${outcome === 'unmarked' ? ' past-goal-row--unmarked' : ''}`}>
               <button className="past-goal-row__toggle" onClick={() => onToggle(goal.id)} aria-label="Toggle outcome">

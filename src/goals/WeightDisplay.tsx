@@ -1,23 +1,30 @@
-import type { Swimlane, SwimlaneWeight } from '../bindings';
+import type { Concern, MainQuest, WeightEntry } from '../bindings';
 
 interface Props {
-  entries: SwimlaneWeight[];
-  swimlanes: Swimlane[];
+  entries: WeightEntry[];
+  mainQuests: MainQuest[];
+  concerns: Concern[];
 }
 
-function entryColor(entry: SwimlaneWeight, swimlanes: Swimlane[]): string {
-  const { target } = entry;
-  if (target.type === 'Swimlane') {
-    return swimlanes.find((s) => s.id === target.id)?.color ?? '#555';
+const SIDE_QUESTS_COLOR = '#8B8680';
+const DISTRACTIONS_COLOR = '#555';
+
+function entryColor(entry: WeightEntry, mainQuests: MainQuest[], concerns: Concern[]): string {
+  const { activity } = entry;
+  if (activity.type === 'MainQuest') {
+    const mq = mainQuests.find((m) => m.id === activity.id);
+    return concerns.find((c) => c.id === mq?.concern_id)?.color ?? '#666';
   }
-  return '#555';
+  if (activity.type === 'SideQuests') return SIDE_QUESTS_COLOR;
+  return DISTRACTIONS_COLOR;
 }
 
-function entryLabel(entry: SwimlaneWeight, swimlanes: Swimlane[]): string {
-  const { target } = entry;
-  if (target.type === 'Swimlane') {
-    return swimlanes.find((s) => s.id === target.id)?.name ?? 'Unknown';
+function entryLabel(entry: WeightEntry, mainQuests: MainQuest[]): string {
+  const { activity } = entry;
+  if (activity.type === 'MainQuest') {
+    return mainQuests.find((m) => m.id === activity.id)?.text ?? 'Unknown';
   }
+  if (activity.type === 'SideQuests') return 'Side quests';
   return 'Distractions';
 }
 
@@ -35,7 +42,7 @@ function arcPath(startAngle: number, endAngle: number): string {
   return `M ${x1} ${y1} A ${R} ${R} 0 ${largeArc} 1 ${x2} ${y2}`;
 }
 
-export default function WeightDisplay({ entries, swimlanes }: Props) {
+export default function WeightDisplay({ entries, mainQuests, concerns }: Props) {
   const arcs: { path: string; color: string }[] = [];
   let angle = -Math.PI / 2;
 
@@ -43,7 +50,7 @@ export default function WeightDisplay({ entries, swimlanes }: Props) {
     const span = entry.weight * 2 * Math.PI;
     arcs.push({
       path: arcPath(angle + GAP_RAD / 2, angle + span - GAP_RAD / 2),
-      color: entryColor(entry, swimlanes),
+      color: entryColor(entry, mainQuests, concerns),
     });
     angle += span;
   }
@@ -58,8 +65,8 @@ export default function WeightDisplay({ entries, swimlanes }: Props) {
       <div className="weight-legend">
         {entries.map((entry, i) => (
           <div key={i} className="weight-legend-item">
-            <div className="weight-legend-dot" style={{ background: entryColor(entry, swimlanes) }} />
-            {Math.round(entry.weight * 100)}% {entryLabel(entry, swimlanes)}
+            <div className="weight-legend-dot" style={{ background: entryColor(entry, mainQuests, concerns) }} />
+            {Math.round(entry.weight * 100)}% {entryLabel(entry, mainQuests)}
           </div>
         ))}
       </div>

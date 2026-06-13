@@ -47,8 +47,8 @@ export function buildReflectionPrompt(
   }
 
   if (reflection && prevPlan) {
-    const actualPct = (reflection.actual_split.weights.find((w) => w.target.type === 'Distractions')?.weight ?? 0) * 100;
-    const plannedPct = (prevPlan.focus.weights.find((w) => w.target.type === 'Distractions')?.weight ?? 0) * 100;
+    const actualPct = (reflection.actual_split.weights.find((w) => w.activity.type === 'Distractions')?.weight ?? 0) * 100;
+    const plannedPct = (prevPlan.focus.weights.find((w) => w.activity.type === 'Distractions')?.weight ?? 0) * 100;
     if (actualPct - plannedPct > 10) {
       const rounded = Math.round(actualPct / 5) * 5;
       const label = topDistractionLabel(pastGoals, distractionLabels) ?? 'interruptions';

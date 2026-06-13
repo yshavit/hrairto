@@ -9,11 +9,11 @@ import ReflectionNotes, { buildReflectionPrompt } from './ReflectionNotes';
 import WaypointHealthList from './WaypointHealthList';
 import WeeklyPlanning from './WeeklyPlanning';
 
-// Variant with no quarterly goals → WaypointHealthList renders nothing,
+// Variant with no current-quarter goals → WaypointHealthList renders nothing,
 // so health validation doesn't interfere with tests targeting other conditions.
 const noWaypointData = {
   ...weeklySessionData,
-  quarter_context: weeklySessionData.quarter_context.map((ctx) => ({ ...ctx, quarterly_goal: null })),
+  current_quarter_goals: [],
 };
 
 // Drive WeeklyPlanning through the reflection phase so tests can start in planning.
@@ -22,7 +22,7 @@ function completeReflection(container: HTMLElement) {
     fireEvent.click(row.querySelector('.past-goal-row__toggle')!);
   });
   fireEvent.change(container.querySelector('.reflection-notes__textarea')!, { target: { value: 'Test notes' } });
-  fireEvent.click(screen.getByRole('button', { name: 'on track' }));
+  screen.getAllByRole('button', { name: 'on track' }).forEach((btn) => fireEvent.click(btn));
   fireEvent.click(screen.getByRole('button', { name: /Done reflecting/i }));
 }
 
@@ -34,8 +34,8 @@ describe('PastGoalsList', () => {
     goals: weeklySessionData.past_goals,
     outcomes,
     onToggle: vi.fn(),
-    swimlanes: weeklySessionData.swimlanes,
-    quarterContext: weeklySessionData.quarter_context,
+    concerns: weeklySessionData.concerns,
+    upcomingQuarterlyGoals: weeklySessionData.upcoming_quarterly_goals,
     distractionLabels: weeklySessionData.distraction_labels,
   };
 
@@ -44,16 +44,16 @@ describe('PastGoalsList', () => {
     const localOutcomes = new Map(weeklySessionData.past_goals.map((g) => [g.id, initialOutcome(g)]));
     const { container, rerender } = render(<PastGoalsList {...baseProps} outcomes={localOutcomes} onToggle={onToggle} />);
 
-    // Goals 1-3 are unmarked (goal 0 is already 'hit')
+    // Goals 1-2 are unmarked (goal 0 is already 'hit')
     const unmarkedRows = container.querySelectorAll('.past-goal-row--unmarked');
-    expect(unmarkedRows.length).toBe(3);
+    expect(unmarkedRows.length).toBe(2);
 
     // Simulate marking goal 1 as hit
     const goal1Id = weeklySessionData.past_goals[1].id;
     const updatedOutcomes = new Map(localOutcomes).set(goal1Id, 'hit' as const);
     rerender(<PastGoalsList {...baseProps} outcomes={updatedOutcomes} onToggle={onToggle} />);
 
-    expect(container.querySelectorAll('.past-goal-row--unmarked').length).toBe(2);
+    expect(container.querySelectorAll('.past-goal-row--unmarked').length).toBe(1);
   });
 
   it('outcome cycling: click cycles unmarked→hit→miss→hit, never back to unmarked', () => {
@@ -122,16 +122,18 @@ describe('ReflectionNotes', () => {
 
 describe('WaypointHealthList', () => {
   const healthProps = {
-    swimlanes: weeklySessionData.swimlanes,
-    quarterContext: weeklySessionData.quarter_context,
+    mainQuests: weeklySessionData.main_quests,
+    concerns: weeklySessionData.concerns,
+    currentQuarterGoals: weeklySessionData.current_quarter_goals,
+    currentQuarter: weeklySessionData.current_quarter,
     locale: weeklySessionData.calendar.locale,
   };
 
-  it('cards have --unselected class initially, removed after selecting confidence', () => {
+  it('cards have --unselected class initially, removed after selecting confidence on all cards', () => {
     const { container } = render(<WaypointHealthList {...healthProps} />);
     expect(container.querySelector('.waypoint-health-card--unselected')).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: 'on track' }));
+    screen.getAllByRole('button', { name: 'on track' }).forEach((btn) => fireEvent.click(btn));
 
     expect(container.querySelector('.waypoint-health-card--unselected')).not.toBeInTheDocument();
   });
@@ -216,7 +218,7 @@ describe('ReflectSection', () => {
       fireEvent.click(row.querySelector('.past-goal-row__toggle')!);
     });
     fireEvent.change(container.querySelector('.reflection-notes__textarea')!, { target: { value: 'Notes' } });
-    fireEvent.click(screen.getByRole('button', { name: 'on track' }));
+    screen.getAllByRole('button', { name: 'on track' }).forEach((btn) => fireEvent.click(btn));
     fireEvent.click(screen.getByRole('button', { name: /Done reflecting/i }));
 
     // All remaining goals were marked hit, no misses
@@ -237,7 +239,7 @@ describe('PlanSection', () => {
     const onSave = vi.fn();
     const { container } = render(<PlanSection {...basePlanProps} onSave={onSave} />);
 
-    // Add a goal to the Team section
+    // Add a goal to the first concern section
     fireEvent.click(screen.getAllByText('+ Add goal')[0]);
     fireEvent.change(container.querySelector('.add-goal-form__input')!, { target: { value: 'Ship the thing' } });
     fireEvent.click(container.querySelector('.add-goal-form__submit')!);
@@ -324,7 +326,13 @@ describe('FocusSplitBar', () => {
   it('drag updates weights that always sum to 100%', () => {
     const onChange = vi.fn();
     const { container } = render(
-      <FocusSplitBar swimlanes={weeklySessionData.swimlanes} weights={weeklySessionData.prev_plan!.focus.weights} isEditable onChange={onChange} />,
+      <FocusSplitBar
+        mainQuests={weeklySessionData.main_quests}
+        concerns={weeklySessionData.concerns}
+        weights={weeklySessionData.prev_plan!.focus.weights}
+        isEditable
+        onChange={onChange}
+      />,
     );
 
     const bar = container.querySelector('.focus-split-bar') as HTMLElement;

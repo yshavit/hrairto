@@ -1,35 +1,42 @@
 import { useRef } from 'react';
-import type { Swimlane, SwimlaneWeight } from '../bindings';
+import type { Concern, MainQuest, WeightEntry } from '../bindings';
 import './FocusSplitBar.css';
 
-export const DISTRACTIONS_COLOR = '#B4B2A9';
+export const DISTRACTIONS_COLOR = '#555';
+export const SIDE_QUESTS_COLOR = '#8B8680';
 export const DISTRACTIONS_KEY = '__distractions__';
+export const SIDE_QUESTS_KEY = '__side_quests__';
 const MIN_LABEL_PCT = 12;
 const MIN_SEGMENT_PCT = 5;
 
-export function weightKey(w: SwimlaneWeight): string {
-  const target = w.target;
-  return target.type === 'Swimlane' ? target.id : DISTRACTIONS_KEY;
+export function weightKey(w: WeightEntry): string {
+  const activity = w.activity;
+  if (activity.type === 'MainQuest') return activity.id;
+  if (activity.type === 'SideQuests') return SIDE_QUESTS_KEY;
+  return DISTRACTIONS_KEY;
 }
 
-export function segmentColor(w: SwimlaneWeight, swimlanes: Swimlane[]): string {
-  const target = w.target;
-  if (target.type === 'Swimlane') {
-    return swimlanes.find((s) => s.id === target.id)?.color ?? '#666';
+export function segmentColor(w: WeightEntry, mainQuests: MainQuest[], concerns: Concern[]): string {
+  const activity = w.activity;
+  if (activity.type === 'MainQuest') {
+    const mq = mainQuests.find((m) => m.id === activity.id);
+    return concerns.find((c) => c.id === mq?.concern_id)?.color ?? '#666';
   }
+  if (activity.type === 'SideQuests') return SIDE_QUESTS_COLOR;
   return DISTRACTIONS_COLOR;
 }
 
 interface Props {
-  swimlanes: Swimlane[];
-  weights: SwimlaneWeight[];
+  mainQuests: MainQuest[];
+  concerns: Concern[];
+  weights: WeightEntry[];
   isEditable?: boolean;
-  onChange?: (weights: SwimlaneWeight[]) => void;
+  onChange?: (weights: WeightEntry[]) => void;
   approximate?: boolean;
   tooltips?: Record<string, string>;
 }
 
-export default function FocusSplitBar({ swimlanes, weights, isEditable, onChange, approximate, tooltips }: Props) {
+export default function FocusSplitBar({ mainQuests, concerns, weights, isEditable, onChange, approximate, tooltips }: Props) {
   const barRef = useRef<HTMLDivElement>(null);
 
   const pcts = weights.map((w) => Math.round(w.weight * 100));
@@ -81,7 +88,7 @@ export default function FocusSplitBar({ swimlanes, weights, isEditable, onChange
     <div className={`focus-split-bar${isEditable ? ' focus-split-bar--editable' : ''}`} ref={barRef}>
       {weights.map((w, i) => {
         const pct = pcts[i];
-        const color = segmentColor(w, swimlanes);
+        const color = segmentColor(w, mainQuests, concerns);
         const key = weightKey(w);
         return (
           <div key={key} className="focus-split-bar__segment" style={{ width: `${pct}%`, background: color }} title={tooltips?.[key]}>
