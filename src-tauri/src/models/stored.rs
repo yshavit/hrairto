@@ -47,7 +47,7 @@ macro_rules! id_types {
 id_types! {
     CalendarId,
     ConcernId,
-    WeightPeriodId,
+    FocusTargetId,
     MainQuestId,
     QuarterlyGoalId,
     WaypointId,
@@ -191,7 +191,7 @@ pub struct Waypoint {
     pub completed_at: Option<Epoch>,
 }
 
-/// One entry in a [`WeightPeriod`]: how much of the week's focus budget goes to
+/// One entry in a [`FocusTarget`]: how much of the week's focus budget goes to
 /// a specific [`Activity`].
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 pub struct WeightEntry {
@@ -200,12 +200,13 @@ pub struct WeightEntry {
     pub weight: f64,
 }
 
-/// A dated set of long-term focus weights that takes effect at `start_at`.
+/// The long-term intended focus allocation that takes effect at `start_at`.
+/// Set during quarterly planning; stays in effect until superseded.
 ///
-/// All entry weights within a period should sum to 1.0.
+/// All entry weights should sum to 1.0.
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
-pub struct WeightPeriod {
-    pub id: WeightPeriodId,
+pub struct FocusTarget {
+    pub id: FocusTargetId,
     /// When these weights take effect.
     pub start_at: Epoch,
     pub note: Option<String>,

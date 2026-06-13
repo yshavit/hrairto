@@ -8,8 +8,8 @@ use serde::{Deserialize, Serialize};
 use specta::Type;
 
 use super::stored::{
-    Calendar, Concern, DistractionLabel, Epoch, MainQuest, MainQuestId, QuarterlyGoal, WeeklyGoal,
-    WeeklyPlan, WeeklyReflection, WeightPeriod,
+    Calendar, Concern, DistractionLabel, Epoch, FocusTarget, MainQuest, MainQuestId, QuarterlyGoal, WeeklyGoal,
+    WeeklyPlan, WeeklyReflection,
 };
 
 /// Precomputed display info for one fiscal quarter.
@@ -37,7 +37,7 @@ pub struct QuarterDisplay {
 pub struct GoalTreeData {
     pub calendar: Calendar,
     pub concerns: Vec<Concern>,
-    pub current_weights: WeightPeriod,
+    pub current_weights: FocusTarget,
     pub main_quests: Vec<MainQuest>,
     pub quarterly_goals: Vec<QuarterlyGoal>,
     /// Quarters to show in the scrolling strip, in chronological order.
@@ -84,7 +84,7 @@ pub struct WeeklySessionData {
     pub distraction_labels: Vec<DistractionLabel>,
     /// Current long-term weight period, shown as the quarterly target reminder
     /// below the focus weight sliders.
-    pub current_weights: WeightPeriod,
+    pub current_weights: FocusTarget,
     /// All quarterly goals for the current planning quarter, for the context
     /// display in the plan section. Includes completed goals (shown dimmed);
     /// covers both main-quest and side-quest goals.

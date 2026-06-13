@@ -125,6 +125,18 @@ export type Epoch = number
  */
 export type Focus = { weights: WeightEntry[] }
 /**
+ * The long-term intended focus allocation that takes effect at `start_at`.
+ * Set during quarterly planning; stays in effect until superseded.
+ * 
+ * All entry weights should sum to 1.0.
+ */
+export type FocusTarget = { id: FocusTargetId; 
+/**
+ * When these weights take effect.
+ */
+start_at: Epoch; note: string | null; entries: WeightEntry[] }
+export type FocusTargetId = string
+/**
  * Whether a weekly goal was achieved.
  * 
  * `at` is when the user marked the goal — this can happen at any point
@@ -135,7 +147,7 @@ export type GoalOutcome = { type: "Hit"; at: Epoch } | { type: "Miss"; at: Epoch
  * Full data payload for the goal tree view.
  * This is the shape of what the eventual Tauri command will return.
  */
-export type GoalTreeData = { calendar: Calendar; concerns: Concern[]; current_weights: WeightPeriod; main_quests: MainQuest[]; quarterly_goals: QuarterlyGoal[]; 
+export type GoalTreeData = { calendar: Calendar; concerns: Concern[]; current_weights: FocusTarget; main_quests: MainQuest[]; quarterly_goals: QuarterlyGoal[]; 
 /**
  * Quarters to show in the scrolling strip, in chronological order.
  * Computed by the backend at invocation time (see `calendar::quarters_to_display`).
@@ -339,7 +351,7 @@ main_quests: MainQuest[]; distraction_labels: DistractionLabel[];
  * Current long-term weight period, shown as the quarterly target reminder
  * below the focus weight sliders.
  */
-current_weights: WeightPeriod; 
+current_weights: FocusTarget; 
 /**
  * All quarterly goals for the current planning quarter, for the context
  * display in the plan section. Includes completed goals (shown dimmed);
@@ -353,7 +365,7 @@ current_quarter_goals: QuarterlyGoal[];
  */
 upcoming_quarterly_goals: QuarterlyGoal[] }
 /**
- * One entry in a [`WeightPeriod`]: how much of the week's focus budget goes to
+ * One entry in a [`FocusTarget`]: how much of the week's focus budget goes to
  * a specific [`Activity`].
  */
 export type WeightEntry = { activity: Activity; 
@@ -361,17 +373,6 @@ export type WeightEntry = { activity: Activity;
  * 0.0–1.0.
  */
 weight: number }
-/**
- * A dated set of long-term focus weights that takes effect at `start_at`.
- * 
- * All entry weights within a period should sum to 1.0.
- */
-export type WeightPeriod = { id: WeightPeriodId; 
-/**
- * When these weights take effect.
- */
-start_at: Epoch; note: string | null; entries: WeightEntry[] }
-export type WeightPeriodId = string
 
 /** tauri-specta globals **/
 

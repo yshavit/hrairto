@@ -40,7 +40,7 @@ const CALENDAR_ID: CalendarId = '00000000-0000-0000-0000-000000000001';
 const TEAM_ID: ConcernId = '00000000-0000-0000-0000-000000000010';
 const PERSONAL_GROWTH_ID: ConcernId = '00000000-0000-0000-0000-000000000011';
 
-const WEIGHT_PERIOD_ID = '00000000-0000-0000-0000-000000000020';
+const FOCUS_TARGET_ID = '00000000-0000-0000-0000-000000000020';
 
 const FIZZBUZZ_ID: MainQuestId = '00000000-0000-0000-0000-000000000030';
 const MONOLITH_ID: MainQuestId = '00000000-0000-0000-0000-000000000031';
@@ -81,7 +81,7 @@ const concerns: Concern[] = [
 // Side-quests is a single pooled weight covering both concerns' side quests.
 
 const current_weights = {
-  id: WEIGHT_PERIOD_ID,
+  id: FOCUS_TARGET_ID,
   start_at: utc(2026, 4, 1),
   note: null,
   entries: [

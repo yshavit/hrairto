@@ -37,8 +37,8 @@ erDiagram
         Epoch completed_at "null until completed"
     }
 
-    WeightPeriod {
-        WeightPeriodId id PK
+    FocusTarget {
+        FocusTargetId id PK
         Epoch start_at
         string note "optional"
     }
@@ -78,7 +78,7 @@ erDiagram
         Epoch created_at
     }
 
-    WeightPeriod ||--|{ WeightEntry : entries
+    FocusTarget ||--|{ WeightEntry : entries
     MainQuest }o--|| Concern : concern_id
     WeeklyReflection ||--|{ WeightEntry : "actual_split.weights"
     WeeklyReflection |o--|| WeeklyPlan : plan_id

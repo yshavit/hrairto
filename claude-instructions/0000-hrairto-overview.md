@@ -128,7 +128,7 @@ Source of truth: `src-tauri/src/models.rs`. Key points:
   They serialize as plain strings on the wire, so TypeScript sees them as `string`.
 - A `Calendar` config (quarter start month + IANA timezone + BCP 47 locale) is the
   single source of truth for deriving real time ranges from fiscal quarter/month values.
-- Focus weights are time-varying: stored as `WeightPeriod` records with a `start_at`
+- Focus weights are time-varying: stored as `FocusTarget` records with a `start_at`
   timestamp. Each entry points at an `Activity` (`MainQuest(id) | SideQuests |
 Distractions`) — never at a Concern.
 - Distraction labels are global and stable — editing a label propagates everywhere.
