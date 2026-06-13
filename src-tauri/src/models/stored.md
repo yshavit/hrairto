@@ -85,10 +85,10 @@ erDiagram
     WeightEntry }o--o| MainQuest : activity
     QuarterlyGoal }o--o| MainQuest : "parent (MainQuest)"
     QuarterlyGoal }o--o| Concern : "parent (SideQuest)"
-    QuarterlyGoal ||--o{ Waypoint : "waypoints[0..2]"
+    Waypoint }o--|| QuarterlyGoal : "waypoints[0..2]"
     WeeklyPlan ||--|{ WeightEntry : "focus.weights"
     WeeklyGoal }o--|| WeeklyPlan : plan_id
     WeeklyGoal }o--o| Waypoint : "goal_ref.waypoint_id"
     WeeklyGoal }o--o| Concern : "goal_ref.concern_id"
-    WeeklyGoal }o--o{ DistractionLabel : "goal_ref.label_ids"
+    DistractionLabel }o--o{ WeeklyGoal : "goal_ref.label_ids"
 ```
