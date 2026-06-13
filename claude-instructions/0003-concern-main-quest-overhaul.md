@@ -1,6 +1,6 @@
 # Hrairto — Concern / Main Quest model overhaul
 
-**Status: draft — design agreed, not yet implemented.**
+**Status: graduated — fully implemented on branch `model-v2`.**
 
 This spec is a **work order**, not enduring truth. It records the target concept model
 and the staged plan to migrate the code to it; while the work is in flight, it **is**
@@ -265,11 +265,11 @@ A redesign, not a port — see "Capacity — surfaced, not modelled" above for r
 
 ### Stage 5 — Reconcile `0000` + graduate
 
-- [ ] Rewrite the swimlane / annual-goal sections of `0000-hrairto-overview.md` to the
+- [x] Rewrite the swimlane / annual-goal sections of `0000-hrairto-overview.md` to the
       Activity × Concern model (Main Quest / Side-quest / Distraction, the two pooled
       Activities, the forward-motion framing). `0001`/`0002` were reconciled in Stages 3–4.
-- [ ] Mark this spec graduated.
-- [ ] Verify: `pnpm all` (format, tsc, lint, all tests).
+- [x] Mark this spec graduated.
+- [x] Verify: `pnpm all` (format, tsc, lint, all tests).
 
 ---
 

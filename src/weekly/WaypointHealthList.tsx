@@ -90,11 +90,12 @@ export default function WaypointHealthList({ mainQuests, concerns, currentQuarte
       const active = findActiveWaypointSlot(goal);
       if (!active) return null;
       let concernColor: string;
-      if (goal.parent.type === 'MainQuest') {
-        const mq = mainQuests.find((m) => m.id === goal.parent.id);
+      const parent = goal.parent;
+      if (parent.type === 'MainQuest') {
+        const mq = mainQuests.find((m) => m.id === parent.id);
         concernColor = concerns.find((c) => c.id === mq?.concern_id)?.color ?? '#666';
       } else {
-        concernColor = concerns.find((c) => c.id === goal.parent.concern_id)?.color ?? '#666';
+        concernColor = concerns.find((c) => c.id === parent.concern_id)?.color ?? '#666';
       }
       return { goal, label: goal.text, concernColor, ...active };
     })
