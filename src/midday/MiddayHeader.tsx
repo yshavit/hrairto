@@ -28,7 +28,7 @@ export default function MiddayHeader({ lastCheckinAt, nextCheckinAt, locale, tim
             'First check-in today'
           ) : (
             <>
-              Last check-in at {formatTime(lastCheckinAt, locale, timezone)} · next check-in at {nextTimeLabel}
+              Last check-in at {formatTime(lastCheckinAt, locale, timezone)} · next at {nextTimeLabel}
             </>
           )}
         </div>

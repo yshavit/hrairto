@@ -23,7 +23,7 @@ describe('MiddayHeader', () => {
   it('shows last check-in time and next check-in when last_checkin_at is set', () => {
     render(<MiddayCheckin data={middayCheckinData} onSave={noop} />);
     expect(screen.queryByText('First check-in today')).not.toBeInTheDocument();
-    expect(screen.getByText(/next check-in at/i)).toBeInTheDocument();
+    expect(screen.getByText(/next at/i)).toBeInTheDocument();
   });
 });
 
