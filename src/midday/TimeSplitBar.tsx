@@ -1,5 +1,5 @@
 import { useRef } from 'react';
-import type { Concern, Epoch, WeeklyGoal } from '../bindings';
+import type { Concern, WeeklyGoal } from '../bindings';
 
 const DISTRACTIONS_COLOR = '#B4B2A9';
 const MIN_SEGMENT_PCT = 5;
@@ -11,8 +11,6 @@ interface Props {
   /** One weight per goal + one for distractions at the end. Sum = 1.0. */
   weights: number[];
   onChange: (weights: number[]) => void;
-  checkinAt: Epoch;
-  lastCheckinAt: Epoch | null;
 }
 
 function segmentColors(goals: WeeklyGoal[], concerns: Concern[]): string[] {
@@ -31,21 +29,12 @@ function segmentColors(goals: WeeklyGoal[], concerns: Concern[]): string[] {
   return colors;
 }
 
-function formatElapsed(ms: number): string {
-  const totalMin = Math.round(ms / 60000);
-  const hrs = Math.floor(totalMin / 60);
-  const min = totalMin % 60;
-  if (min === 0) return `~${hrs} hrs`;
-  if (min === 30) return `~${hrs}.5 hrs`;
-  return `~${hrs}h ${min}m`;
-}
-
 function legendLabel(goal: WeeklyGoal | null): string {
   if (!goal) return 'Distractions';
   return goal.text;
 }
 
-export default function TimeSplitBar({ goals, concerns, weights, onChange, checkinAt, lastCheckinAt }: Props) {
+export default function TimeSplitBar({ goals, concerns, weights, onChange }: Props) {
   const barRef = useRef<HTMLDivElement>(null);
 
   const colors = segmentColors(goals, concerns);
@@ -95,15 +84,8 @@ export default function TimeSplitBar({ goals, concerns, weights, onChange, check
     handle.addEventListener('pointerup', onUp);
   }
 
-  const elapsedLabel = lastCheckinAt !== null ? formatElapsed(checkinAt - lastCheckinAt) : null;
-
   return (
     <div className="time-split-bar">
-      <div className="time-split-bar__above">
-        <span className="time-split-bar__hint">Drag the handles to adjust</span>
-        {elapsedLabel && <span className="time-split-bar__elapsed">{elapsedLabel}</span>}
-      </div>
-
       <div className="time-split-bar__track-wrap" ref={barRef}>
         <div className="time-split-bar__track">
           {segments.map((seg, i) => (

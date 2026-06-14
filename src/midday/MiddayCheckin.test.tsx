@@ -131,8 +131,6 @@ describe('TimeSplitBar', () => {
         concerns={concerns}
         weights={weights}
         onChange={onChange}
-        checkinAt={middayCheckinData.checkin_at}
-        lastCheckinAt={middayCheckinData.last_checkin_at}
       />,
     );
     return { onChange };
@@ -168,21 +166,12 @@ describe('TimeSplitBar', () => {
   });
 
   it('omits elapsed time label when last_checkin_at is null', () => {
-    render(
-      <TimeSplitBar
-        goals={goals}
-        concerns={concerns}
-        weights={Array(segCount).fill(1 / segCount)}
-        onChange={vi.fn()}
-        checkinAt={middayCheckinData.checkin_at}
-        lastCheckinAt={null}
-      />,
-    );
+    render(<MiddayCheckin data={{ ...middayCheckinData, last_checkin_at: null }} onSave={noop} />);
     expect(document.querySelector('.time-split-bar__elapsed')).not.toBeInTheDocument();
   });
 
   it('shows elapsed time label when last_checkin_at is set', () => {
-    renderBar();
+    render(<MiddayCheckin data={middayCheckinData} onSave={noop} />);
     expect(document.querySelector('.time-split-bar__elapsed')).toBeInTheDocument();
   });
 });

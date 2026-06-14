@@ -1,4 +1,13 @@
 import { useLayoutEffect, useState } from 'react';
+
+function formatElapsed(ms: number): string {
+  const totalMin = Math.round(ms / 60000);
+  const hrs = Math.floor(totalMin / 60);
+  const min = totalMin % 60;
+  if (min === 0) return `~${hrs} hrs`;
+  if (min === 30) return `~${hrs}.5 hrs`;
+  return `~${hrs}h ${min}m`;
+}
 import type { MiddayCheckinData, MiddayCheckinResult } from '../bindings';
 import './MiddayCheckin.css';
 import MiddayHeader from './MiddayHeader';
@@ -72,14 +81,22 @@ export default function MiddayCheckin({ data, onSave, onReady }: Props) {
         </section>
 
         <section className="midday-zone">
-          <p className="midday-zone-label">Time split</p>
+          <div className="midday-time-split-header">
+            <p className="midday-zone-label">
+              Time split
+              <span className="midday-zone-bullet">•</span><span className="midday-zone-hint">Drag handles to adjust</span>
+            </p>
+            {data.last_checkin_at !== null && (
+              <span className="time-split-bar__elapsed">
+                {formatElapsed(data.checkin_at - data.last_checkin_at)}
+              </span>
+            )}
+          </div>
           <TimeSplitBar
             goals={data.todays_goals}
             concerns={data.concerns}
             weights={weights}
             onChange={setWeights}
-            checkinAt={data.checkin_at}
-            lastCheckinAt={data.last_checkin_at}
           />
         </section>
 
