@@ -52,7 +52,6 @@ export default function MiddayCheckin({ data, onSave }: Props) {
   return (
     <div className="midday-checkin">
       <MiddayHeader
-        checkinAt={data.checkin_at}
         lastCheckinAt={data.last_checkin_at}
         nextCheckinAt={data.next_checkin_at}
         locale={data.calendar.locale}
