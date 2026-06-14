@@ -1,3 +1,4 @@
+import { getCurrentWindow } from '@tauri-apps/api/window';
 import type { Epoch } from '../bindings';
 
 interface Props {
@@ -16,11 +17,18 @@ function formatTime(epoch: Epoch, locale: string, timezone: string): string {
   }).format(new Date(epoch));
 }
 
+function startDrag(e: React.MouseEvent) {
+  if (e.button !== 0) return;
+  if ('__TAURI_INTERNALS__' in window) {
+    void getCurrentWindow().startDragging();
+  }
+}
+
 export default function MiddayHeader({ lastCheckinAt, nextCheckinAt, locale, timezone }: Props) {
   const nextTimeLabel = formatTime(nextCheckinAt, locale, timezone);
 
   return (
-    <header className="midday-header">
+    <header className="midday-header" onMouseDown={startDrag}>
       <h1 className="midday-header__title">Check-in</h1>
       <div className="midday-header__right">
         <div className="midday-header__sub">

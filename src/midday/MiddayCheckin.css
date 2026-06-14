@@ -27,6 +27,12 @@ body {
   align-items: flex-start;
   justify-content: space-between;
   gap: 12px;
+  cursor: grab;
+  user-select: none;
+}
+
+.midday-header:active {
+  cursor: grabbing;
 }
 
 .midday-header__title {

@@ -5,6 +5,33 @@ test.beforeEach(async ({ page }) => {
   await page.waitForSelector('.midday-checkin');
 });
 
+// Needs its own goto because it must inject the Tauri mock before navigation.
+test('header mousedown triggers startDragging', async ({ page }) => {
+  await page.addInitScript(() => {
+    const calls: string[] = [];
+    (window as any).__tauriDragCalls = calls;
+    (window as any).__TAURI_INTERNALS__ = {
+      metadata: {
+        currentWindow: { label: 'midday' },
+        windows: [{ label: 'midday' }],
+      },
+      invoke: async (cmd: string) => {
+        calls.push(cmd as string);
+        return null;
+      },
+      transformCallback: () => 0,
+    };
+  });
+
+  await page.goto('/ui-test-entrypoints/midday.html');
+  await page.waitForSelector('.midday-checkin');
+
+  await page.locator('.midday-header').dispatchEvent('mousedown', { button: 0, bubbles: true });
+
+  const calls = await page.evaluate(() => (window as any).__tauriDragCalls as string[]);
+  expect(calls).toContain('plugin:window|start_dragging');
+});
+
 test('happy path: mark a goal hit, drag a handle, write a note, save', async ({ page }) => {
   // Mark first goal as hit
   const toggles = page.locator('.midday-goal-row__toggle');
