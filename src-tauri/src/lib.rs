@@ -40,6 +40,8 @@ fn specta_builder() -> Builder<tauri::Wry> {
             ui::goals::open_yearly_goals,
             ui::weekly::open_weekly_planning,
             ui::midday::open_midday_checkin,
+            ui::midday::show_midday,
+            ui::midday::resize_midday,
             quit
         ])
         // No commands return these yet (phase 1 has no data commands), so register

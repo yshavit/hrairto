@@ -32,6 +32,20 @@ async openMiddayCheckin() : Promise<void> {
     await TAURI_INVOKE("open_midday_checkin");
 },
 /**
+ * Called by the webview after first render to set the window to its content height and show it.
+ */
+async showMidday(height: number) : Promise<void> {
+    await TAURI_INVOKE("show_midday", { height });
+},
+/**
+ * Called by the webview whenever content height changes after the initial show.
+ * On Windows the bottom edge is held fixed (tray at bottom); on macOS the top
+ * edge is held fixed (menu bar at top).
+ */
+async resizeMidday(height: number) : Promise<void> {
+    await TAURI_INVOKE("resize_midday", { height });
+},
+/**
  * Quits the application, exiting the process.
  */
 async quit() : Promise<void> {

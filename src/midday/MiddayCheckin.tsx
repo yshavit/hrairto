@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useLayoutEffect, useState } from 'react';
 import type { MiddayCheckinData, MiddayCheckinResult } from '../bindings';
 import './MiddayCheckin.css';
 import MiddayHeader from './MiddayHeader';
@@ -8,13 +8,17 @@ import TimeSplitBar from './TimeSplitBar';
 interface Props {
   data: MiddayCheckinData;
   onSave: (result: MiddayCheckinResult) => void;
+  onReady?: () => void;
 }
 
-export default function MiddayCheckin({ data, onSave }: Props) {
+export default function MiddayCheckin({ data, onSave, onReady }: Props) {
   const segCount = data.todays_goals.length + 1;
   const [outcomes, setOutcomes] = useState<Map<string, LocalOutcome>>(new Map());
   const [weights, setWeights] = useState<number[]>(() => Array(segCount).fill(1 / segCount));
   const [note, setNote] = useState('');
+
+  useLayoutEffect(() => { onReady?.(); }, []);
+
   function toggleOutcome(id: string) {
     setOutcomes((prev) => {
       const next = new Map(prev);
