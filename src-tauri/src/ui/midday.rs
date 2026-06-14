@@ -24,11 +24,7 @@ pub async fn resize_midday(app: AppHandle, height: f64) {
     };
 
     #[cfg(target_os = "windows")]
-    if let (Ok(pos), Ok(outer), Ok(inner)) = (
-        window.outer_position(),
-        window.outer_size(),
-        window.inner_size(),
-    ) {
+    if let (Ok(pos), Ok(outer), Ok(inner)) = (window.outer_position(), window.outer_size(), window.inner_size()) {
         let scale = window.scale_factor().unwrap_or(1.0);
         let non_client_h = outer.height as i32 - inner.height as i32;
         let new_outer_h = (height * scale).round() as i32 + non_client_h;

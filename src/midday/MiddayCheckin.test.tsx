@@ -11,12 +11,7 @@ const noop = vi.fn();
 
 describe('MiddayHeader', () => {
   it('shows "First check-in today" when last_checkin_at is null', () => {
-    render(
-      <MiddayCheckin
-        data={{ ...middayCheckinData, last_checkin_at: null }}
-        onSave={noop}
-      />,
-    );
+    render(<MiddayCheckin data={{ ...middayCheckinData, last_checkin_at: null }} onSave={noop} />);
     expect(screen.getByText('First check-in today')).toBeInTheDocument();
   });
 
@@ -125,14 +120,7 @@ describe('TimeSplitBar', () => {
   const segCount = goals.length + 1; // 3 goals + distractions = 4
 
   function renderBar(weights = Array(segCount).fill(1 / segCount), onChange = vi.fn()) {
-    render(
-      <TimeSplitBar
-        goals={goals}
-        concerns={concerns}
-        weights={weights}
-        onChange={onChange}
-      />,
-    );
+    render(<TimeSplitBar goals={goals} concerns={concerns} weights={weights} onChange={onChange} />);
     return { onChange };
   }
 
@@ -213,12 +201,7 @@ describe('SaveButton', () => {
 
 describe('TimeSplitBar elapsed label', () => {
   it('absent when last_checkin_at is null', () => {
-    render(
-      <MiddayCheckin
-        data={{ ...middayCheckinData, last_checkin_at: null }}
-        onSave={noop}
-      />,
-    );
+    render(<MiddayCheckin data={{ ...middayCheckinData, last_checkin_at: null }} onSave={noop} />);
     expect(document.querySelector('.time-split-bar__elapsed')).not.toBeInTheDocument();
   });
 });

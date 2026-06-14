@@ -27,18 +27,19 @@ precedence where they conflict.
 
 ## Key files
 
-| What                  | Where                                     |
-| --------------------- | ----------------------------------------- |
-| React entry point     | `src/midday/MiddayCheckin.tsx`            |
-| All midday components | `src/midday/`                             |
-| Styles                | `src/midday/MiddayCheckin.css`            |
-| Mock data (Phase 1)   | `src/mockData.ts` (extend existing file)  |
-| Test entrypoint HTML  | `ui-test-entrypoints/midday.html`         |
-| Test entrypoint TS    | `src/midday-main.tsx`                     |
-| RTL unit tests        | `src/midday/*.test.tsx`                   |
-| Playwright e2e tests  | `tests/midday.spec.ts`                      |
+| What                  | Where                                    |
+| --------------------- | ---------------------------------------- |
+| React entry point     | `src/midday/MiddayCheckin.tsx`           |
+| All midday components | `src/midday/`                            |
+| Styles                | `src/midday/MiddayCheckin.css`           |
+| Mock data (Phase 1)   | `src/mockData.ts` (extend existing file) |
+| Test entrypoint HTML  | `ui-test-entrypoints/midday.html`        |
+| Test entrypoint TS    | `src/midday-main.tsx`                    |
+| RTL unit tests        | `src/midday/*.test.tsx`                  |
+| Playwright e2e tests  | `tests/midday.spec.ts`                   |
 
 Reuses from existing code:
+
 - All model types from `src/bindings.ts`
 - `src/utils/calendar.ts` display helpers
 - Concern color constants (from shared theme)
@@ -150,14 +151,15 @@ MiddayCheckin                 — top-level; owns all local state
 ## MiddayHeader
 
 Shows:
+
 - Title: "Mid-day check-in" (left)
 - Date + time: e.g. "Tuesday May 20 · 12:30 pm" (right, muted)
 - Sub-line: "Last check-in: this morning at 9:00 am · next check-in at 5:30 pm"
-    - "next check-in at X" is a link/button that opens the time adjustment UI
-      (Phase 1: cosmetic only — renders as a styled anchor, no action)
-    - If `last_checkin_at` is null: "First check-in today"
-    - Times formatted via `Intl.DateTimeFormat` using `calendar.locale` and
-      `calendar.timezone`
+  - "next check-in at X" is a link/button that opens the time adjustment UI
+    (Phase 1: cosmetic only — renders as a styled anchor, no action)
+  - If `last_checkin_at` is null: "First check-in today"
+  - Times formatted via `Intl.DateTimeFormat` using `calendar.locale` and
+    `calendar.timezone`
 
 ---
 
@@ -168,16 +170,17 @@ main quest — the list is short enough (1–4 goals typically) that grouping ad
 noise without value.
 
 Each `GoalRow`:
+
 - Hit/miss toggle (left): same mechanic as weekly session
-    - Starts unmarked
-    - First click → hit (green fill + checkmark)
-    - Subsequent clicks toggle between hit and miss
-    - Never returns to unmarked once touched
+  - Starts unmarked
+  - First click → hit (green fill + checkmark)
+  - Subsequent clicks toggle between hit and miss
+  - Never returns to unmarked once touched
 - Goal text (middle): strikethrough when hit
 - `ⓘ` button (right): toggles inline detail below the goal text
-    - Detail shows: concern name · quarterly goal text · waypoint text (if linked)
-    - For distraction goals: distraction label(s) instead
-    - Detail is hidden by default; `ⓘ` button color deepens when open
+  - Detail shows: concern name · quarterly goal text · waypoint text (if linked)
+  - For distraction goals: distraction label(s) instead
+  - Detail is hidden by default; `ⓘ` button color deepens when open
 
 No validation required — goals do not need to be marked to save. This is a
 lightweight check-in, not a formal reflection.
@@ -196,6 +199,7 @@ One segment per `WeeklyGoal` in `todays_goals`, plus one fixed `Distractions`
 segment at the right end. Segment count = `todays_goals.length + 1`.
 
 Segment colors:
+
 - For planned goals (`WeeklyGoalRef::Planned`): the color of the goal's concern,
   looked up via `concerns`. If multiple goals share a concern, they get distinct
   shades — use the concern color at full opacity for the first, 60% for the second.
@@ -220,6 +224,7 @@ work is adapting the data shape (per-`WeeklyGoalId` instead of per-`Activity`) a
 adding the below-bar legend.
 
 Constraints (same as `FocusSplitBar`):
+
 - Minimum segment width: 5% (no segment can be dragged below 5%)
 - Dragging a handle only affects the two adjacent segments — it does not
   redistribute across all segments
@@ -261,6 +266,7 @@ Min height: ~52px, resizable vertically.
 Label: "Done — back to work"
 
 On click:
+
 - Collect goal outcomes (only goals that were touched — unmarked goals are omitted)
 - Collect time split weights
 - Collect note (null if empty)
@@ -296,6 +302,7 @@ inner pip, extending `3px` above and below the bar for a larger drag target.
 Extend `src/mockData.ts` with a `middayCheckinData: MiddayCheckinData` export.
 
 Use goals consistent with the existing `weeklySessionData`:
+
 - 2 planned goals (one FizzBuzz main quest, one side-quest)
 - 1 distraction goal (known in advance — e.g. "support rotation")
 - `last_checkin_at`: 3.5 hours before `checkin_at`

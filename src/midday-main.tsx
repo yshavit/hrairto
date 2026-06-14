@@ -20,7 +20,9 @@ ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
       onSave={(result) => {
         document.body.dataset.savedPayload = JSON.stringify(result);
       }}
-      onReady={() => { void onReady(); }}
+      onReady={() => {
+        void onReady();
+      }}
     />
   </React.StrictMode>,
 );

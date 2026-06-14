@@ -1,4 +1,4 @@
-import { useLayoutEffect, useState } from 'react';
+import { useLayoutEffect, useRef, useState } from 'react';
 
 function formatElapsed(ms: number): string {
   const totalMin = Math.round(ms / 60000);
@@ -27,13 +27,19 @@ export default function MiddayCheckin({ data, onSave, onReady }: Props) {
   const [weights, setWeights] = useState<number[]>(() => Array(segCount).fill(1 / segCount));
   const [note, setNote] = useState('');
 
-  useLayoutEffect(() => { onReady?.(); }, []);
+  const onReadyRef = useRef(onReady);
+  useLayoutEffect(() => {
+    onReadyRef.current?.();
+  }, []);
 
   function toggleOutcome(id: string) {
     setOutcomes((prev) => {
       const next = new Map(prev);
-      const cur = next.get(id);
-      next.set(id, cur === 'hit' ? 'miss' : 'hit');
+      if (next.get(id) === 'hit') {
+        next.delete(id);
+      } else {
+        next.set(id, 'hit');
+      }
       return next;
     });
   }
@@ -62,12 +68,7 @@ export default function MiddayCheckin({ data, onSave, onReady }: Props) {
 
   return (
     <div className="midday-checkin">
-      <MiddayHeader
-        lastCheckinAt={data.last_checkin_at}
-        nextCheckinAt={data.next_checkin_at}
-        locale={data.calendar.locale}
-        timezone={data.calendar.timezone}
-      />
+      <MiddayHeader lastCheckinAt={data.last_checkin_at} nextCheckinAt={data.next_checkin_at} locale={data.calendar.locale} timezone={data.calendar.timezone} />
       <div className="midday-checkin__body">
         <section className="midday-zone">
           <p className="midday-zone-label">Today's goals</p>
@@ -85,20 +86,12 @@ export default function MiddayCheckin({ data, onSave, onReady }: Props) {
           <div className="midday-time-split-header">
             <p className="midday-zone-label">
               Time split
-              <span className="midday-zone-bullet">•</span><span className="midday-zone-hint">Drag handles to adjust</span>
+              <span className="midday-zone-bullet">•</span>
+              <span className="midday-zone-hint">Drag handles to adjust</span>
             </p>
-            {data.last_checkin_at !== null && (
-              <span className="time-split-bar__elapsed">
-                {formatElapsed(data.checkin_at - data.last_checkin_at)}
-              </span>
-            )}
+            {data.last_checkin_at !== null && <span className="time-split-bar__elapsed">{formatElapsed(data.checkin_at - data.last_checkin_at)}</span>}
           </div>
-          <TimeSplitBar
-            goals={data.todays_goals}
-            concerns={data.concerns}
-            weights={weights}
-            onChange={setWeights}
-          />
+          <TimeSplitBar goals={data.todays_goals} concerns={data.concerns} weights={weights} onChange={setWeights} />
         </section>
 
         <section className="midday-zone">
@@ -110,12 +103,7 @@ export default function MiddayCheckin({ data, onSave, onReady }: Props) {
           />
         </section>
 
-        <SaveSnoozeButton
-          onDone={handleSave}
-          nextCheckinAt={data.next_checkin_at}
-          locale={data.calendar.locale}
-          timezone={data.calendar.timezone}
-        />
+        <SaveSnoozeButton onDone={handleSave} nextCheckinAt={data.next_checkin_at} locale={data.calendar.locale} timezone={data.calendar.timezone} />
       </div>
     </div>
   );

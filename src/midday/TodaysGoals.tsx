@@ -72,9 +72,7 @@ function GoalRow({ goal, outcome, onToggle, concerns, quarterlyGoals, distractio
         <button className="midday-goal-row__toggle" onClick={() => onToggle(goal.id)} aria-label="Toggle outcome">
           <OutcomeIcon outcome={outcome} />
         </button>
-        <span className={`midday-goal-row__text${outcome === 'hit' ? ' midday-goal-row__text--hit' : ''}`}>
-          {goal.text}
-        </span>
+        <span className={`midday-goal-row__text${outcome === 'hit' ? ' midday-goal-row__text--hit' : ''}`}>{goal.text}</span>
         <button
           className={`midday-goal-row__info-btn${detailOpen ? ' midday-goal-row__info-btn--open' : ''}`}
           onClick={() => setDetailOpen((o) => !o)}

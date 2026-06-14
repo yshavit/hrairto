@@ -89,25 +89,14 @@ export default function TimeSplitBar({ goals, concerns, weights, onChange }: Pro
       <div className="time-split-bar__track-wrap" ref={barRef}>
         <div className="time-split-bar__track">
           {segments.map((seg, i) => (
-            <div
-              key={seg?.id ?? '__distractions__'}
-              className="time-split-bar__segment"
-              style={{ width: `${pcts[i]}%`, background: colors[i] }}
-            >
-              {pcts[i] >= MIN_LABEL_PCT && (
-                <span className="time-split-bar__segment-pct">{pcts[i]}%</span>
-              )}
+            <div key={seg?.id ?? '__distractions__'} className="time-split-bar__segment" style={{ width: `${pcts[i]}%`, background: colors[i] }}>
+              {pcts[i] >= MIN_LABEL_PCT && <span className="time-split-bar__segment-pct">{pcts[i]}%</span>}
             </div>
           ))}
         </div>
 
         {dividerPositions.map((pos, i) => (
-          <div
-            key={i}
-            className="time-split-bar__handle"
-            style={{ left: `${pos}%` }}
-            onPointerDown={(e) => startDrag(e, i)}
-          />
+          <div key={i} className="time-split-bar__handle" style={{ left: `${pos}%` }} onPointerDown={(e) => startDrag(e, i)} />
         ))}
       </div>
 

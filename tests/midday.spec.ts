@@ -95,22 +95,18 @@ test('ⓘ toggle opens and closes detail for a distraction goal', async ({ page 
   await expect(detail).not.toBeVisible();
 });
 
-test('goal toggle cycles: first click = hit (strikethrough), second = miss (no strikethrough)', async ({ page }) => {
+test('goal toggle: first click marks hit (strikethrough), second click unchecks', async ({ page }) => {
   const toggle = page.locator('.midday-goal-row__toggle').first();
   const text = page.locator('.midday-goal-row__text').first();
 
-  // Initially no strikethrough
   await expect(text).not.toHaveClass(/midday-goal-row__text--hit/);
 
-  // First click → hit
   await toggle.click();
   await expect(text).toHaveClass(/midday-goal-row__text--hit/);
 
-  // Second click → miss
   await toggle.click();
   await expect(text).not.toHaveClass(/midday-goal-row__text--hit/);
 
-  // Third click → hit again (never back to unmarked)
   await toggle.click();
   await expect(text).toHaveClass(/midday-goal-row__text--hit/);
 });
