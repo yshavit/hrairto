@@ -64,7 +64,7 @@ const calendar: Calendar = {
   id: CALENDAR_ID,
   name: 'Standard',
   quarter_start_month: 1,
-  timezone: 'UTC',
+  timezone: 'America/New_York',
   locale: 'en-US',
 };
 

@@ -13,6 +13,7 @@ import './MiddayCheckin.css';
 import MiddayHeader from './MiddayHeader';
 import TodaysGoals, { type LocalOutcome } from './TodaysGoals';
 import TimeSplitBar from './TimeSplitBar';
+import SaveSnoozeButton from './SaveSnoozeButton';
 
 interface Props {
   data: MiddayCheckinData;
@@ -109,9 +110,12 @@ export default function MiddayCheckin({ data, onSave, onReady }: Props) {
           />
         </section>
 
-        <button className="midday-save-btn" onClick={handleSave}>
-          Done
-        </button>
+        <SaveSnoozeButton
+          onDone={handleSave}
+          nextCheckinAt={data.next_checkin_at}
+          locale={data.calendar.locale}
+          timezone={data.calendar.timezone}
+        />
       </div>
     </div>
   );

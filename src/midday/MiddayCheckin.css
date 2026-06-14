@@ -324,27 +324,102 @@ body {
   border-color: #666;
 }
 
-/* === Save button =========================================================== */
+/* === Save / snooze split button =========================================== */
 
-.midday-save-btn {
-  width: 100%;
+.save-snooze {
+  position: relative;
   margin-top: -6px;
-  padding: 8px;
+}
+
+.save-snooze__bar {
+  position: relative;
+  display: flex;
   background: #1e1e1e;
-  color: #e0e0e0;
   border: 0.5px solid #444;
   border-radius: 6px;
+  overflow: hidden;
+}
+
+.save-snooze__done {
+  flex: 1;
+  padding: 8px;
+  background: none;
+  color: #e0e0e0;
+  border: none;
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
   font-family: inherit;
-  transition:
-    background 0.1s,
-    border-color 0.1s,
-    color 0.1s;
+  text-align: center;
+  transition: background 0.1s;
 }
 
-.midday-save-btn:hover:not(:disabled) {
+.save-snooze__done:hover {
   background: #252525;
-  border-color: #666;
+}
+
+.save-snooze__trigger {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  padding: 4px 10px;
+  background: none;
+  border: none;
+  border-left: 0.5px solid #444;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.1s;
+}
+
+.save-snooze__trigger:hover {
+  background: #252525;
+}
+
+.save-snooze__chevron {
+  font-size: 12px;
+  color: #888;
+  line-height: 1;
+}
+
+.save-snooze__label {
+  font-size: 9px;
+  color: #666;
+  letter-spacing: 0.04em;
+}
+
+.save-snooze__dropdown {
+  position: absolute;
+  bottom: calc(100% + 4px);
+  right: 0;
+  background: #1e1e1e;
+  border: 0.5px solid #444;
+  border-radius: 6px;
+  overflow: hidden;
+  min-width: 180px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  z-index: 10;
+}
+
+.save-snooze__option {
+  display: block;
+  width: 100%;
+  padding: 8px 12px;
+  background: none;
+  border: none;
+  color: #e0e0e0;
+  font-size: 13px;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+
+.save-snooze__option:hover {
+  background: #252525;
 }
