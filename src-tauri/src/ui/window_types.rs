@@ -2,6 +2,7 @@ pub enum Window {
     Main,
     Goals,
     Weekly,
+    Midday,
 }
 
 impl Window {
@@ -10,6 +11,7 @@ impl Window {
             Window::Main => "main",
             Window::Goals => "goals",
             Window::Weekly => "weekly",
+            Window::Midday => "midday",
         }
     }
 }

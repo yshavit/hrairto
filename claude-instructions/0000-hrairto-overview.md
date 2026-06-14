@@ -151,15 +151,15 @@ daily tracking last).
 
 ## Current status
 
-Phase 1 in progress. Goal tree view and weekly planning/reflection are fully implemented.
+Phase 1 in progress. Goal tree view, weekly planning/reflection, and mid-day check-in are fully implemented.
 
 ## Screens
 
 - ✅ Goal tree view (read-only) — designed and implemented; see `0001-yearly-goals.md`
 - ✅ Weekly planning/reflection session — designed and implemented; see `0002-weekly-planning.md`
-- ✅ End-of-day check-in — UX designed
+- ✅ End-of-day check-in — UX designed; will reuse mid-day check-in pane with an extra section
+- ✅ Mid-day check-in — designed and implemented; see `0004-midday-checkin.md`
 - 🔲 Quarterly planning session (UX not yet designed)
-- 🔲 Mid-day check-in (simple variant of end-of-day zone 1)
 - 🔲 Tray popup container
 
 ## Conventions

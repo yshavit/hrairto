@@ -9,6 +9,7 @@ import type {
   GoalTreeData,
   MainQuest,
   MainQuestId,
+  MiddayCheckinData,
   QuarterDisplay,
   QuarterlyGoal,
   QuarterlyGoalId,
@@ -63,7 +64,7 @@ const calendar: Calendar = {
   id: CALENDAR_ID,
   name: 'Standard',
   quarter_start_month: 1,
-  timezone: 'UTC',
+  timezone: 'America/New_York',
   locale: 'en-US',
 };
 
@@ -263,10 +264,12 @@ const WEEKLY_REFLECTION_ID: WeeklyReflectionId = '00000000-0000-0000-0000-000000
 const WG = (suffix: string): WeeklyGoalId => `00000000-0000-0000-0000-0000000001${suffix}`;
 const LABEL_CUSTOMER_REQUEST: DistractionLabelId = '00000000-0000-0000-0000-000000000120';
 const LABEL_BUG: DistractionLabelId = '00000000-0000-0000-0000-000000000121';
+const LABEL_SUPPORT_ROTATION: DistractionLabelId = '00000000-0000-0000-0000-000000000122';
 
 const distractionLabels: DistractionLabel[] = [
   { id: LABEL_CUSTOMER_REQUEST, text: 'customer request', created_at: utc(2026, 1, 1) },
   { id: LABEL_BUG, text: 'bug', created_at: utc(2026, 1, 1) },
+  { id: LABEL_SUPPORT_ROTATION, text: 'support rotation', created_at: utc(2026, 1, 1) },
 ];
 
 // Past week: May 19–23.
@@ -358,4 +361,51 @@ export const weeklySessionData: WeeklySessionData = {
   current_weights,
   current_quarter_goals: currentQuarterGoals,
   upcoming_quarterly_goals: upcomingQuarterlyGoals,
+};
+
+// ── Midday check-in mock data ─────────────────────────────────────────────────
+// Monday May 26 at noon. Last check-in was 3.5 hrs ago (8:30 AM); next at 5:30 PM.
+// 3 goals: one FizzBuzz planned, one API v2 side-quest planned, one distraction.
+
+const MIDDAY_AT: Epoch = utc(2026, 5, 26) + 12 * 60 * 60 * 1000;
+
+// Use hex suffixes a0–a2 to avoid collision with distraction label IDs (120–122).
+const middayGoals: WeeklyGoal[] = [
+  {
+    id: WG('a0'),
+    plan_id: WEEKLY_PLAN_ID,
+    created_at: utc(2026, 5, 25),
+    text: 'Wire up the closed beta sign-up flow',
+    outcome: null,
+    goal_ref: { type: 'Planned', concern_id: TEAM_ID, waypoint_id: W('52') },
+  },
+  {
+    id: WG('a1'),
+    plan_id: WEEKLY_PLAN_ID,
+    created_at: utc(2026, 5, 25),
+    text: 'Implement API v2 endpoints + integration tests',
+    outcome: null,
+    goal_ref: { type: 'Planned', concern_id: TEAM_ID, waypoint_id: W('61') },
+  },
+  {
+    id: WG('a2'),
+    plan_id: WEEKLY_PLAN_ID,
+    created_at: utc(2026, 5, 25),
+    text: 'Support rotation',
+    outcome: null,
+    goal_ref: { type: 'Distraction', label_ids: [LABEL_SUPPORT_ROTATION] },
+  },
+];
+
+export const middayCheckinData: MiddayCheckinData = {
+  calendar,
+  checkin_at: MIDDAY_AT,
+  last_checkin_at: MIDDAY_AT - 3.5 * 60 * 60 * 1000,
+  next_checkin_at: MIDDAY_AT + 5.5 * 60 * 60 * 1000,
+  todays_goals: middayGoals,
+  concerns,
+  main_quests,
+  quarterly_goals: currentQuarterGoals,
+  distraction_labels: distractionLabels,
+  weekly_plan: weeklyPlan,
 };

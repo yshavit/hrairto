@@ -1,0 +1,424 @@
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: #111;
+  overflow: hidden;
+}
+
+.midday-checkin {
+  display: flex;
+  flex-direction: column;
+  background: #111;
+  color: #fff;
+  font-family:
+    system-ui,
+    -apple-system,
+    sans-serif;
+}
+
+/* === Header =============================================================== */
+
+.midday-header {
+  flex-shrink: 0;
+  padding: 10px 14px 8px;
+  border-bottom: 0.5px solid #333;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  cursor: grab;
+  user-select: none;
+}
+
+.midday-header:active {
+  cursor: grabbing;
+}
+
+.midday-header__title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #fff;
+}
+
+.midday-header__right {
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.midday-header__date {
+  font-size: 13px;
+  color: #888;
+}
+
+.midday-header__sub {
+  margin-top: 3px;
+  font-size: 12px;
+  color: #666;
+}
+
+/* === Body ================================================================= */
+
+.midday-checkin__body {
+  flex: 1;
+  padding: 12px 14px;
+  max-width: 560px;
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* === Zone labels =========================================================== */
+
+.midday-zone-label {
+  margin: 0 0 5px;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #555;
+}
+
+/* === Goal rows ============================================================= */
+
+.midday-goals-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.midday-goal-row {
+  background: #1a1a1a;
+  border: 0.5px solid #333;
+  border-radius: 6px;
+}
+
+.midday-goal-row__main {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+}
+
+.midday-goal-row__toggle {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.midday-goal-toggle-icon {
+  display: block;
+}
+
+.midday-goal-row__text {
+  flex: 1;
+  font-size: 14px;
+  color: #e0e0e0;
+  line-height: 1.4;
+}
+
+.midday-goal-row__text--hit {
+  text-decoration: line-through;
+  color: #666;
+}
+
+.midday-goal-row__info-btn {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  font-size: 15px;
+  color: #555;
+  cursor: pointer;
+  padding: 0 2px;
+  line-height: 1;
+  font-family: inherit;
+  transition: color 0.1s;
+}
+
+.midday-goal-row__info-btn--open {
+  color: #aaa;
+}
+
+.midday-goal-row__info-btn:hover {
+  color: #aaa;
+}
+
+.midday-goal-row__detail {
+  padding: 0 10px 8px 38px;
+  font-size: 12px;
+  color: #666;
+  line-height: 1.5;
+}
+
+/* === Time split bar ======================================================== */
+
+.midday-time-split-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 5px;
+}
+
+.midday-time-split-header .midday-zone-label {
+  margin-bottom: 0;
+}
+
+.midday-zone-hint,
+.midday-zone-bullet {
+  text-transform: none;
+  font-weight: 400;
+  letter-spacing: 0;
+  font-size: 10px;
+  color: #555;
+}
+
+.midday-zone-bullet {
+  padding: 0 0.3em;
+}
+
+.time-split-bar__elapsed {
+  font-size: 11px;
+  color: #555;
+}
+
+.time-split-bar__track-wrap {
+  position: relative;
+}
+
+.time-split-bar__track {
+  display: flex;
+  height: 28px;
+  border-radius: var(--border-radius-md, 6px);
+  overflow: hidden;
+}
+
+.time-split-bar__segment {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.time-split-bar__segment-pct {
+  font-size: 11px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.85);
+  white-space: nowrap;
+}
+
+.time-split-bar__handle {
+  position: absolute;
+  top: -3px;
+  width: 10px;
+  height: calc(28px + 6px);
+  transform: translateX(-50%);
+  cursor: ew-resize;
+  z-index: 1;
+}
+
+/* thin spine */
+.time-split-bar__handle::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 1.5px;
+  transform: translateX(-50%);
+  background: rgba(255, 255, 255, 0.25);
+  transition: background 0.12s;
+}
+
+/* center pip */
+.time-split-bar__handle::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 3px;
+  height: 17px;
+  transform: translate(-50%, -50%);
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: 2px;
+  transition:
+    background 0.12s,
+    width 0.12s;
+}
+
+.time-split-bar__handle:hover::before {
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.time-split-bar__handle:hover::after {
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.time-split-bar__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  margin-top: 6px;
+}
+
+.time-split-bar__legend-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  color: #aaa;
+  min-width: 0;
+}
+
+.time-split-bar__dot {
+  flex-shrink: 0;
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+}
+
+.time-split-bar__legend-label {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 140px;
+}
+
+.time-split-bar__legend-pct {
+  flex-shrink: 0;
+  color: #666;
+}
+
+/* === Note field ============================================================ */
+
+.midday-note-field {
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 40px;
+  background: #1a1a1a;
+  color: #e0e0e0;
+  border: 0.5px solid #444;
+  border-radius: 6px;
+  padding: 5px 8px;
+  font-size: 13px;
+  font-family: inherit;
+  line-height: 1.6;
+  resize: vertical;
+  outline: none;
+}
+
+.midday-note-field::placeholder {
+  color: #555;
+}
+
+.midday-note-field:focus {
+  border-color: #666;
+}
+
+/* === Save / snooze split button =========================================== */
+
+.save-snooze {
+  position: relative;
+  margin-top: -6px;
+}
+
+.save-snooze__bar {
+  position: relative;
+  display: flex;
+  background: #1e1e1e;
+  border: 0.5px solid #444;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.save-snooze__done {
+  flex: 1;
+  padding: 8px;
+  background: none;
+  color: #e0e0e0;
+  border: none;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: inherit;
+  text-align: center;
+  transition: background 0.1s;
+}
+
+.save-snooze__done:hover {
+  background: #252525;
+}
+
+.save-snooze__trigger {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  padding: 4px 10px;
+  background: none;
+  border: none;
+  border-left: 0.5px solid #444;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.1s;
+}
+
+.save-snooze__trigger:hover {
+  background: #252525;
+}
+
+.save-snooze__chevron {
+  font-size: 12px;
+  color: #888;
+  line-height: 1;
+}
+
+.save-snooze__label {
+  font-size: 9px;
+  color: #666;
+  letter-spacing: 0.04em;
+}
+
+.save-snooze__dropdown {
+  position: absolute;
+  bottom: calc(100% + 4px);
+  right: 0;
+  background: #1e1e1e;
+  border: 0.5px solid #444;
+  border-radius: 6px;
+  overflow: hidden;
+  min-width: 180px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  z-index: 10;
+}
+
+.save-snooze__option {
+  display: block;
+  width: 100%;
+  padding: 8px 12px;
+  background: none;
+  border: none;
+  color: #e0e0e0;
+  font-size: 13px;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+
+.save-snooze__option:hover {
+  background: #252525;
+}

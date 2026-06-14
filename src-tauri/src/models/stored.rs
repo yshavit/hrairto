@@ -321,3 +321,49 @@ pub enum WeeklyPlanRequest {
     Plan { focus: Focus, goals: Vec<WeeklyGoal> },
     NoPlan { reason: String },
 }
+
+/// The artifact saved when the user completes a mid-day check-in.
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct MiddayCheckinResult {
+    /// When this check-in was scheduled / opened.
+    pub checkin_at: Epoch,
+    /// When the previous check-in ended. `None` on the first check-in of the day.
+    pub last_checkin_at: Option<Epoch>,
+    /// Outcomes for goals the user marked. Goals not touched are omitted.
+    pub goal_outcomes: Vec<GoalOutcomeEntry>,
+    /// Time distribution since last check-in, one weight per today's goal plus a
+    /// distraction bucket. All weights sum to 1.0.
+    pub time_split: MiddayTimeSplit,
+    pub note: Option<String>,
+}
+
+/// A single goal outcome recorded during a check-in.
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct GoalOutcomeEntry {
+    pub goal_id: WeeklyGoalId,
+    pub outcome: GoalOutcome,
+}
+
+/// Per-goal time allocation for a midday check-in.
+///
+/// Unlike [`Focus`], which allocates across [`Activity`] buckets (MainQuest /
+/// SideQuests / Distractions), this records how time was actually spent at the
+/// individual [`WeeklyGoal`] level. The EOD reflection can translate this to a
+/// `Focus` for pre-populating the weekly actual-split bar.
+///
+/// All `goal_weights[*].weight` values plus `distraction_weight` sum to 1.0.
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct MiddayTimeSplit {
+    pub goal_weights: Vec<MiddayGoalWeight>,
+    /// Weight for unplanned/distraction time not attributed to any goal.
+    pub distraction_weight: f64,
+}
+
+/// One entry in a [`MiddayTimeSplit`]: how much of the period's time went to
+/// a specific weekly goal.
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct MiddayGoalWeight {
+    pub goal_id: WeeklyGoalId,
+    /// 0.0–1.0.
+    pub weight: f64,
+}
