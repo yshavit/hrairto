@@ -36,6 +36,7 @@ export default defineConfig(async () => ({
         main: resolve(__dirname, 'index.html'),
         goals: resolve(__dirname, 'ui-test-entrypoints/goals.html'),
         weekly: resolve(__dirname, 'ui-test-entrypoints/weekly.html'),
+        midday: resolve(__dirname, 'ui-test-entrypoints/midday.html'),
       },
     },
   },

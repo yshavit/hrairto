@@ -10,7 +10,11 @@ check-in.
 The mid-day check-in is the simplest session in the app. It opens as a
 medium-sized window (not a small tray bubble, not as large as the weekly session).
 
-**Status: UX designed, not yet implemented.**
+**Relationship to EOD check-in:** The EOD check-in is this same pane plus a
+goal-selection section (pick tomorrow's goals). They will share the same component,
+with a boolean prop to show or hide the second section.
+
+**Status: fully implemented.**
 
 ---
 
@@ -21,7 +25,7 @@ precedence where they conflict.
 
 ---
 
-## Key files (to be created)
+## Key files
 
 | What                  | Where                                     |
 | --------------------- | ----------------------------------------- |
@@ -32,20 +36,20 @@ precedence where they conflict.
 | Test entrypoint HTML  | `ui-test-entrypoints/midday.html`         |
 | Test entrypoint TS    | `src/midday-main.tsx`                     |
 | RTL unit tests        | `src/midday/*.test.tsx`                   |
-| Playwright e2e tests  | `e2e/midday.spec.ts`                      |
+| Playwright e2e tests  | `tests/midday.spec.ts`                      |
 
 Reuses from existing code:
 - All model types from `src/bindings.ts`
 - `src/utils/calendar.ts` display helpers
 - Concern color constants (from shared theme)
-- Goal toggle mechanic (same as weekly and EOD)
-- `ⓘ` detail toggle mechanic (same as EOD)
+- Goal toggle mechanic (same as weekly session)
+- `ⓘ` detail toggle mechanic (defined below; EOD check-in will reuse this same component)
 
 ---
 
 ## Data model additions
 
-Source of truth: `src-tauri/src/models.rs`. Add these structs:
+**View** (`src-tauri/src/models/views.rs`) — computed by backend, never stored:
 
 ```rust
 /// Full payload for the mid-day check-in session.
@@ -66,12 +70,18 @@ pub struct MiddayCheckinData {
     pub concerns: Vec<Concern>,
     /// All active main quests, for context resolution.
     pub main_quests: Vec<MainQuest>,
+    /// All quarterly goals active this week, for ⓘ detail resolution.
+    pub quarterly_goals: Vec<QuarterlyGoal>,
     /// All distraction labels, for context resolution.
     pub distraction_labels: Vec<DistractionLabel>,
     /// The weekly plan this check-in falls within.
     pub weekly_plan: WeeklyPlan,
 }
+```
 
+**Stored** (`src-tauri/src/models/stored.rs`) — persisted as the check-in artifact:
+
+```rust
 /// The artifact saved when the user completes a mid-day check-in.
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 pub struct MiddayCheckinResult {
@@ -80,9 +90,9 @@ pub struct MiddayCheckinResult {
     /// Outcomes for any goals the user marked during this check-in.
     /// Goals not touched are omitted (outcome stays None in storage).
     pub goal_outcomes: Vec<GoalOutcomeEntry>,
-    /// Time distribution since last check-in, per weekly goal.
-    /// All entries sum to 1.0.
-    pub time_split: Focus,
+    /// Time distribution since last check-in, one weight per today's goal
+    /// plus a distraction bucket. All weights sum to 1.0.
+    pub time_split: MiddayTimeSplit,
     /// Optional free-text note.
     pub note: Option<String>,
 }
@@ -92,6 +102,30 @@ pub struct MiddayCheckinResult {
 pub struct GoalOutcomeEntry {
     pub goal_id: WeeklyGoalId,
     pub outcome: GoalOutcome,
+}
+
+/// Per-goal time allocation for a midday check-in.
+///
+/// Unlike [`Focus`], which allocates across [`Activity`] buckets (MainQuest /
+/// SideQuests / Distractions), this records how time was actually spent at the
+/// individual [`WeeklyGoal`] level. The EOD reflection can translate this to a
+/// `Focus` for pre-populating the weekly actual-split bar.
+///
+/// All `goal_weights[*].weight` values plus `distraction_weight` sum to 1.0.
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct MiddayTimeSplit {
+    pub goal_weights: Vec<MiddayGoalWeight>,
+    /// Weight for unplanned/distraction time not attributed to any goal.
+    pub distraction_weight: f64,
+}
+
+/// One entry in a [`MiddayTimeSplit`]: how much of the period's time went to
+/// a specific weekly goal.
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct MiddayGoalWeight {
+    pub goal_id: WeeklyGoalId,
+    /// 0.0–1.0.
+    pub weight: f64,
 }
 ```
 
@@ -134,7 +168,7 @@ main quest — the list is short enough (1–4 goals typically) that grouping ad
 noise without value.
 
 Each `GoalRow`:
-- Hit/miss toggle (left): same mechanic as weekly and EOD sessions
+- Hit/miss toggle (left): same mechanic as weekly session
     - Starts unmarked
     - First click → hit (green fill + checkmark)
     - Subsequent clicks toggle between hit and miss
@@ -180,12 +214,19 @@ weights — but for Phase 1, even distribution is fine.
 
 ### Drag mechanic
 
-Handles sit at the boundaries between segments. Each handle can be dragged
-left/right. Constraints:
+Reuse the drag logic from `src/shared/FocusSplitBar.tsx` — it already implements
+pointer capture, adjacent-segment-only updates, and the 5% minimum. The only new
+work is adapting the data shape (per-`WeeklyGoalId` instead of per-`Activity`) and
+adding the below-bar legend.
+
+Constraints (same as `FocusSplitBar`):
 - Minimum segment width: 5% (no segment can be dragged below 5%)
 - Dragging a handle only affects the two adjacent segments — it does not
   redistribute across all segments
-- Handles snap to 1% increments (or use continuous — keep it simple for Phase 1)
+- Snap to 5% increments (matching `FocusSplitBar`'s existing behavior)
+
+Note: 5% minimum means a 20-goal day would be impossible to represent accurately;
+that's a known limitation to be addressed when `FocusSplitBar` is revised.
 
 ### Legend
 
@@ -280,7 +321,7 @@ distractions = 25% each).
 - `MiddayHeader`: shows "First check-in today" when `last_checkin_at` is null
 - `MiddayHeader`: elapsed time label absent when `last_checkin_at` is null
 
-### Playwright e2e (`e2e/midday.spec.ts`)
+### Playwright e2e (`tests/midday.spec.ts`)
 
 - Full happy path: mark a goal hit, drag a handle, write a note, save
 - Save with nothing touched — should succeed immediately
@@ -288,85 +329,34 @@ distractions = 25% each).
 
 ---
 
-## Implementation checklist
+## Non-obvious decisions
 
-- [ ] **Step 0: Reconcile spec with current codebase**
-    - This spec was written with knowledge of the data model and UX decisions but
-      without full visibility into current code conventions. Before implementing:
-        - Read key files from `0001-yearly-goals.md` and `0002-weekly-planning.md`
-          to understand current conventions (component structure, CSS patterns,
-          mock data shape, test setup, the EOD check-in if already implemented)
-        - Identify any conflicts or inconsistencies between this spec and those conventions
-        - Amend this spec to resolve them — the codebase conventions win
-        - Only proceed to Step 1 once the spec reflects the actual repo
+- **`time_split: Focus` → `MiddayTimeSplit`**: The original spec used `Focus` for the
+  saved time split, but `Focus` allocates across `Activity` buckets (MainQuest /
+  SideQuests / Distractions) — it can't hold per-goal weights. A new `MiddayTimeSplit`
+  type holds one weight per `WeeklyGoal` plus a `distraction_weight` bucket. At EOD
+  reflection, the backend can translate this to a `Focus` by grouping goals by their
+  activity type, for pre-populating the weekly actual-split bar.
 
-- [ ] **Step 1: Data model**
-    - [ ] Add `MiddayCheckinData`, `MiddayCheckinResult`, `GoalOutcomeEntry`
-      to `src-tauri/src/models.rs` (or `views.rs` as appropriate)
-    - [ ] Run `cargo check` — no errors
-    - [ ] Regenerate `src/bindings.ts`
-    - [ ] Verify new types appear correctly in `bindings.ts`
+- **`quarterly_goals` added to `MiddayCheckinData`**: The ⓘ detail panel shows
+  "quarterly goal text · waypoint text", but `WeeklyGoalRef::Planned` only carries
+  `concern_id + waypoint_id`. Resolving both requires `QuarterlyGoal` records. The
+  field was missing from the original spec.
 
-- [ ] **Step 2: Mock data**
-    - [ ] Extend `src/mockData.ts` with `middayCheckinData: MiddayCheckinData`
-      per the mock data spec above
-    - [ ] TypeScript compiles with no errors
+- **`MiddayCheckinData` is a view, not stored**: Follows the existing `views.rs` /
+  `stored.rs` split. `MiddayCheckinResult` and its sub-types are stored; the session
+  payload is assembled by the backend at invocation time.
 
-- [ ] **Step 3: Test entrypoint**
-    - [ ] Create `ui-test-entrypoints/midday.html`
-    - [ ] Create `src/midday-main.tsx`
-    - [ ] Verify page loads in browser
+- **`TimeSplitBar` adapted from `FocusSplitBar`**: The drag mechanic (pointer capture,
+  adjacent-segment-only adjustment, 5% snapping) was reused from `src/shared/FocusSplitBar.tsx`
+  rather than rebuilt. The main new work was the per-goal data adapter and the below-bar
+  legend. Snap interval was aligned to 5% (matching the existing bar) rather than the
+  spec's "1% or continuous."
 
-- [ ] **Step 4: MiddayHeader**
-    - [ ] Title + timestamp (right-aligned, muted)
-    - [ ] Sub-line with last/next check-in times
-    - [ ] "First check-in today" variant when `last_checkin_at` is null
-    - [ ] "Next check-in at X" renders as styled link (Phase 1: no action)
+- **"Next check-in at X" rendered as a `<button>`** rather than `<a href="#">`: avoids
+  the browser's default anchor behavior (scroll-to-top, address bar change) with no
+  action wired yet. Styled identically.
 
-- [ ] **Step 5: GoalRow + TodaysGoals**
-    - [ ] Hit/miss toggle: unmarked → hit → miss → hit (never back to unmarked)
-    - [ ] Strikethrough on hit
-    - [ ] ⓘ toggle: reveals/hides detail inline
-    - [ ] Detail content: concern + quarterly goal + waypoint for planned goals;
-      labels for distraction goals
-    - [ ] Assemble into TodaysGoals flat list
-
-- [ ] **Step 6: TimeSplitBar**
-    - [ ] Render segments from `todays_goals` + distractions, evenly weighted
-    - [ ] Correct colors per segment (concern color for planned, gray for distractions)
-    - [ ] Drag handles: update adjacent segments only, 5% minimum per segment
-    - [ ] Legend updates live
-    - [ ] Elapsed time label (omit if `last_checkin_at` is null)
-    - [ ] "Drag the handles to adjust" label
-
-- [ ] **Step 7: NoteField**
-    - [ ] Optional textarea with label + "(optional)" qualifier
-    - [ ] Correct placeholder text
-
-- [ ] **Step 8: SaveButton**
-    - [ ] No validation — saves regardless
-    - [ ] Post-save: text changes to "Saved. Good work!", disables
-    - [ ] Phase 1: logs collected data to console
-
-- [ ] **Step 9: MiddayCheckin assembly**
-    - [ ] Assemble all components
-    - [ ] Full flow works end-to-end with mock data
-    - [ ] Visual polish: spacing, zone labels, max-width
-
-- [ ] **Step 10: RTL unit tests**
-    - [ ] Write all tests listed above
-    - [ ] All pass: `pnpm test`
-
-- [ ] **Step 11: Playwright e2e tests**
-    - [ ] Write all e2e tests listed above
-    - [ ] All pass: `pnpm test:e2e`
-
-- [ ] **Step 12: Graduate this doc**
-    - [ ] Remove the implementation checklist from this file
-    - [ ] Update the overview section to "Status: fully implemented"
-    - [ ] Fill in the "Key files" table with actual paths
-    - [ ] Add a "Non-obvious decisions" section for anything that diverged from
-      this spec or required significant judgment
-    - [ ] Delete `claude-instructions/0004-mockups/`
-    - [ ] Update `0000-hrairto-overview.md`: mark mid-day check-in as ✅,
-      update "Current status" line
+- **Mock data goal IDs use hex suffixes `a0–a2`**: `WG('20')–WG('22')` would collide
+  with distraction label IDs `120–122` (same UUID byte pattern). Hex suffixes avoid
+  this without changing any ID scheme.

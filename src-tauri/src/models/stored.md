@@ -78,6 +78,27 @@ erDiagram
         Epoch created_at
     }
 
+    MiddayCheckinResult {
+        Epoch checkin_at PK
+        Epoch last_checkin_at "null on first check-in"
+        string note "optional"
+    }
+
+    GoalOutcomeEntry {
+        WeeklyGoalId goal_id FK
+        string outcome_type "Hit | Miss"
+        Epoch outcome_at
+    }
+
+    MiddayTimeSplit {
+        f64 distraction_weight "0.0 to 1.0"
+    }
+
+    MiddayGoalWeight {
+        WeeklyGoalId goal_id FK
+        f64 weight "0.0 to 1.0"
+    }
+
     FocusTarget ||--|{ WeightEntry : entries
     MainQuest }o--|| Concern : concern_id
     WeeklyReflection ||--|{ WeightEntry : "actual_split.weights"
@@ -91,4 +112,9 @@ erDiagram
     WeeklyGoal }o--o| Waypoint : "goal_ref.waypoint_id"
     WeeklyGoal }o--o| Concern : "goal_ref.concern_id"
     DistractionLabel }o--o{ WeeklyGoal : "goal_ref.label_ids"
+    MiddayCheckinResult ||--|{ GoalOutcomeEntry : goal_outcomes
+    MiddayCheckinResult ||--|| MiddayTimeSplit : time_split
+    MiddayTimeSplit ||--|{ MiddayGoalWeight : goal_weights
+    GoalOutcomeEntry }o--|| WeeklyGoal : goal_id
+    MiddayGoalWeight }o--|| WeeklyGoal : goal_id
 ```

@@ -94,3 +94,29 @@ pub struct WeeklySessionData {
     /// the backend excludes goals whose every waypoint is already completed.
     pub upcoming_quarterly_goals: Vec<QuarterlyGoal>,
 }
+
+/// Full payload for the mid-day check-in session.
+/// The backend computes all derived fields; the frontend just renders.
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct MiddayCheckinData {
+    pub calendar: Calendar,
+    /// When this check-in was scheduled / opened.
+    pub checkin_at: Epoch,
+    /// When the previous check-in ended (morning start-of-day or prior midday).
+    /// `None` on the very first check-in of the day.
+    pub last_checkin_at: Option<Epoch>,
+    /// When the next check-in is scheduled.
+    pub next_checkin_at: Epoch,
+    /// Today's planned goals, in display order.
+    pub todays_goals: Vec<WeeklyGoal>,
+    /// All concerns, for color/label resolution.
+    pub concerns: Vec<Concern>,
+    /// All active main quests, for context resolution.
+    pub main_quests: Vec<MainQuest>,
+    /// All quarterly goals active this week, for ⓘ detail resolution.
+    pub quarterly_goals: Vec<QuarterlyGoal>,
+    /// All distraction labels, for context resolution.
+    pub distraction_labels: Vec<DistractionLabel>,
+    /// The weekly plan this check-in falls within.
+    pub weekly_plan: WeeklyPlan,
+}

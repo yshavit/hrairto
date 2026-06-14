@@ -25,6 +25,13 @@ async openWeeklyPlanning() : Promise<void> {
     await TAURI_INVOKE("open_weekly_planning");
 },
 /**
+ * Opens the Mid-day Check-in window and hides the tray popup.
+ * Reuses the window if it is already open.
+ */
+async openMiddayCheckin() : Promise<void> {
+    await TAURI_INVOKE("open_midday_checkin");
+},
+/**
  * Quits the application, exiting the process.
  */
 async quit() : Promise<void> {
@@ -144,6 +151,10 @@ export type FocusTargetId = string
  */
 export type GoalOutcome = { type: "Hit"; at: Epoch } | { type: "Miss"; at: Epoch }
 /**
+ * A single goal outcome recorded during a check-in.
+ */
+export type GoalOutcomeEntry = { goal_id: WeeklyGoalId; outcome: GoalOutcome }
+/**
  * Full data payload for the goal tree view.
  * This is the shape of what the eventual Tauri command will return.
  */
@@ -171,6 +182,93 @@ due_quarter: number;
  */
 due_year: number; text: string; created_at: Epoch }
 export type MainQuestId = string
+/**
+ * Full payload for the mid-day check-in session.
+ * The backend computes all derived fields; the frontend just renders.
+ */
+export type MiddayCheckinData = { calendar: Calendar; 
+/**
+ * When this check-in was scheduled / opened.
+ */
+checkin_at: Epoch; 
+/**
+ * When the previous check-in ended (morning start-of-day or prior midday).
+ * `None` on the very first check-in of the day.
+ */
+last_checkin_at: Epoch | null; 
+/**
+ * When the next check-in is scheduled.
+ */
+next_checkin_at: Epoch; 
+/**
+ * Today's planned goals, in display order.
+ */
+todays_goals: WeeklyGoal[]; 
+/**
+ * All concerns, for color/label resolution.
+ */
+concerns: Concern[]; 
+/**
+ * All active main quests, for context resolution.
+ */
+main_quests: MainQuest[]; 
+/**
+ * All quarterly goals active this week, for ⓘ detail resolution.
+ */
+quarterly_goals: QuarterlyGoal[]; 
+/**
+ * All distraction labels, for context resolution.
+ */
+distraction_labels: DistractionLabel[]; 
+/**
+ * The weekly plan this check-in falls within.
+ */
+weekly_plan: WeeklyPlan }
+/**
+ * The artifact saved when the user completes a mid-day check-in.
+ */
+export type MiddayCheckinResult = { 
+/**
+ * When this check-in was scheduled / opened.
+ */
+checkin_at: Epoch; 
+/**
+ * When the previous check-in ended. `None` on the first check-in of the day.
+ */
+last_checkin_at: Epoch | null; 
+/**
+ * Outcomes for goals the user marked. Goals not touched are omitted.
+ */
+goal_outcomes: GoalOutcomeEntry[]; 
+/**
+ * Time distribution since last check-in, one weight per today's goal plus a
+ * distraction bucket. All weights sum to 1.0.
+ */
+time_split: MiddayTimeSplit; note: string | null }
+/**
+ * One entry in a [`MiddayTimeSplit`]: how much of the period's time went to
+ * a specific weekly goal.
+ */
+export type MiddayGoalWeight = { goal_id: WeeklyGoalId; 
+/**
+ * 0.0–1.0.
+ */
+weight: number }
+/**
+ * Per-goal time allocation for a midday check-in.
+ * 
+ * Unlike [`Focus`], which allocates across [`Activity`] buckets (MainQuest /
+ * SideQuests / Distractions), this records how time was actually spent at the
+ * individual [`WeeklyGoal`] level. The EOD reflection can translate this to a
+ * `Focus` for pre-populating the weekly actual-split bar.
+ * 
+ * All `goal_weights[*].weight` values plus `distraction_weight` sum to 1.0.
+ */
+export type MiddayTimeSplit = { goal_weights: MiddayGoalWeight[]; 
+/**
+ * Weight for unplanned/distraction time not attributed to any goal.
+ */
+distraction_weight: number }
 /**
  * A quarterly goal's parent — either a specific main quest or the side-quest
  * pool (with its own concern).
