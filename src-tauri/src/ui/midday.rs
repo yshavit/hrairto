@@ -1,5 +1,5 @@
 use super::window_types::Window;
-use tauri::{AppHandle, LogicalSize, Manager, PhysicalPosition, WebviewUrl, WebviewWindowBuilder};
+use tauri::{AppHandle, LogicalSize, Manager, WebviewUrl, WebviewWindowBuilder};
 
 /// Called by the webview after first render to set the window to its content height and show it.
 #[tauri::command]
@@ -29,7 +29,7 @@ pub async fn resize_midday(app: AppHandle, height: f64) {
         let non_client_h = outer.height as i32 - inner.height as i32;
         let new_outer_h = (height * scale).round() as i32 + non_client_h;
         let new_y = pos.y + outer.height as i32 - new_outer_h;
-        let _ = window.set_position(PhysicalPosition::new(pos.x, new_y));
+        let _ = window.set_position(tauri::PhysicalPosition::new(pos.x, new_y));
     }
 
     let _ = window.set_size(LogicalSize::new(480.0_f64, height));
