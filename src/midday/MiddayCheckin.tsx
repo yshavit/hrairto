@@ -15,8 +15,6 @@ export default function MiddayCheckin({ data, onSave }: Props) {
   const [outcomes, setOutcomes] = useState<Map<string, LocalOutcome>>(new Map());
   const [weights, setWeights] = useState<number[]>(() => Array(segCount).fill(1 / segCount));
   const [note, setNote] = useState('');
-  const [saved, setSaved] = useState(false);
-
   function toggleOutcome(id: string) {
     setOutcomes((prev) => {
       const next = new Map(prev);
@@ -46,7 +44,6 @@ export default function MiddayCheckin({ data, onSave }: Props) {
     };
     console.log('Midday check-in saved:', result);
     onSave(result);
-    setSaved(true);
   }
 
   return (
@@ -94,12 +91,8 @@ export default function MiddayCheckin({ data, onSave }: Props) {
           />
         </section>
 
-        <button
-          className={`midday-save-btn${saved ? ' midday-save-btn--saved' : ''}`}
-          onClick={handleSave}
-          disabled={saved}
-        >
-          {saved ? 'Saved. Good work!' : 'Done — back to work'}
+        <button className="midday-save-btn" onClick={handleSave}>
+          Done
         </button>
       </div>
     </div>

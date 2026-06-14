@@ -194,21 +194,12 @@ describe('SaveButton', () => {
     const onSave = vi.fn();
     render(<MiddayCheckin data={middayCheckinData} onSave={onSave} />);
 
-    fireEvent.click(screen.getByRole('button', { name: /Done — back to work/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Done/i }));
 
     expect(onSave).toHaveBeenCalledTimes(1);
     const result = onSave.mock.calls[0][0];
     expect(result.goal_outcomes).toHaveLength(0);
     expect(result.note).toBeNull();
-  });
-
-  it('changes button text to "Saved. Good work!" and disables after save', () => {
-    render(<MiddayCheckin data={middayCheckinData} onSave={noop} />);
-
-    const btn = screen.getByRole('button', { name: /Done — back to work/i });
-    fireEvent.click(btn);
-
-    expect(screen.getByRole('button', { name: /Saved\. Good work!/i })).toBeDisabled();
   });
 
   it('includes touched goal outcomes and time split in saved result', () => {
@@ -219,7 +210,7 @@ describe('SaveButton', () => {
     const toggles = screen.getAllByRole('button', { name: /toggle outcome/i });
     fireEvent.click(toggles[0]);
 
-    fireEvent.click(screen.getByRole('button', { name: /Done — back to work/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Done/i }));
 
     const result = onSave.mock.calls[0][0];
     expect(result.goal_outcomes).toHaveLength(1);

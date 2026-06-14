@@ -16,8 +16,6 @@ test('happy path: mark a goal hit, drag a handle, write a note, save', async ({ 
 
   // Save
   await page.locator('.midday-save-btn').click();
-  await expect(page.locator('.midday-save-btn')).toHaveText('Saved. Good work!');
-  await expect(page.locator('.midday-save-btn')).toBeDisabled();
 
   // Saved payload should include the goal outcome and time split
   const payload = await page.evaluate(() => document.body.dataset.savedPayload);
@@ -32,8 +30,6 @@ test('happy path: mark a goal hit, drag a handle, write a note, save', async ({ 
 
 test('save with nothing touched — succeeds immediately', async ({ page }) => {
   await page.locator('.midday-save-btn').click();
-  await expect(page.locator('.midday-save-btn')).toHaveText('Saved. Good work!');
-  await expect(page.locator('.midday-save-btn')).toBeDisabled();
 
   const payload = await page.evaluate(() => document.body.dataset.savedPayload);
   const result = JSON.parse(payload!);
