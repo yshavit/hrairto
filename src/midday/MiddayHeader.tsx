@@ -28,10 +28,7 @@ export default function MiddayHeader({ lastCheckinAt, nextCheckinAt, locale, tim
             'First check-in today'
           ) : (
             <>
-              Last check-in at {formatTime(lastCheckinAt, locale, timezone)} ·{' '}
-              <button className="midday-header__next-link" type="button" onClick={() => {}}>
-                next check-in at {nextTimeLabel}
-              </button>
+              Last check-in at {formatTime(lastCheckinAt, locale, timezone)} · next check-in at {nextTimeLabel}
             </>
           )}
         </div>

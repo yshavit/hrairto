@@ -20,10 +20,10 @@ describe('MiddayHeader', () => {
     expect(screen.getByText('First check-in today')).toBeInTheDocument();
   });
 
-  it('shows last check-in time and next check-in link when last_checkin_at is set', () => {
+  it('shows last check-in time and next check-in when last_checkin_at is set', () => {
     render(<MiddayCheckin data={middayCheckinData} onSave={noop} />);
     expect(screen.queryByText('First check-in today')).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /next check-in at/i })).toBeInTheDocument();
+    expect(screen.getByText(/next check-in at/i)).toBeInTheDocument();
   });
 });
 

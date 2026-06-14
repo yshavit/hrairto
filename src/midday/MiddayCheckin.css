@@ -45,22 +45,6 @@
   color: #666;
 }
 
-.midday-header__next-link {
-  color: #888;
-  text-decoration: underline;
-  text-underline-offset: 2px;
-  cursor: pointer;
-  background: none;
-  border: none;
-  font: inherit;
-  font-size: inherit;
-  padding: 0;
-}
-
-.midday-header__next-link:hover {
-  color: #aaa;
-}
-
 /* === Body ================================================================= */
 
 .midday-checkin__body {
