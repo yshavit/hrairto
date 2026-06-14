@@ -21,7 +21,7 @@ export default function MiddayHeader({ lastCheckinAt, nextCheckinAt, locale, tim
 
   return (
     <header className="midday-header">
-      <h1 className="midday-header__title">Mid-day check-in</h1>
+      <h1 className="midday-header__title">Check-in</h1>
       <div className="midday-header__right">
         <div className="midday-header__sub">
           {lastCheckinAt === null ? (

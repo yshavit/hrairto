@@ -84,9 +84,6 @@ export default function MiddayCheckin({ data, onSave, onReady }: Props) {
         </section>
 
         <section className="midday-zone">
-          <label className="midday-note-label">
-            Note <span className="midday-note-label__optional">(optional)</span>
-          </label>
           <textarea
             className="midday-note-field"
             placeholder="Anything worth noting about the morning?"
